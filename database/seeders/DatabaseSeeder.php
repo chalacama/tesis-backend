@@ -9,6 +9,7 @@ use Database\Seeders\UsersSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Database\Seeders\UserInformationSeeder;
 use Database\Seeders\CoursesSeeder;
+use Database\Seeders\RatingCourseSeeder;
 class DatabaseSeeder extends Seeder
 {
     /**
@@ -24,6 +25,13 @@ class DatabaseSeeder extends Seeder
         $this->call(UserInformationSeeder::class);
         // Llamar al seeder de cursos
         $this->call(CoursesSeeder::class);
+        // Llamar al seeder de rating_courses
+        $this->call(RatingCourseSeeder::class);
+
+
+
+
+
 
 
         // User::factory(10)->create();

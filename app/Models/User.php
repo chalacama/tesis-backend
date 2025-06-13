@@ -3,11 +3,17 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+
+
+
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use App\Models\UserInformation;
+use App\Models\RatingCourse;
+use App\Models\Course;
+
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
@@ -52,5 +58,22 @@ class User extends Authenticatable
     public function userInformation()
     {
         return $this->hasOne(UserInformation::class);
+    }
+    /**
+     * Relación uno a muchos con RatingCourse.
+     */
+    public function ratingCourses()
+    {
+        return $this->hasMany(RatingCourse::class);
+    }
+
+    /**
+     * Relación muchos a muchos con Course a través de rating_courses.
+     */
+    public function ratedCourses()
+    {
+        return $this->belongsToMany(Course::class, 'rating_courses')
+            ->withPivot('stars')
+            ->withTimestamps();
     }
 }
