@@ -30,8 +30,9 @@ class DatabaseSeeder extends Seeder
         $this->call(RatingCourseSeeder::class);
         // Llamar al seeder de tutor_courses
         $this->call(TutorCourseSeeder::class);
-
-
+        // Llamar al seeder de categorías
+        $this->call(CategoriesSeeder::class);
+        
 
 
 
