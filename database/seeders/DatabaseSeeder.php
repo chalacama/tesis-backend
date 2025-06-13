@@ -5,12 +5,7 @@ namespace Database\Seeders;
 /* use App\Models\User; */
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Database\Seeders\UsersSeeder;
-use Database\Seeders\RolesAndPermissionsSeeder;
-use Database\Seeders\UserInformationSeeder;
-use Database\Seeders\CoursesSeeder;
-use Database\Seeders\RatingCourseSeeder;
-use Database\Seeders\TutorCourseSeeder;
+
 class DatabaseSeeder extends Seeder
 {
     /**
@@ -34,7 +29,8 @@ class DatabaseSeeder extends Seeder
         $this->call(CategoriesSeeder::class);
         // Llamar al seeder de category_courses
         $this->call(CategoryCourseSeeder::class);
-
+        // Llamar al seeder de comentarios
+        $this->call(CommentsSeeder::class);
 
 
 
