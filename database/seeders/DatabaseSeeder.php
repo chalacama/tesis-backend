@@ -7,6 +7,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Database\Seeders\UsersSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
+use Database\Seeders\UserInformationSeeder;
 class DatabaseSeeder extends Seeder
 {
     /**
@@ -18,6 +19,8 @@ class DatabaseSeeder extends Seeder
         $this->call(RolesAndPermissionsSeeder::class);
         // Llamar al seeder de usuarios
         $this->call(UsersSeeder::class);
+        // Llamar al seeder de user_information
+        $this->call(UserInformationSeeder::class);
         // User::factory(10)->create();
 
         /* User::factory()->create([
