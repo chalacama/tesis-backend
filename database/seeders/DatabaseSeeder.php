@@ -32,7 +32,8 @@ class DatabaseSeeder extends Seeder
         $this->call(TutorCourseSeeder::class);
         // Llamar al seeder de categorías
         $this->call(CategoriesSeeder::class);
-        
+        // Llamar al seeder de category_courses
+        $this->call(CategoryCourseSeeder::class);
 
 
 

@@ -13,13 +13,18 @@ class CategoriesSeeder extends Seeder
     public function run(): void
     {
         Category::create([
-            'name' => 'Programación',
+            'name' => 'Programación', // id : 1 
             'description' => 'Cursos relacionados con programación.',
             'enabled' => true,
         ]);
         Category::create([
-            'name' => 'Diseño',
+            'name' => 'Diseño', // id : 2 
             'description' => 'Cursos de diseño gráfico y digital.',
+            'enabled' => true,
+        ]);
+        Category::create([
+            'name' => 'Diagramas', // id : 3 
+            'description' => 'Cursos de base de datos.',
             'enabled' => true,
         ]);
     }

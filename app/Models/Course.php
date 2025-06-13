@@ -41,4 +41,11 @@ class Course extends Model
             ->withPivot('stars')
             ->withTimestamps();
     }
+     /**
+     * Relación muchos a muchos con Category a través de category_courses.
+     */
+    public function categories()
+    {
+        return $this->belongsToMany(Category::class, 'category_courses');
+    }
 }
