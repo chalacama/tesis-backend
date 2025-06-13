@@ -33,7 +33,8 @@ class DatabaseSeeder extends Seeder
         $this->call(CommentsSeeder::class);
         // Llamar al seeder de reply_comments
         $this->call(ReplyCommentsSeeder::class);
-
+        // Llamar al seeder de modules
+        $this->call(ModulesSeeder::class);
 
 
         // User::factory(10)->create();

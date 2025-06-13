@@ -13,7 +13,9 @@ use Illuminate\Notifications\Notifiable;
 use App\Models\UserInformation;
 use App\Models\RatingCourse;
 use App\Models\Course;
-
+use App\Models\TutorCourse;
+use App\Models\Comment;
+use App\Models\ReplyComment;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */

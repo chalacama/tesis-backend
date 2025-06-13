@@ -3,7 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-
+use App\Models\TutorCourse;
+use App\Models\User;
+use App\Models\RatingCourse;
+use App\Models\Category;
+use App\Models\Comment;
+use App\Models\Module;
 class Course extends Model
 {
     /**
@@ -54,5 +59,12 @@ class Course extends Model
     public function comments()
     {
         return $this->hasMany(Comment::class, 'curso_id');
+    }
+    /**
+     * Relación uno a muchos con Module.
+     */
+    public function modules()
+    {
+        return $this->hasMany(Module::class);
     }
 }
