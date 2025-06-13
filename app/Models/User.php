@@ -76,4 +76,21 @@ class User extends Authenticatable
             ->withPivot('stars')
             ->withTimestamps();
     }
+    /**
+     * Relación uno a muchos con TutorCourse.
+     */
+    public function tutorCourses()
+    {
+        return $this->hasMany(TutorCourse::class);
+    }
+
+    /**
+     * Relación muchos a muchos con Course a través de tutor_courses (cursos donde es tutor).
+     */
+    public function tutoredCourses()
+    {
+        return $this->belongsToMany(Course::class, 'tutor_courses')
+            ->withPivot('enabled', 'order')
+            ->withTimestamps();
+    }
 }

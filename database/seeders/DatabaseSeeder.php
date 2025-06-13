@@ -10,6 +10,7 @@ use Database\Seeders\RolesAndPermissionsSeeder;
 use Database\Seeders\UserInformationSeeder;
 use Database\Seeders\CoursesSeeder;
 use Database\Seeders\RatingCourseSeeder;
+use Database\Seeders\TutorCourseSeeder;
 class DatabaseSeeder extends Seeder
 {
     /**
@@ -27,7 +28,8 @@ class DatabaseSeeder extends Seeder
         $this->call(CoursesSeeder::class);
         // Llamar al seeder de rating_courses
         $this->call(RatingCourseSeeder::class);
-
+        // Llamar al seeder de tutor_courses
+        $this->call(TutorCourseSeeder::class);
 
 
 

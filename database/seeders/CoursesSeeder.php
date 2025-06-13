@@ -12,6 +12,7 @@ class CoursesSeeder extends Seeder
      */
     public function run(): void
     {
+        // id : 1
         Course::create([
             'title' => 'Laravel Básico',
             'description' => 'Curso introductorio a Laravel.',
@@ -19,11 +20,28 @@ class CoursesSeeder extends Seeder
             'enabled' => true,
             'archived_at' => null,
         ]);
+        // id : 2
+        Course::create([
+            'title' => 'Angular Básico',
+            'description' => 'Curso introductorio a Angular.',
+            'is_certified' => true,
+            'enabled' => true,
+            'archived_at' => null,
+        ]);
+        // id : 3
         Course::create([
             'title' => 'PHP Avanzado',
             'description' => 'Curso avanzado de PHP.',
             'is_certified' => false,
             'enabled' => true,
+            'archived_at' => null,
+        ]);
+        // id : 4
+        Course::create([
+            'title' => 'Java Avanzado',
+            'description' => 'Curso avanzado de Java.',
+            'is_certified' => true,
+            'enabled' => false,
             'archived_at' => null,
         ]);
     }
