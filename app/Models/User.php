@@ -93,4 +93,19 @@ class User extends Authenticatable
             ->withPivot('enabled', 'order')
             ->withTimestamps();
     }
+    /**
+     * Relación uno a muchos con Comment.
+     */
+    public function comments()
+    {
+        return $this->hasMany(Comment::class);
+    }
+
+    /**
+     * Relación uno a muchos con ReplyComment.
+     */
+    public function replyComments()
+    {
+        return $this->hasMany(ReplyComment::class);
+    }
 }

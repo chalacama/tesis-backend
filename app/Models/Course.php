@@ -48,4 +48,11 @@ class Course extends Model
     {
         return $this->belongsToMany(Category::class, 'category_courses');
     }
+    /**
+     * Relación uno a muchos con Comment.
+     */
+    public function comments()
+    {
+        return $this->hasMany(Comment::class, 'curso_id');
+    }
 }
