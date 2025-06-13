@@ -35,7 +35,8 @@ class DatabaseSeeder extends Seeder
         $this->call(ReplyCommentsSeeder::class);
         // Llamar al seeder de modules
         $this->call(ModulesSeeder::class);
-
+        // Llamar al seeder de tipos de contenido de aprendizaje
+        $this->call(TypeLearningContentSeeder::class);
 
         // User::factory(10)->create();
 
