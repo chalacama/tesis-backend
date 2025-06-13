@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('users', function (Blueprint $table) {
+        /* Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
@@ -19,8 +19,20 @@ return new class extends Migration
             $table->string('password');
             $table->rememberToken();
             $table->timestamps();
+        }); */
+        Schema::create('users', function (Blueprint $table) {
+            $table->id();
+            $table->string('email')->unique();
+            $table->string('password');
+            $table->string('name');
+            $table->string('lastname');
+            $table->string('username')->unique();
+            $table->string('registration_method')->nullable();
+            $table->timestamp('email_verified_at')->nullable();
+            $table->string('firebase_Uuid')->nullable();
+            $table->rememberToken();
+            $table->timestamps();
         });
-
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();
             $table->string('token');
