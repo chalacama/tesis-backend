@@ -29,4 +29,8 @@ class Form extends Model
     {
         return $this->hasMany(Question::class, 'form_id');
     }
+    public function chapters()
+    {
+    return $this->hasMany(Chapter::class, 'form_id');
+    }
 }

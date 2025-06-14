@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('province')->nullable();
             $table->string('canton')->nullable();
             $table->string('parish')->nullable();
-            $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('user_id')->unique();
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->timestamps();
         });

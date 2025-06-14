@@ -47,7 +47,11 @@ class DatabaseSeeder extends Seeder
         $this->call(TypeQuestionsSeeder::class);
         // Llamar al seeder de preguntas
         $this->call(QuestionsSeeder::class);
-
+        // Llamar al seeder de respuestas
+        $this->call(ChaptersSeeder::class);
+        // Llamar al seeder de preguntas de capítulos
+        $this->call(ChapterQuestionsSeeder::class);
+        
         // User::factory(10)->create();
 
         /* User::factory()->create([

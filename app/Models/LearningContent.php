@@ -22,4 +22,8 @@ class LearningContent extends Model
     {
         return $this->belongsTo(TypeLearningContent::class, 'type_content_id');
     }
+    public function chapter()
+{
+    return $this->hasOne(Chapter::class, 'learning_content_id');
+}
 }

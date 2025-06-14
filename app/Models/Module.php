@@ -20,4 +20,11 @@ class Module extends Model
     {
         return $this->belongsTo(Course::class);
     }
+     /**
+     * Relación: un módulo tiene muchos capítulos.
+     */
+    public function chapters()
+    {
+        return $this->hasMany(Chapter::class, 'modulo_id');
+    }
 }
