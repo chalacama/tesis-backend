@@ -51,6 +51,10 @@ class DatabaseSeeder extends Seeder
         $this->call(ChaptersSeeder::class);
         // Llamar al seeder de preguntas de capítulos
         $this->call(ChapterQuestionsSeeder::class);
+        // Llamar al seeder de respuestas de capítulos
+        $this->call(RegistrationsSeeder::class);
+        // Llamar al seeder de certificados de registro
+        $this->call(RegistrationCertificatesSeeder::class);
         
         // User::factory(10)->create();
 

@@ -9,6 +9,7 @@ use App\Models\RatingCourse;
 use App\Models\Category;
 use App\Models\Comment;
 use App\Models\Module;
+use App\Models\Registration;
 class Course extends Model
 {
     /**
@@ -66,5 +67,12 @@ class Course extends Model
     public function modules()
     {
         return $this->hasMany(Module::class);
+    }
+    /**
+     * Relación uno a muchos con Registration.
+     */
+    public function registrations()
+    {
+        return $this->hasMany(Registration::class);
     }
 }

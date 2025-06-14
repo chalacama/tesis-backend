@@ -16,6 +16,7 @@ use App\Models\Course;
 use App\Models\TutorCourse;
 use App\Models\Comment;
 use App\Models\ReplyComment;
+use App\Models\Registration;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
@@ -109,5 +110,12 @@ class User extends Authenticatable
     public function replyComments()
     {
         return $this->hasMany(ReplyComment::class);
+    }
+    /**
+     * Relación uno a muchos con Registration.
+     */
+    public function registrations()
+    {
+        return $this->hasMany(Registration::class);
     }
 }
