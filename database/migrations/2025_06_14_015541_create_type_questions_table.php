@@ -11,16 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('forms', function (Blueprint $table) {
+        Schema::create('type_questions', function (Blueprint $table) {
             $table->id();
-            $table->string('title')->default('Sin título');
-            $table->integer('order')->default(1)->nullable();
-            $table->boolean('random_questions')->default(false);
+            $table->string('nombre');
             $table->boolean('enabled')->default(true);
-            $table->unsignedBigInteger('type_form_id');
             $table->timestamps();
-
-            $table->foreign('type_form_id')->references('id')->on('type_forms')->onDelete('cascade');
         });
     }
 
@@ -29,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('forms');
+        Schema::dropIfExists('type_questions');
     }
 };

@@ -3,7 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-
+use App\Models\TypeForm;
+use App\Models\Question;
 class Form extends Model
 {
     protected $fillable = [
@@ -20,5 +21,12 @@ class Form extends Model
     public function typeForm()
     {
         return $this->belongsTo(TypeForm::class, 'type_form_id');
+    }
+    /**
+     * Relación: un formulario tiene muchas preguntas.
+     */
+    public function questions()
+    {
+        return $this->hasMany(Question::class, 'form_id');
     }
 }

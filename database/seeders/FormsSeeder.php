@@ -14,14 +14,14 @@ class FormsSeeder extends Seeder
     {
         Form::create([
             'title' => 'Encuesta de satisfacción',
-            'order' => 1,
+            'order' => null,
             'random_questions' => false,
             'enabled' => true,
             'type_form_id' => 1, // Asegúrate de que el tipo exista
         ]);
         Form::create([
             'title' => 'Examen final',
-            'order' => 2,
+            /* 'order' => null, */
             'random_questions' => true,
             'enabled' => true,
             'type_form_id' => 2,
