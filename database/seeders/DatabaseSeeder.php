@@ -39,8 +39,10 @@ class DatabaseSeeder extends Seeder
         $this->call(TypeLearningContentSeeder::class);
         // Llamar al seeder de contenidos de aprendizaje
         $this->call(LearningContentsSeeder::class);
-
-        
+        // Llamar al seeder de tipos de formularios
+        $this->call(TypeFormsSeeder::class);
+        // Llamar al seeder de formularios
+        $this->call(FormsSeeder::class);
         // User::factory(10)->create();
 
         /* User::factory()->create([
