@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('tutor_courses', function (Blueprint $table) {
             $table->id();
             $table->boolean('enabled');
-            $table->integer('order');
+            $table->integer('order')->default(1);
             $table->unsignedBigInteger('course_id');
             $table->unsignedBigInteger('user_id');
             $table->timestamps();
