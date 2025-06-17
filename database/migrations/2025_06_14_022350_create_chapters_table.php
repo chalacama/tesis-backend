@@ -13,6 +13,8 @@ return new class extends Migration
     {
         Schema::create('chapters', function (Blueprint $table) {
             $table->id();
+            $table->string('name')->nullable();
+            $table->text('description')->nullable();
             $table->unsignedBigInteger('modulo_id');
             $table->unsignedBigInteger('learning_content_id')->nullable()->unique(); // uno a uno
             $table->unsignedBigInteger('form_id')->nullable(); // varios capítulos pueden compartir el mismo formulario

@@ -3,12 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-
+use App\Models\TypeLearningContent;
+use App\Models\Chapter;
+use App\Models\CompletedContent;
 class LearningContent extends Model
 {
     protected $fillable = [
-        'name',
-        'description',
         'url',
         'iframe',
         'enabled',
@@ -23,7 +23,14 @@ class LearningContent extends Model
         return $this->belongsTo(TypeLearningContent::class, 'type_content_id');
     }
     public function chapter()
-{
+    {
     return $this->hasOne(Chapter::class, 'learning_content_id');
-}
+    }
+    /**
+     * Relación uno a muchos con CompletedContent.
+     */
+    public function completedContents()
+    {
+        return $this->hasMany(CompletedContent::class);
+    }
 }

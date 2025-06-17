@@ -13,8 +13,6 @@ return new class extends Migration
     {
         Schema::create('learning_contents', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->nullable();
-            $table->text('description')->nullable();
             $table->string('url');
             $table->string('iframe')->nullable();
             $table->boolean('enabled')->default(true);

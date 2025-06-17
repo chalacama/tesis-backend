@@ -13,16 +13,12 @@ class LearningContentsSeeder extends Seeder
     public function run(): void
     {
         LearningContent::create([
-            'name' => 'Introducción a Laravel',
-            'description' => 'Video introductorio sobre Laravel.',
             'url' => 'https://www.youtube.com/shorts/-qr9dUuOzJc',
             'iframe' => null,
             'enabled' => true,
             'type_content_id' => 3, // Asegúrate de que el tipo exista
         ]);
         LearningContent::create([
-            'name' => 'Youtube - curso de laravel',
-            'description' => 'Documento PDF con la documentación oficial.',
             'url' => 'https://www.youtube.com/watch?v=-0Fr1blovx8',
             'iframe' => null,
             'enabled' => true,

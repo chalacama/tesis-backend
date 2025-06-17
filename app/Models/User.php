@@ -17,6 +17,7 @@ use App\Models\TutorCourse;
 use App\Models\Comment;
 use App\Models\ReplyComment;
 use App\Models\Registration;
+use App\Models\CompletedContent;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
@@ -117,5 +118,12 @@ class User extends Authenticatable
     public function registrations()
     {
         return $this->hasMany(Registration::class);
+    }
+    /**
+     * Relación uno a muchos con CompletedContent.
+     */
+    public function completedContents()
+    {
+        return $this->hasMany(CompletedContent::class);
     }
 }

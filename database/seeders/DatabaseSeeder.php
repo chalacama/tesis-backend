@@ -55,7 +55,8 @@ class DatabaseSeeder extends Seeder
         $this->call(RegistrationsSeeder::class);
         // Llamar al seeder de certificados de registro
         $this->call(RegistrationCertificatesSeeder::class);
-        
+        // Llamar al seeder de contenidos completados
+        $this->call(CompletedContentsSeeder::class);
         // User::factory(10)->create();
 
         /* User::factory()->create([
