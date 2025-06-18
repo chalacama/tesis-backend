@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
 use App\Models\Course;
 use App\Models\ReplyComment;
+
 class Comment extends Model
 {
     protected $fillable = [

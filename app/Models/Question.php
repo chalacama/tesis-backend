@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\TypeQuestion;
 use App\Models\Form;
+use App\Models\Answer;
+use App\Models\UserAnswer;
 class Question extends Model
 {
     protected $fillable = [

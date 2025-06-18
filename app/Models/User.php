@@ -18,6 +18,11 @@ use App\Models\Comment;
 use App\Models\ReplyComment;
 use App\Models\Registration;
 use App\Models\CompletedContent;
+use App\Models\ContentView;
+use App\Models\UserAnswer;
+use App\Models\ModuleAttempt;
+use App\Models\LikeLearningContent;
+use App\Models\SavedCourse;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
@@ -139,5 +144,27 @@ class User extends Authenticatable
     public function userAnswers()
     {
         return $this->hasMany(UserAnswer::class);
+    }
+    /**
+     * Relación uno a muchos con ModuleAttempt.
+     */
+    public function moduleAttempts()
+    {
+        return $this->hasMany(ModuleAttempt::class);
+    }
+    /**
+     * Relación uno a muchos con LikeLearningContent.
+     */
+    public function likeLearningContents()
+    {
+        return $this->hasMany(LikeLearningContent::class);
+    }
+
+    /**
+     * Relación uno a muchos con SavedCourse.
+     */
+    public function savedCourses()
+    {
+        return $this->hasMany(SavedCourse::class);
     }
 }

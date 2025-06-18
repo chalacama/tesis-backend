@@ -10,6 +10,7 @@ use App\Models\Category;
 use App\Models\Comment;
 use App\Models\Module;
 use App\Models\Registration;
+use App\Models\SavedCourse;
 class Course extends Model
 {
     protected $fillable = [
@@ -83,5 +84,12 @@ class Course extends Model
     public function registrations()
     {
         return $this->hasMany(Registration::class);
+    }
+    /**
+     * Relación uno a muchos con SavedCourse.
+     */
+    public function savedCourses()
+    {
+        return $this->hasMany(SavedCourse::class);
     }
 }

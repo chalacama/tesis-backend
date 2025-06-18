@@ -3,7 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-
+use App\Models\User;
+use App\Models\Answer;
+use App\Models\Question;
 class UserAnswer extends Model
 {
     protected $fillable = [

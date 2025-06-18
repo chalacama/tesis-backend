@@ -63,9 +63,12 @@ class DatabaseSeeder extends Seeder
         $this->call(ContentViewsSeeder::class);
         // Llamar al seeder de respuestas de usuario
         $this->call(UserAnswersSeeder::class);
-        
-
-
+        // Llamar al seeder de intentos de módulo
+        $this->call(ModuleAttemptsSeeder::class);
+        // Llamar al seeder de intentos de contenido
+        $this->call(LikeLearningContentsSeeder::class);
+        // Llamar al seeder de cursos guardados
+        $this->call(SavedCoursesSeeder::class);
         // User::factory(10)->create();
 
         /* User::factory()->create([

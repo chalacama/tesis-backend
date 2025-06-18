@@ -3,7 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-
+use App\Models\Chapter;
+use App\Models\Question;
 class ChapterQuestion extends Model
 {
     protected $fillable = [

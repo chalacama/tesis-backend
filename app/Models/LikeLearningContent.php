@@ -5,17 +5,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
 use App\Models\LearningContent;
-class ContentView extends Model
+class LikeLearningContent extends Model
 {
     protected $fillable = [
         'user_id',
-        'learning_content_id',
-        'viewed_at',
-        'duration_seconds',
+        'learning_contents_id',
     ];
 
     /**
-     * Relación: un registro pertenece a un usuario.
+     * Relación: un like pertenece a un usuario.
      */
     public function user()
     {
@@ -23,10 +21,10 @@ class ContentView extends Model
     }
 
     /**
-     * Relación: un registro pertenece a un contenido de aprendizaje.
+     * Relación: un like pertenece a un contenido de aprendizaje.
      */
     public function learningContent()
     {
-        return $this->belongsTo(LearningContent::class);
+        return $this->belongsTo(LearningContent::class, 'learning_contents_id');
     }
 }

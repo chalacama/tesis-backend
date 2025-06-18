@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-
+use App\Models\LearningContent;
 class TypeLearningContent extends Model
 {
     protected $fillable = [

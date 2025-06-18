@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-
+use App\Models\Form;
 class TypeForm extends Model
 {
     protected $fillable = [

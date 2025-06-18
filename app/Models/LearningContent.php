@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\TypeLearningContent;
 use App\Models\Chapter;
 use App\Models\CompletedContent;
+use App\Models\ContentView;
+use App\Models\LikeLearningContent;
 class LearningContent extends Model
 {
     protected $fillable = [
@@ -38,5 +40,12 @@ class LearningContent extends Model
     public function contentViews()
     {
         return $this->hasMany(ContentView::class);
+    }
+    /**
+     * Relación uno a muchos con LikeLearningContent.
+     */
+    public function likeLearningContents()
+    {
+        return $this->hasMany(LikeLearningContent::class, 'learning_contents_id');
     }
 }

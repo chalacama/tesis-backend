@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Course;
+use App\Models\Chapter;
+use App\Models\ModuleAttempt;
 class Module extends Model
 {
     protected $fillable = [
@@ -26,5 +28,12 @@ class Module extends Model
     public function chapters()
     {
         return $this->hasMany(Chapter::class, 'modulo_id');
+    }
+    /**
+     * Relación uno a muchos con ModuleAttempt.
+     */
+    public function moduleAttempts()
+    {
+        return $this->hasMany(ModuleAttempt::class);
     }
 }
