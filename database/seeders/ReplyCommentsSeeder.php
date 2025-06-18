@@ -14,11 +14,13 @@ class ReplyCommentsSeeder extends Seeder
     {
         ReplyComment::create([
             'texto' => '¡Totalmente de acuerdo!',
+            'enabled' => true,
             'user_id' => 3, // Asegúrate de que el usuario y el comentario existan
             'comment_id' => 1,
         ]);
         ReplyComment::create([
             'texto' => 'Gracias por tu comentario.',
+            'enabled' => true,
             'user_id' => 4,
             'comment_id' => 2,
         ]);

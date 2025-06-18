@@ -14,13 +14,11 @@ class LearningContentsSeeder extends Seeder
     {
         LearningContent::create([
             'url' => 'https://www.youtube.com/shorts/-qr9dUuOzJc',
-            'iframe' => null,
             'enabled' => true,
             'type_content_id' => 3, // Asegúrate de que el tipo exista
         ]);
         LearningContent::create([
             'url' => 'https://www.youtube.com/watch?v=-0Fr1blovx8',
-            'iframe' => null,
             'enabled' => true,
             'type_content_id' => 2,
         ]);

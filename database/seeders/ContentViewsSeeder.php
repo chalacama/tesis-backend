@@ -1,0 +1,29 @@
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Database\Seeder;
+use App\Models\ContentView;
+use Carbon\Carbon;
+class ContentViewsSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
+    {
+        ContentView::create([
+            'user_id' => 1,
+            'learning_content_id' => 1,
+            'viewed_at' => Carbon::now(),
+            'duration_seconds' => '120',
+        ]);
+        ContentView::create([
+            'user_id' => 2,
+            'learning_content_id' => 1,
+            'viewed_at' => Carbon::now(),
+            'duration_seconds' => '300',
+        ]);
+    }
+}

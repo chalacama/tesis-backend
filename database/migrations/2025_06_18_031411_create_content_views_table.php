@@ -11,16 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('reply_comments', function (Blueprint $table) {
+        Schema::create('content_views', function (Blueprint $table) {
             $table->id();
-            $table->text('texto');
-            $table->boolean('enabled')->default(true);
             $table->unsignedBigInteger('user_id');
-            $table->unsignedBigInteger('comment_id');
+            $table->unsignedBigInteger('learning_content_id');
+            $table->timestamp('viewed_at');
+            $table->string('duration_seconds');
             $table->timestamps();
 
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('comment_id')->references('id')->on('comments')->onDelete('cascade');
+            $table->foreign('learning_content_id')->references('id')->on('learning_contents')->onDelete('cascade');
+            $table->unique(['user_id', 'learning_content_id']); // <-- Evita duplicados
         });
     }
 
@@ -29,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('reply_comments');
+        Schema::dropIfExists('content_views');
     }
 };

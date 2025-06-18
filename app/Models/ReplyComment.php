@@ -9,6 +9,7 @@ class ReplyComment extends Model
 {
     protected $fillable = [
         'texto',
+        'enabled',
         'user_id',
         'comment_id',
     ];

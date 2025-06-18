@@ -10,7 +10,6 @@ class LearningContent extends Model
 {
     protected $fillable = [
         'url',
-        'iframe',
         'enabled',
         'type_content_id',
     ];
@@ -32,5 +31,12 @@ class LearningContent extends Model
     public function completedContents()
     {
         return $this->hasMany(CompletedContent::class);
+    }
+    /**
+     * Relación uno a muchos con ContentView.
+     */
+    public function contentViews()
+    {
+        return $this->hasMany(ContentView::class);
     }
 }

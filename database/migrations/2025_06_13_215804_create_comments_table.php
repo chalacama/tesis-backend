@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('comments', function (Blueprint $table) {
             $table->id();
         $table->text('texto');
+        $table->boolean('enabled')->default(true);
         $table->unsignedBigInteger('user_id');
         $table->unsignedBigInteger('curso_id');
         $table->timestamps();

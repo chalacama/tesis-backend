@@ -126,4 +126,11 @@ class User extends Authenticatable
     {
         return $this->hasMany(CompletedContent::class);
     }
+    /**
+     * Relación uno a muchos con ContentView.
+     */
+    public function contentViews()
+    {
+        return $this->hasMany(ContentView::class);
+    }
 }

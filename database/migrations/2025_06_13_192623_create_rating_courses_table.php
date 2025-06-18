@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('rating_courses', function (Blueprint $table) {
             $table->id();
-             $table->string('stars');
+            $table->tinyInteger('stars')->unsigned()->check('stars >= 1 AND stars <= 5');
             $table->unsignedBigInteger('course_id');
             $table->unsignedBigInteger('user_id');
             $table->timestamps();

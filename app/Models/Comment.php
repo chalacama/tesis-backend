@@ -10,6 +10,7 @@ class Comment extends Model
 {
     protected $fillable = [
         'texto',
+        'enabled',
         'user_id',
         'curso_id',
     ];
