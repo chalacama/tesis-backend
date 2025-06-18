@@ -48,6 +48,8 @@ class DatabaseSeeder extends Seeder
         // Llamar al seeder de preguntas
         $this->call(QuestionsSeeder::class);
         // Llamar al seeder de respuestas
+        $this->call(AnswersSeeder::class);
+        // Llamar al seeder de respuestas
         $this->call(ChaptersSeeder::class);
         // Llamar al seeder de preguntas de capítulos
         $this->call(ChapterQuestionsSeeder::class);
@@ -59,9 +61,11 @@ class DatabaseSeeder extends Seeder
         $this->call(CompletedContentsSeeder::class);
         // Llamar al seeder de vistas de contenido
         $this->call(ContentViewsSeeder::class);
-
-
+        // Llamar al seeder de respuestas de usuario
+        $this->call(UserAnswersSeeder::class);
         
+
+
         // User::factory(10)->create();
 
         /* User::factory()->create([

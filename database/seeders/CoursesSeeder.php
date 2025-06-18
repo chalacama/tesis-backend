@@ -18,6 +18,8 @@ class CoursesSeeder extends Seeder
             'description' => 'Curso introductorio a Laravel.',
             'is_certified' => true,
             'enabled' => true,
+            'max_attempts' => 3,
+            'is_unlimited' => true,
             'archived_at' => null,
         ]);
         // id : 2
@@ -26,6 +28,8 @@ class CoursesSeeder extends Seeder
             'description' => 'Curso introductorio a Angular.',
             'is_certified' => true,
             'enabled' => true,
+            'max_attempts' => 5,
+            'is_unlimited' => true,
             'archived_at' => null,
         ]);
         // id : 3
@@ -34,6 +38,8 @@ class CoursesSeeder extends Seeder
             'description' => 'Curso avanzado de PHP.',
             'is_certified' => false,
             'enabled' => true,
+            'max_attempts' => 2,
+            'is_unlimited' => true,
             'archived_at' => null,
         ]);
         // id : 4
@@ -42,6 +48,8 @@ class CoursesSeeder extends Seeder
             'description' => 'Curso avanzado de Java.',
             'is_certified' => true,
             'enabled' => false,
+            'max_attempts' => 5,
+            'is_unlimited' => false,
             'archived_at' => null,
         ]);
     }

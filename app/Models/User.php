@@ -133,4 +133,11 @@ class User extends Authenticatable
     {
         return $this->hasMany(ContentView::class);
     }
+    /**
+     * Relación uno a muchos con UserAnswer.
+     */
+    public function userAnswers()
+    {
+        return $this->hasMany(UserAnswer::class);
+    }
 }

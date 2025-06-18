@@ -17,6 +17,8 @@ return new class extends Migration
             $table->text('description');
             $table->boolean('is_certified');
             $table->boolean('enabled');
+            $table->integer('max_attempts')->nullable()->default(null);
+            $table->boolean('is_unlimited')->default(true);
             $table->timestamp('archived_at')->nullable();
             $table->timestamps();
            

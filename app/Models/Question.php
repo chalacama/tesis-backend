@@ -9,6 +9,7 @@ class Question extends Model
 {
     protected $fillable = [
         'statement',
+        'spot',
         'order',
         'enabled',
         'type_questions_id',
@@ -29,5 +30,19 @@ class Question extends Model
     public function form()
     {
         return $this->belongsTo(Form::class, 'form_id');
+    }
+    /**
+     * Relación: una pregunta tiene muchas respuestas.
+     */
+    public function answers()
+    {
+        return $this->hasMany(Answer::class);
+    }
+    /**
+     * Relación uno a muchos con UserAnswer.
+     */
+    public function userAnswers()
+    {
+        return $this->hasMany(UserAnswer::class);
     }
 }

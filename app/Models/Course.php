@@ -12,6 +12,15 @@ use App\Models\Module;
 use App\Models\Registration;
 class Course extends Model
 {
+    protected $fillable = [
+    'title',
+    'description',
+    'is_certified',
+    'enabled',
+    'max_attempts',
+    'is_unlimited',
+    'archived_at',
+    ];
     /**
      * Relación uno a muchos con TutorCourse.
      */
