@@ -11,7 +11,6 @@ class CourseController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'required|string',
         ]);
-// now()
         $course = Course::create([
             'title' => $validated['title'],
             'description' => $validated['description'],
@@ -98,6 +97,35 @@ class CourseController extends Controller
 
         return response()->json([
             'message' => 'Curso enviado a papelería correctamente'
+        ]);
+    }
+    public function getAllCourses()
+    {
+        $courses = Course::all();
+
+        return response()->json([
+            'courses' => $courses
+        ]);
+    }
+
+    public function getCourseDetail($id)
+    {
+        $course = Course::with([
+            'modules.chapters',      // módulos y sus capítulos
+            'comments.user',         // comentarios y el usuario que comentó
+            'categories',            // categorías del curso
+            'tutors',                // tutores del curso
+            'registrations.user',    // inscripciones y el usuario inscrito
+            'savedCourses.user',     // usuarios que guardaron el curso
+            'ratingCourses.user',    // calificaciones y el usuario que calificó
+        ])->find($id);
+
+        if (!$course) {
+            return response()->json(['message' => 'Curso no encontrado'], 404);
+        }
+
+        return response()->json([
+            'course' => $course
         ]);
     }
 

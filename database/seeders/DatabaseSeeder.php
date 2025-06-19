@@ -21,6 +21,8 @@ class DatabaseSeeder extends Seeder
         $this->call(UserInformationSeeder::class);
         // Llamar al seeder de cursos
         $this->call(CoursesSeeder::class);
+        // Llamar al seeder de course_certified
+        $this->call(CourseCertifiedSeeder::class);
         // Llamar al seeder de rating_courses
         $this->call(RatingCourseSeeder::class);
         // Llamar al seeder de tutor_courses
@@ -69,6 +71,9 @@ class DatabaseSeeder extends Seeder
         $this->call(LikeLearningContentsSeeder::class);
         // Llamar al seeder de cursos guardados
         $this->call(SavedCoursesSeeder::class);
+        // Llamar al seeder de miniaturas de cursos
+        $this->call(MiniatureCoursesSeeder::class);
+        
         // User::factory(10)->create();
 
         /* User::factory()->create([

@@ -18,10 +18,7 @@ class Course extends Model
     protected $fillable = [
     'title',
     'description',
-    'is_certified',
     'enabled',
-    'max_attempts',
-    'is_unlimited',
     'archived_at',
     'published_at'
     ];
@@ -94,5 +91,19 @@ class Course extends Model
     public function savedCourses()
     {
         return $this->hasMany(SavedCourse::class);
+    }
+    /**
+     * Relación uno a uno con CourseCertified.
+     */
+    public function certified()
+    {
+        return $this->hasOne(CourseCertified::class);
+    }
+    /**
+     * Relación uno a muchos con MiniatureCourse.
+     */
+    public function miniatures()
+    {
+        return $this->hasMany(MiniatureCourse::class);
     }
 }
