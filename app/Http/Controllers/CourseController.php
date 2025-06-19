@@ -111,13 +111,12 @@ class CourseController extends Controller
     public function getCourseDetail($id)
     {
         $course = Course::with([
-            'modules.chapters',      // módulos y sus capítulos
-            'comments.user',         // comentarios y el usuario que comentó
+            'modules.chapters.learningContent', // contenido de aprendizaje de cada capítulo
+            'modules.chapters.form.typeForm',   // formulario y su tipo
+            'modules.chapters.chapterQuestions.question.typeQuestion', // preguntas y su tipo
+            'modules.chapters.chapterQuestions.question.answers',      // respuestas de la pregunta
             'categories',            // categorías del curso
             'tutors',                // tutores del curso
-            'registrations.user',    // inscripciones y el usuario inscrito
-            'savedCourses.user',     // usuarios que guardaron el curso
-            'ratingCourses.user',    // calificaciones y el usuario que calificó
         ])->find($id);
 
         if (!$course) {

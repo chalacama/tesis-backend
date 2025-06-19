@@ -17,5 +17,6 @@ Route::prefix('course')->group(function () {
     Route::put('/{id}/publish', [CourseController::class, 'publishCourse']);
     Route::delete('/{id}/delete', [CourseController::class, 'deleteCourse']);
     Route::get('/all', [CourseController::class, 'getAllCourses']);
+    Route::get('/{id}/detail', [CourseController::class, 'getCourseDetail']);
 
 });
