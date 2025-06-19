@@ -15,12 +15,14 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->text('description');
-            $table->boolean('is_certified');
-            $table->boolean('enabled');
+            $table->boolean('is_certified')->default(false);
+            $table->boolean('enabled')->default(false);
             $table->integer('max_attempts')->nullable()->default(null);
             $table->boolean('is_unlimited')->default(true);
             $table->timestamp('archived_at')->nullable();
+            $table->timestamp('published_at')->nullable();
             $table->timestamps();
+            $table->softDeletes();
            
         });
     }

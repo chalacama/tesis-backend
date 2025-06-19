@@ -19,18 +19,20 @@ class CoursesSeeder extends Seeder
             'is_certified' => true,
             'enabled' => true,
             'max_attempts' => 3,
-            'is_unlimited' => true,
+            'is_unlimited' => false,
             'archived_at' => null,
+            'published_at' =>null
         ]);
         // id : 2
         Course::create([
             'title' => 'Angular Básico',
             'description' => 'Curso introductorio a Angular.',
-            'is_certified' => true,
+            'is_certified' => false,
             'enabled' => true,
             'max_attempts' => 5,
             'is_unlimited' => true,
             'archived_at' => null,
+            'published_at' =>null
         ]);
         // id : 3
         Course::create([
@@ -41,6 +43,7 @@ class CoursesSeeder extends Seeder
             'max_attempts' => 2,
             'is_unlimited' => true,
             'archived_at' => null,
+            'published_at' =>null
         ]);
         // id : 4
         Course::create([
@@ -51,6 +54,7 @@ class CoursesSeeder extends Seeder
             'max_attempts' => 5,
             'is_unlimited' => false,
             'archived_at' => null,
+            'published_at' =>null
         ]);
     }
 }

@@ -11,8 +11,10 @@ use App\Models\Comment;
 use App\Models\Module;
 use App\Models\Registration;
 use App\Models\SavedCourse;
+use Illuminate\Database\Eloquent\SoftDeletes;
 class Course extends Model
 {
+    use SoftDeletes; 
     protected $fillable = [
     'title',
     'description',
@@ -21,6 +23,7 @@ class Course extends Model
     'max_attempts',
     'is_unlimited',
     'archived_at',
+    'published_at'
     ];
     /**
      * Relación uno a muchos con TutorCourse.
