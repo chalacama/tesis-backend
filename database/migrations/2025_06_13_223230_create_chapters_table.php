@@ -15,16 +15,14 @@ return new class extends Migration
             $table->id();
             $table->string('name')->nullable();
             $table->text('description')->nullable();
-            $table->unsignedBigInteger('modulo_id');
-            $table->unsignedBigInteger('learning_content_id')->nullable()->unique(); // uno a uno
-            $table->unsignedBigInteger('form_id')->nullable(); // varios capítulos pueden compartir el mismo formulario
+            
             $table->integer('order')->default(1);
             $table->boolean('enabled')->default(true);
+            $table->unsignedBigInteger('module_id');
             $table->timestamps();
 
-            $table->foreign('modulo_id')->references('id')->on('modules')->onDelete('cascade');
-            $table->foreign('learning_content_id')->references('id')->on('learning_contents')->onDelete('cascade');
-            $table->foreign('form_id')->references('id')->on('forms')->onDelete('set null');
+            $table->foreign('module_id')->references('id')->on('modules')->onDelete('cascade');
+            
         });
     }
 

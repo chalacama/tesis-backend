@@ -16,9 +16,14 @@ return new class extends Migration
             $table->string('url');
             $table->boolean('enabled')->default(true);
             $table->unsignedBigInteger('type_content_id');
+            $table->unsignedBigInteger('chapter_id')->unique(); // uno a uno
             $table->timestamps();
 
             $table->foreign('type_content_id')->references('id')->on('type_learning_contents')->onDelete('cascade');
+            $table->foreign('chapter_id')->references('id')->on('chapters')->onDelete('cascade');
+            
+            
+            
         });
     }
 

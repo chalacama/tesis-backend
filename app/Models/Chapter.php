@@ -5,16 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Module;
 use App\Models\LearningContent;
-use App\Models\Form;
-use App\Models\ChapterQuestion;
 class Chapter extends Model
 {
     protected $fillable = [
-        'modulo_id',
-        'learning_content_id',
-        'form_id',
+        'name',
+        'description',
         'order',
         'enabled',
+        'module_id',
     ];
 
     /**
@@ -22,30 +20,22 @@ class Chapter extends Model
      */
     public function module()
     {
-        return $this->belongsTo(Module::class, 'modulo_id');
+        return $this->belongsTo(Module::class, 'module_id');
     }
-
     /**
      * Relación: un capítulo tiene un contenido de aprendizaje (uno a uno).
      */
     public function learningContent()
     {
-        return $this->belongsTo(LearningContent::class, 'learning_content_id');
+        return $this->hasOne(LearningContent::class, 'chapter_id');
     }
 
     /**
-     * Relación: un capítulo puede tener un formulario (uno a uno, pero puede ser compartido).
+     * Relación: un capítulo tiene muchas preguntas.
      */
-    public function form()
+    public function questions()
     {
-        return $this->belongsTo(Form::class, 'form_id');
+        return $this->hasMany(Question::class, 'chapter_id');
     }
 
-    /**
-     * Relación: un capítulo tiene muchas preguntas seleccionadas.
-     */
-    public function chapterQuestions()
-    {
-        return $this->hasMany(ChapterQuestion::class);
-    }
 }

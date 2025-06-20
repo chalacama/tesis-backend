@@ -17,8 +17,8 @@ class QuestionsSeeder extends Seeder
             'spot' => 1,
             'order' => 1,
             'enabled' => true,
-            'type_questions_id' => 1, // Asegúrate de que el tipo y el formulario existan
-            'form_id' => 1,
+            'type_questions_id' => 1,
+            'chapter_id' => 1
         ]);
         Question::create([
             'statement' => 'Explica el ciclo de vida de una petición HTTP.',
@@ -26,7 +26,7 @@ class QuestionsSeeder extends Seeder
             'order' => 2,
             'enabled' => true,
             'type_questions_id' => 1,
-            'form_id' => 1,
+            'chapter_id' => 2
         ]);
     }
 }

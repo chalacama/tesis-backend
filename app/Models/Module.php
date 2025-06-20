@@ -27,7 +27,7 @@ class Module extends Model
      */
     public function chapters()
     {
-        return $this->hasMany(Chapter::class, 'modulo_id');
+        return $this->hasMany(Chapter::class, 'module_id');
     }
     /**
      * Relación uno a muchos con ModuleAttempt.

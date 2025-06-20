@@ -14,6 +14,7 @@ class LearningContent extends Model
         'url',
         'enabled',
         'type_content_id',
+        'chapter_id'
     ];
 
     /**
@@ -23,9 +24,12 @@ class LearningContent extends Model
     {
         return $this->belongsTo(TypeLearningContent::class, 'type_content_id');
     }
+    /**
+     * Relación: un contenido pertenece a un capítulo (uno a uno inverso).
+     */
     public function chapter()
     {
-    return $this->hasOne(Chapter::class, 'learning_content_id');
+        return $this->belongsTo(Chapter::class, 'chapter_id');
     }
     /**
      * Relación uno a muchos con CompletedContent.

@@ -18,11 +18,11 @@ return new class extends Migration
             $table->integer('order')->default(1);
             $table->boolean('enabled')->default(true);
             $table->unsignedBigInteger('type_questions_id');
-            $table->unsignedBigInteger('form_id');
+            $table->unsignedBigInteger('chapter_id');
             $table->timestamps();
 
             $table->foreign('type_questions_id')->references('id')->on('type_questions')->onDelete('cascade');
-            $table->foreign('form_id')->references('id')->on('forms')->onDelete('cascade');
+            $table->foreign('chapter_id')->references('id')->on('chapters')->onDelete('cascade');
         });
     }
 

@@ -4,9 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\TypeQuestion;
-use App\Models\Form;
 use App\Models\Answer;
 use App\Models\UserAnswer;
+use App\Models\Chapter;
 class Question extends Model
 {
     protected $fillable = [
@@ -15,7 +15,7 @@ class Question extends Model
         'order',
         'enabled',
         'type_questions_id',
-        'form_id',
+        'chapter_id',
     ];
 
     /**
@@ -25,14 +25,14 @@ class Question extends Model
     {
         return $this->belongsTo(TypeQuestion::class, 'type_questions_id');
     }
-
     /**
-     * Relación: una pregunta pertenece a un formulario.
+     * Relación: una pregunta pertenece a un capítulo.
      */
-    public function form()
+    public function chapter()
     {
-        return $this->belongsTo(Form::class, 'form_id');
+        return $this->belongsTo(Chapter::class, 'chapter_id');
     }
+
     /**
      * Relación: una pregunta tiene muchas respuestas.
      */

@@ -37,24 +37,19 @@ class DatabaseSeeder extends Seeder
         $this->call(ReplyCommentsSeeder::class);
         // Llamar al seeder de modules
         $this->call(ModulesSeeder::class);
+        // Llamar al seeder de respuestas
+        $this->call(ChaptersSeeder::class);
         // Llamar al seeder de tipos de contenido de aprendizaje
         $this->call(TypeLearningContentSeeder::class);
         // Llamar al seeder de contenidos de aprendizaje
         $this->call(LearningContentsSeeder::class);
-        // Llamar al seeder de tipos de formularios
-        $this->call(TypeFormsSeeder::class);
-        // Llamar al seeder de formularios
-        $this->call(FormsSeeder::class);
         // Llamar al seeder de preguntas
         $this->call(TypeQuestionsSeeder::class);
+        
         // Llamar al seeder de preguntas
         $this->call(QuestionsSeeder::class);
         // Llamar al seeder de respuestas
         $this->call(AnswersSeeder::class);
-        // Llamar al seeder de respuestas
-        $this->call(ChaptersSeeder::class);
-        // Llamar al seeder de preguntas de capítulos
-        $this->call(ChapterQuestionsSeeder::class);
         // Llamar al seeder de respuestas de capítulos
         $this->call(RegistrationsSeeder::class);
         // Llamar al seeder de certificados de registro
