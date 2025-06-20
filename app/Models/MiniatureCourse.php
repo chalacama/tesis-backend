@@ -9,6 +9,8 @@ class MiniatureCourse extends Model
     protected $fillable = [
         'course_id',
         'url',
+        'enabled',
+        'order'
     ];
 
     /**

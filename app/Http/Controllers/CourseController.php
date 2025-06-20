@@ -101,7 +101,44 @@ class CourseController extends Controller
     }
     public function getAllCourses()
     {
-        $courses = Course::all();
+        $courses = Course::with([
+            // Traer solo miniaturas habilitadas
+            'miniatures' => function ($query) {
+                $query->where('enabled', true);
+            },
+            // Traer categorías con su nombre
+            'categories:id,name'
+        ])
+        // Contar módulos activos
+        ->withCount(['modules as active_modules_count' => function ($query) {
+            $query->where('enabled', true);
+        }])
+        // Contar estrellas (sumar stars de rating_courses)
+        ->withSum('ratingCourses as total_stars', 'stars')
+        // Contar guardados
+        ->withCount('savedCourses')
+        // Contar inscripciones
+        ->withCount('registrations')
+        // Contar comentarios
+        ->withCount('comments')
+        // Contar respuestas a comentarios (replyComments en Comment)
+        ->withCount(['comments as reply_comments_count' => function ($query) {
+            $query->join('reply_comments', 'comments.id', '=', 'reply_comments.comment_id');
+        }])
+        // Saber si tiene certificado
+        ->with(['certified:id,course_id,is_certified'])
+        ->get()
+        // Sumar comentarios y respuestas
+        ->map(function ($course) {
+            $course->total_comments = $course->comments_count + $course->reply_comments_count;
+            // Mostrar solo el campo is_certified si existe
+            $course->is_certified = $course->certified ? $course->certified->is_certified : false;
+            // Mostrar solo los nombres de las categorías
+            $course->category_names = $course->categories->pluck('name');
+            // Eliminar relaciones innecesarias para respuesta más limpia
+            unset($course->certified, $course->categories);
+            return $course;
+        });
 
         return response()->json([
             'courses' => $courses

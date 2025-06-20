@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('category_courses', function (Blueprint $table) {
             $table->id();
+            $table->integer('order')->default(1);
             $table->unsignedBigInteger('course_id');
             $table->unsignedBigInteger('category_id');
             $table->timestamps();

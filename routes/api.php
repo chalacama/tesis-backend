@@ -4,7 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\{
     CourseController,
-
+    Controller
 
 };
 Route::get('/user', function (Request $request) {
@@ -18,5 +18,9 @@ Route::prefix('course')->group(function () {
     Route::delete('/{id}/delete', [CourseController::class, 'deleteCourse']);
     Route::get('/all', [CourseController::class, 'getAllCourses']);
     Route::get('/{id}/detail', [CourseController::class, 'getCourseDetail']);
+
+});
+Route::prefix('start')->group(function () {
+    
 
 });
