@@ -13,4 +13,11 @@ class Category extends Model
     {
         return $this->belongsToMany(Course::class, 'category_courses');
     }
+    /**
+     * Relación uno a muchos con UserCategoryInterest.
+     */
+    public function userCategoryInterests()
+    {
+        return $this->hasMany(UserCategoryInterest::class);
+    }
 }

@@ -16,7 +16,10 @@ class DatabaseSeeder extends Seeder
         // Llamar al seeder de roles y permisos
         $this->call(RolesAndPermissionsSeeder::class);
         // Llamar al seeder de usuarios
+        $this->call(SemestersSeeder::class);
         $this->call(UsersSeeder::class);
+        $this->call(CareersSeeder::class);
+        $this->call(AcademicProgramsSeeder::class);
         // Llamar al seeder de user_information
         $this->call(UserInformationSeeder::class);
         // Llamar al seeder de cursos
@@ -69,6 +72,7 @@ class DatabaseSeeder extends Seeder
         // Llamar al seeder de miniaturas de cursos
         $this->call(MiniatureCoursesSeeder::class);
         
+        $this->call(UserCategoryInterestSeeder::class);
         // User::factory(10)->create();
 
         /* User::factory()->create([

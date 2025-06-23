@@ -22,5 +22,30 @@ class RatingCourseSeeder extends Seeder
             'course_id' => 2,
             'user_id' => 2,
         ]);
+        RatingCourse::create([
+            'stars' => 2,
+            'course_id' => 3,
+            'user_id' => 2,
+        ]);
+        RatingCourse::create([
+            'stars' => 3,
+            'course_id' => 1,
+            'user_id' => 3,
+        ]);
+        RatingCourse::create([
+            'stars' => 1,
+            'course_id' => 3,
+            'user_id' => 4,
+        ]);
+        RatingCourse::create([
+            'stars' => 5,
+            'course_id' => 1,
+            'user_id' => 4,
+        ]);
+        RatingCourse::create([
+            'stars' => 4,
+            'course_id' => 2,
+            'user_id' => 3,
+        ]);
     }
 }

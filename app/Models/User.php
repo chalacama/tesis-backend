@@ -167,4 +167,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(SavedCourse::class);
     }
+
+    /**
+     * Relación uno a muchos con UserCategoryInterest.
+     */
+    public function categoryInterests()
+    {
+        return $this->hasMany(UserCategoryInterest::class);
+    }
 }

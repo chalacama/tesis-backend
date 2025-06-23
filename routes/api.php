@@ -3,8 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\{
-    CourseController,
-    Controller
+    CourseController,StartController
 
 };
 Route::get('/user', function (Request $request) {
@@ -21,6 +20,10 @@ Route::prefix('course')->group(function () {
 
 });
 Route::prefix('start')->group(function () {
-    
+    Route::get('/top-popular-courses', [StartController::class, 'topPopularCourses']);
+    Route::get('/top-best-rated-courses', [StartController::class, 'topBestRatedCourses']);
+    Route::get('/top-publish-courses', [StartController::class, 'topPublishCourses']);
+    Route::get('/top-created-courses', [StartController::class, 'topCreatedCourses']);
+    Route::get('/recommend-courses/{userId}', [StartController::class, 'recommendCoursesByUserInterest']);
 
 });

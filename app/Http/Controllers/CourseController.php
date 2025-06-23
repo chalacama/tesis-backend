@@ -107,7 +107,10 @@ class CourseController extends Controller
                 $query->where('enabled', true);
             },
             // Traer categorías con su nombre
-            'categories:id,name'
+            'categories' => function ($query) {
+                $query->where('enabled', true);
+            },
+            
         ])
         // Contar módulos activos
         ->withCount(['modules as active_modules_count' => function ($query) {
@@ -120,10 +123,13 @@ class CourseController extends Controller
         // Contar inscripciones
         ->withCount('registrations')
         // Contar comentarios
-        ->withCount('comments')
-        // Contar respuestas a comentarios (replyComments en Comment)
+        ->withCount(['comments' => function ($query) {
+            $query->where('enabled', true);
+        }])
+        // Contar respuestas a comentarios (replyComments en Comment) solo si están activos
         ->withCount(['comments as reply_comments_count' => function ($query) {
-            $query->join('reply_comments', 'comments.id', '=', 'reply_comments.comment_id');
+            $query->join('reply_comments', 'comments.id', '=', 'reply_comments.comment_id')
+              ->where('reply_comments.enabled', true);
         }])
         // Saber si tiene certificado
         ->with(['certified:id,course_id,is_certified'])
@@ -133,10 +139,15 @@ class CourseController extends Controller
             $course->total_comments = $course->comments_count + $course->reply_comments_count;
             // Mostrar solo el campo is_certified si existe
             $course->is_certified = $course->certified ? $course->certified->is_certified : false;
-            // Mostrar solo los nombres de las categorías
-            $course->category_names = $course->categories->pluck('name');
+            // Mostrar id y nombre de las categorías
+    $course->categorias = $course->categories->map(function($cat) {
+        return [
+            'id' => $cat->id,
+            'name' => $cat->name
+        ];
+    });
             // Eliminar relaciones innecesarias para respuesta más limpia
-            unset($course->certified, $course->categories);
+            unset($course->certified, $course->categories,$course->comments_count,$course->reply_comments_count);
             return $course;
         });
 

@@ -21,15 +21,15 @@ class CoursesSeeder extends Seeder
            
             
             'archived_at' => null,
-            'published_at' =>null
+            'published_at' =>'2025-06-22 10:30:00'
         ]);
         // id : 2
         Course::create([
             'title' => 'Angular Básico',
             'description' => 'Curso introductorio a Angular.',
             'enabled' => true,
-            'archived_at' => null,
-            'published_at' =>null
+            'archived_at' => '2025-05-22 10:30:00',
+            'published_at' =>'2025-06-25 10:30:00'
         ]);
         // id : 3
         Course::create([
@@ -37,15 +37,15 @@ class CoursesSeeder extends Seeder
             'description' => 'Curso avanzado de PHP.',
             'enabled' => true,
             'archived_at' => null,
-            'published_at' =>null
+            'published_at' =>'2025-08-15 10:30:00'
         ]);
         // id : 4
         Course::create([
             'title' => 'Java Avanzado',
             'description' => 'Curso avanzado de Java.',
             'enabled' => false,
-            'archived_at' => null,
-            'published_at' =>null
+            'archived_at' => '2025-07-22 10:30:00',
+            'published_at' =>'2025-06-30 10:30:00'
         ]);
     }
 }
