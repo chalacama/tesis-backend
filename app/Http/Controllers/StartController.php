@@ -5,8 +5,11 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\Course;
+
 class StartController extends Controller
 {
+    
+    
     public function topPopularCourses()
     {
     $courses = Course::with($this->getCourseWithRelations())
@@ -150,6 +153,7 @@ public function recommendCoursesByUserInterest($userId)
         'courses' => $this->formatCourses($courses)
     ]);
 }
+
 
 
 }
