@@ -15,25 +15,29 @@ class TypeLearningContentSeeder extends Seeder
         TypeLearningContent::create([
             'name' => 'pm4',
             'max_size' => '500MB',
+            'min_duration_seconds' => '60',
             'max_duration_seconds' => '3600',
             'enabled' => true,
         ]);
         TypeLearningContent::create([
             'name' => 'youtube-watch',
             'max_size' => '',
-            'max_duration_seconds' => '',
+            'min_duration_seconds' => null,
+            'max_duration_seconds' => null,
             'enabled' => true,
         ]);
         TypeLearningContent::create([
             'name' => 'youtube-shorts',
             'max_size' => '50MB',
-            'max_duration_seconds' => '',
+            'min_duration_seconds' => null,
+            'max_duration_seconds' => null,
             'enabled' => true,
         ]);
         TypeLearningContent::create([
             'name' => 'pdf',
             'max_size' => '50MB',
-            'max_duration_seconds' => '',
+            'min_duration_seconds' => null,
+            'max_duration_seconds' => null,
             'enabled' => false,
         ]);
     }

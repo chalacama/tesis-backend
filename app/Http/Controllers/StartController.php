@@ -38,9 +38,13 @@ class StartController extends Controller
         if ($course->tutorCourses && $course->tutorCourses->count() > 0) {
             $tutor = $course->tutorCourses->first()->user;
             $course->tutor_name = $tutor ? $tutor->name . ' ' . $tutor->lastname : 'ESPAM MFL';
-            $course->tutor_career = ($tutor && $tutor->userInformation && $tutor->userInformation->career)
-                ? $tutor->userInformation->career->name
-                : null;
+            $course->tutor_career_info = ($tutor && $tutor->userInformation && $tutor->userInformation->career)
+    ? [
+        'id' => $tutor->userInformation->career->id,
+        'name' => $tutor->userInformation->career->name,
+        'url_logo' => $tutor->userInformation->career->url_logo
+    ]
+    : null;
         } else {
             $course->tutor_name = 'ESPAM MFL';
             $course->tutor_career = null;

@@ -3,7 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\{
-    CourseController,StartController,RegistrationController
+    CourseController,StartController,RegistrationController,WatchingController
 
 };
 Route::get('/user', function (Request $request) {
@@ -28,8 +28,11 @@ Route::prefix('start')->group(function () {
     
 });
 Route::prefix('register')->group(function () {
-    Route::get('/{courseId}/course-detail/{userId}', [RegistrationController::class, 'getCourseDetail']);
-    Route::post('/youtube-detail', [RegistrationController::class, 'getYtVideoDetail']);
     Route::post('/user-to-course', [RegistrationController::class, 'registerUserToCourse']);
 
+}); 
+Route::prefix('watching')->group(function () {
+    Route::get('/{courseId}/list-content/{userId}', [WatchingController::class, 'getListContent']);
+    Route::post('/youtube-detail', [WatchingController::class, 'getYtVideoDetail']);
+    Route::get('/{contentViewId}/content-view/{registerId}', [WatchingController::class, 'getContentViewById']);
 }); 

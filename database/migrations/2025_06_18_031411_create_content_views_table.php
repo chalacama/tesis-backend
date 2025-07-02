@@ -15,8 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('learning_content_id');
-            $table->timestamp('viewed_at');
-            $table->string('duration_seconds');
+            $table->string('second_seen');
             $table->timestamps();
 
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');

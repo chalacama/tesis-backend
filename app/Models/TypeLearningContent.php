@@ -9,6 +9,7 @@ class TypeLearningContent extends Model
     protected $fillable = [
         'name',
         'max_size',
+        'min_duration_seconds',
         'max_duration_seconds',
         'enabled',
     ];

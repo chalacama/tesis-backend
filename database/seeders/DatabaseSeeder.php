@@ -73,6 +73,9 @@ class DatabaseSeeder extends Seeder
         $this->call(MiniatureCoursesSeeder::class);
         
         $this->call(UserCategoryInterestSeeder::class);
+
+        $this->call(AcademicCareerSeeder::class);
+
         // User::factory(10)->create();
 
         /* User::factory()->create([

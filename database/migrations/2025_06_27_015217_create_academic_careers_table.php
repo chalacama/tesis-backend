@@ -11,13 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('type_learning_contents', function (Blueprint $table) {
+        Schema::create('academic_careers', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('max_size')->nullable();
-            $table->string('min_duration_seconds')->nullable();
-            $table->string('max_duration_seconds')->nullable();
-            $table->boolean('enabled')->default(true);
+            $table->foreignId('academic_program_id')->constrained()->onDelete('cascade');
+            $table->foreignId('career_id')->constrained()->onDelete('cascade');
+            $table->unique(['academic_program_id', 'career_id']); // Restricción de unicidad
             $table->timestamps();
         });
     }
@@ -27,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('type_learning_contents');
+        Schema::dropIfExists('academic_careers');
     }
 };

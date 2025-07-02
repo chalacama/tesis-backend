@@ -10,8 +10,7 @@ class ContentView extends Model
     protected $fillable = [
         'user_id',
         'learning_content_id',
-        'viewed_at',
-        'duration_seconds',
+        'second_seen',
     ];
 
     /**
