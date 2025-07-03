@@ -8,7 +8,7 @@ use App\Models\LearningContent;
 class Chapter extends Model
 {
     protected $fillable = [
-        'name',
+        'title',
         'description',
         'order',
         'enabled',

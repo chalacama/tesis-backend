@@ -13,6 +13,27 @@ return new class extends Migration
     {
         Schema::create('comments', function (Blueprint $table) {
             $table->id();
+            
+            // foreignId es una forma más moderna y corta de definir la llave foránea.
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            
+            $table->text('texto');
+            
+            // Columna para las respuestas. Es nullable porque los comentarios principales no tienen padre.
+            $table->unsignedBigInteger('parent_id')->nullable();
+            
+            // Columnas polimórficas. Creará commentable_id y commentable_type.
+            $table->morphs('commentable');
+            
+            $table->boolean('enabled')->default(true);
+            $table->timestamps();
+
+            // Definimos la llave foránea para las respuestas (apunta a la misma tabla).
+            $table->foreign('parent_id')->references('id')->on('comments')->onDelete('cascade');
+        });
+
+        /* Schema::create('comments', function (Blueprint $table) {
+            $table->id();
         $table->text('texto');
         $table->boolean('enabled')->default(true);
         $table->unsignedBigInteger('user_id');
@@ -21,7 +42,7 @@ return new class extends Migration
 
         $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         $table->foreign('curso_id')->references('id')->on('courses')->onDelete('cascade');
-        });
+        }); */
     }
 
     /**

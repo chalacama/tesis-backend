@@ -13,14 +13,14 @@ class ChaptersSeeder extends Seeder
     public function run(): void
     {
         Chapter::create([
-            'name' => 'Introducción a Laravel',
+            'title' => 'Introducción a Laravel',
             'description' => 'Video introductorio sobre Laravel.',
             'module_id' => 1,
             'order' => 1,
             'enabled' => true,
         ]);
         Chapter::create([
-            'name' => 'Introducción a Angular',
+            'title' => 'Introducción a Angular',
             'description' => 'Video introductorio sobre Angular.',
             'module_id' => 1,
             'order' => 2,

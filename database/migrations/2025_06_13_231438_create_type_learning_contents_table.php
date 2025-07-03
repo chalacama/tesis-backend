@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('max_size')->nullable();
             $table->string('min_duration_seconds')->nullable();
             $table->string('max_duration_seconds')->nullable();
-            $table->boolean('enabled')->default(true);
+            $table->boolean('enabled')->default(false);
             $table->timestamps();
         });
     }

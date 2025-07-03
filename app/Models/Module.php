@@ -6,8 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\Course;
 use App\Models\Chapter;
 use App\Models\ModuleAttempt;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
 class Module extends Model
 {
+    use SoftDeletes; 
     protected $fillable = [
         'name',
         'order',

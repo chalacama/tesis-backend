@@ -27,7 +27,7 @@ class CourseController extends Controller
         $validated = $request->validate([
             'title' => 'sometimes|required|string|max:255',
             'description' => 'sometimes|required|string',
-        ]);
+        ]); 
 
         $course = Course::find($id);
 
@@ -40,19 +40,13 @@ class CourseController extends Controller
         // Solo retorna los campos necesarios
         return response()->json([
             'message' => 'Curso actualizado correctamente',
-            'course' => [
-                'id' => $course->id,
-                'title' => $course->title,
-                'description' => $course->description,
-                'created_at' => $course->created_at,
-                'updated_at' => $course->updated_at,
-            ]
+            'course' => $course
         ]);
     }
-    public function publishCourse(Request $request, $id)
+    public function activateCourse(Request $request, $id)
     {
         $validated = $request->validate([
-            'publish' => 'required|boolean',
+            'activate' => 'required|boolean',
         ]);
 
         $course = Course::find($id);
@@ -60,32 +54,35 @@ class CourseController extends Controller
         if (!$course) {
             return response()->json(['message' => 'Curso no encontrado'], 404);
         }
+        if ($validated['activate'] && $course->enabled) {
+        return response()->json([
+            'message' => 'El Curso ya está activado',
+            'course' => $course
+        ]);
+    }
+    if (!$validated['activate'] && !$course->enabled) {
+        return response()->json([
+            'message' => 'El Curso ya está desactivado',
+            'module' => $course
+        ]);
+    }
 
-        if ($validated['publish']) {
+        if ($validated['activate']) {
             $course->enabled = true;
-            $course->published_at = now();
+            
         } else {
             $course->enabled = false;
-            $course->archived_at = now();
+            
         }
 
         $course->save();
 
         return response()->json([
-            'message' => $validated['publish'] ? 'Curso publicado correctamente' : 'Curso archivado correctamente',
-            'course' => [
-                'id' => $course->id,
-                'title' => $course->title,
-                'description' => $course->description,
-                'enabled' => $course->enabled,
-                'archived_at' => $course->archived_at,
-                'published_at' => $course->published_at,
-                'created_at' => $course->created_at,
-                'updated_at' => $course->updated_at,
-            ]
+            'message' => $validated['activate'] ? 'Curso publicado correctamente' : 'Curso archivado correctamente',
+            'course' => $course
         ]);
     }
-    public function deleteCourse($id)
+    public function softDeleteCourse($id)
     {
         $course = Course::find($id);
 

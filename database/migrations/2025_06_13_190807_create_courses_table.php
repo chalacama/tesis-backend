@@ -16,8 +16,8 @@ return new class extends Migration
             $table->string('title');
             $table->text('description');
             $table->boolean('enabled')->default(false);
-            $table->timestamp('archived_at')->nullable();
-            $table->timestamp('published_at')->nullable();
+            // $table->timestamp('archived_at')->nullable();
+            // $table->timestamp('published_at')->nullable();
             $table->timestamps();
             $table->softDeletes();
            

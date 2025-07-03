@@ -18,6 +18,7 @@ return new class extends Migration
             $table->boolean('enabled')->default(true);
             $table->unsignedBigInteger('course_id');
             $table->timestamps();
+            $table->softDeletes();
 
             $table->foreign('course_id')->references('id')->on('courses')->onDelete('cascade');
         });

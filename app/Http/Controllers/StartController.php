@@ -26,9 +26,6 @@ class StartController extends Controller
     private function formatCourses($courses)
 {
     return $courses->map(function ($course) {
-        $course->published_at_formatted = $course->published_at
-            ? \Carbon\Carbon::parse($course->published_at)->locale('es')->isoFormat('D MMM YYYY')
-            : null;
         $course->created_at_formatted = $course->created_at
             ? \Carbon\Carbon::parse($course->created_at)->locale('es')->isoFormat('D MMM YYYY')
             : null;
@@ -103,13 +100,13 @@ class StartController extends Controller
     ]);
     }
     
-    public function topPublishCourses()
+    public function topUpdatedCourses()
 {
     $courses = Course::with($this->getCourseWithRelations())
         ->where('enabled', true)
         ->withCount('registrations')
         ->withCount('savedCourses')
-        ->orderByDesc('published_at')
+        ->orderByDesc('updated_at')
         ->get();
 
     return response()->json([
@@ -132,7 +129,7 @@ public function topCreatedCourses()
 public function recommendCoursesByUserInterest($userId)
 {
     // Obtener las categorías de interés del usuario
-    $categoryIds = \DB::table('user_category_interests')
+    $categoryIds = DB::table('user_category_interests')
         ->where('user_id', $userId)
         ->pluck('category_id')
         ->toArray();

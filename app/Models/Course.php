@@ -19,8 +19,6 @@ class Course extends Model
     'title',
     'description',
     'enabled',
-    'archived_at',
-    'published_at'
     ];
     /**
      * Relación uno a muchos con TutorCourse.
