@@ -104,7 +104,7 @@ public function softDeleteModule($id)
         'message' => 'Módulo enviado a papelería correctamente'
     ]);
 }
-public function updateOrder(Request $request)
+public function updateOrderModules(Request $request)
 {
     // 1. Validar que recibimos un array de IDs.
     $validated = $request->validate([

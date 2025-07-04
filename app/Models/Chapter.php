@@ -5,8 +5,17 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Module;
 use App\Models\LearningContent;
-class Chapter extends Model
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\EloquentSortable\Sortable;
+use Spatie\EloquentSortable\SortableTrait;
+class Chapter extends Model implements Sortable
 {
+    use SoftDeletes,SortableTrait; 
+    
+    public $sortable = [
+        'order_column_name' => 'order',
+        'sort_when_creating' => true,
+    ];
     protected $fillable = [
         'title',
         'description',
@@ -14,7 +23,10 @@ class Chapter extends Model
         'enabled',
         'module_id',
     ];
-
+    public function buildSortQuery()
+    {
+        return static::query()->where('module_id', $this->module_id);
+    }
     /**
      * Relación: un capítulo pertenece a un módulo.
      */

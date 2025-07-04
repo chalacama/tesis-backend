@@ -21,7 +21,7 @@ class Module extends Model implements Sortable
 
     protected $fillable = [
         'name',
-        'order', // 'order' todavía debe estar en fillable
+        'order',
         'enabled',
         'course_id',
     ];

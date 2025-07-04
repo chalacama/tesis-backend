@@ -11,7 +11,6 @@ class ChapterController extends Controller
     $validated = $request->validate([
         'title' => 'required|string|max:255',
         'description' => 'nullable|string',
-        'order' => 'required|integer',
         'module_id' => 'required|integer',
     ]);
 
@@ -22,12 +21,11 @@ class ChapterController extends Controller
         'chapter' => $chapter
     ]);
 }
-public function updateChapter(Request $request, $id)
+public function updateChapters(Request $request, $id)
 {
     $validated = $request->validate([
         'title' => 'required|string',
         'description' => 'nullable|string',
-        'order' => 'required|integer',
         'module_id' => 'required|integer',
     ]);
 
@@ -57,6 +55,22 @@ public function softDeleteChapter($id)
 
     return response()->json([
         'message' => 'Capítulo eliminado correctamente'
+    ]);
+}
+public function updateOrderChapters(Request $request)
+{
+    // 1. Validar que recibimos un array de IDs.
+    $validated = $request->validate([
+        'chapters'   => 'required|array',
+        'chapters.*' => 'integer|exists:chapters,id', // Valida que cada ID exista en la tabla modules
+    ]);
+
+    // 2. Llama al método estático del modelo para reordenar.
+    Chapter::setNewOrder($validated['chapters']);
+
+    // 3. Devuelve una respuesta de éxito.
+    return response()->json([
+        'message' => 'El orden de los capitulos ha sido actualizado.'
     ]);
 }
 }
