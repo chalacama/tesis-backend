@@ -12,7 +12,6 @@ class Question extends Model
     protected $fillable = [
         'statement',
         'spot',
-        'order',
         'enabled',
         'type_questions_id',
         'chapter_id',

@@ -15,12 +15,10 @@ class AnswersSeeder extends Seeder
         Answer::create([
             'option' => 'París',
             'is_correct' => true,
-            'order' => 1,
             'question_id' => 1,
         ]);
         Answer::create([
             'option' => 'Londres',
-            'order' => 2,
             'is_correct' => false,
             'question_id' => 1,
         ]);

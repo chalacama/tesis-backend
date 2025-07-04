@@ -3,26 +3,18 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-
+use App\Http\Resources\CourseResource;
 use Illuminate\Support\Facades\Cache;
 use App\Models\Course;
-use App\Models\Registration;
-use App\Models\User;
 use App\Models\ContentView;
-use App\Models\Module;
-use App\Models\LearningContent;
-use App\Models\Chapter;
-use App\Models\ModuleAttempt;
-use Google_Client;
-use Google_Service_YouTube;
 use Exception;
+use Google_Client;
+// use Google_Service_YouTube;
 use DateInterval;
-use App\Http\Resources\CourseResource;
+use Google_Service_YouTube;
 class WatchingController extends Controller
 {
 
-    // ... (Tus otras funciones como getYtVideoDetail, extractYtVideoId, etc. se mantienen igual)
-    
     /**
      * Obtiene la duración de múltiples videos de YouTube en una sola llamada a la API.
      * Utiliza caché para evitar llamadas repetidas.
@@ -45,7 +37,7 @@ class WatchingController extends Controller
             try {
                 $client = new Google_Client();
                 $client->setDeveloperKey(env('YOUTUBE_API_KEY'));
-                $youtube = new Google_Service_YouTube($client);
+                $youtube = new \Google_Service_YouTube($client);
 
                 // La API permite solicitar hasta 50 IDs a la vez, separados por comas.
                 $videoResponse = $youtube->videos->listVideos('contentDetails', [
@@ -144,7 +136,7 @@ class WatchingController extends Controller
             $client = new Google_Client();
             $client->setDeveloperKey(env('YOUTUBE_API_KEY'));
 
-            $youtube = new Google_Service_YouTube($client);
+            $youtube = new \Google_Service_YouTube($client);
 
             $videoResponse = $youtube->videos->listVideos('contentDetails,snippet', [
                 'id' => $videoId,

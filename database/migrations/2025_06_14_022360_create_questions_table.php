@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
             $table->string('statement');
             $table->decimal('spot', 2, 1)->default(1);
-            $table->integer('order')->default(1);
             $table->boolean('enabled')->default(true);
             $table->unsignedBigInteger('type_questions_id');
             $table->unsignedBigInteger('chapter_id');
