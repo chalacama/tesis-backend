@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Course; 
+use Illuminate\Http\JsonResponse;
 class CourseController extends Controller
 {
     public function createCourse(Request $request)
@@ -96,7 +97,7 @@ class CourseController extends Controller
             'message' => 'Curso enviado a papelería correctamente'
         ]);
     }
-    public function getAllCourses()
+    /* public function getAllCourses()
     {
         $courses = Course::with([
             // Traer solo miniaturas habilitadas
@@ -151,7 +152,7 @@ class CourseController extends Controller
         return response()->json([
             'courses' => $courses
         ]);
-    }
+    } */
 
     public function getCourseDetail($id)
     {
@@ -171,6 +172,52 @@ class CourseController extends Controller
             'course' => $course
         ]);
     }
+/**
+     * Obtiene todos los cursos con su información agregada para una API.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getAllCourses(): JsonResponse
+    {
+        $courses = Course::query()
+            // Cargar relaciones con condiciones
+            ->with([
+                'miniatures' => fn($query) => $query->where('enabled', true),
+                'categories' => fn($query) => $query->where('enabled', true),
+                'certified:id,course_id,is_certified', // Cargar solo campos necesarios
+            ])
+            // Contar módulos activos
+            ->withCount(['modules as active_modules_count' => fn($query) => $query->where('enabled', true)])
+            // Contar el total de comentarios y respuestas de una sola vez
+            ->withCount(['allComments as total_comments_count' => fn($query) => $query->where('enabled', true)])
+            // Contar guardados e inscripciones
+            ->withCount(['savedCourses', 'registrations'])
+            // Sumar todas las estrellas de calificación
+            ->withSum('ratingCourses as total_stars', 'stars')
+            // Obtener solo cursos que están habilitados
+            ->where('enabled', true)
+            ->get()
+            // Transformar la colección para una respuesta de API limpia
+            ->map(function ($course) {
+                // El campo 'total_stars' puede ser null si no hay calificaciones, lo convertimos a 0.
+                $course->total_stars = (int) $course->total_stars;
 
+                // Simplificar la información del certificado
+                $course->is_certified = $course->certified ? $course->certified->is_certified : false;
+
+                // Formatear las categorías para que solo muestren id y nombre
+                $course->categorias = $course->categories->map(fn($cat) => [
+                    'id' => $cat->id,
+                    'name' => $cat->name
+                ]);
+
+                // Eliminar las relaciones completas para no exponer datos innecesarios en la API
+                unset($course->certified, $course->categories);
+
+                return $course;
+            });
+
+        return response()->json(['courses' => $courses]);
+    }
 
 }

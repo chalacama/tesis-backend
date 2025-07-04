@@ -15,7 +15,6 @@ use App\Models\RatingCourse;
 use App\Models\Course;
 use App\Models\TutorCourse;
 use App\Models\Comment;
-use App\Models\ReplyComment;
 use App\Models\Registration;
 use App\Models\CompletedContent;
 use App\Models\ContentView;
@@ -110,13 +109,7 @@ class User extends Authenticatable
         return $this->hasMany(Comment::class);
     }
 
-    /**
-     * Relación uno a muchos con ReplyComment.
-     */
-    public function replyComments()
-    {
-        return $this->hasMany(ReplyComment::class);
-    }
+    
     /**
      * Relación uno a muchos con Registration.
      */

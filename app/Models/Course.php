@@ -1,8 +1,9 @@
 <?php
 
 namespace App\Models;
-
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use App\Models\TutorCourse;
 use App\Models\User;
 use App\Models\RatingCourse;
@@ -14,7 +15,8 @@ use App\Models\SavedCourse;
 use Illuminate\Database\Eloquent\SoftDeletes;
 class Course extends Model
 {
-    use SoftDeletes; 
+    use SoftDeletes,HasFactory; 
+  
     protected $fillable = [
     'title',
     'description',
@@ -63,11 +65,25 @@ class Course extends Model
         return $this->belongsToMany(Category::class, 'category_courses');
     }
     /**
-     * Relación uno a muchos con Comment.
+     * RELACIÓN DE COMENTARIOS ACTUALIZADA
+     *
+     * Obtiene solo los comentarios PRINCIPALES (sin respuestas) del curso.
+     * La relación polimórfica 'commentable' se encarga de la magia.
      */
-    public function comments()
+    public function comments(): MorphMany
     {
-        return $this->hasMany(Comment::class, 'curso_id');
+        return $this->morphMany(Comment::class, 'commentable')->whereNull('parent_id');
+    }
+
+    /**
+     * NUEVA RELACIÓN PARA CONTEO TOTAL
+     *
+     * Obtiene TODOS los comentarios asociados al curso, incluyendo las respuestas.
+     * Ideal para usar con withCount().
+     */
+    public function allComments(): MorphMany
+    {
+        return $this->morphMany(Comment::class, 'commentable');
     }
     /**
      * Relación uno a muchos con Module.
