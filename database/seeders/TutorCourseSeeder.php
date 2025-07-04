@@ -30,7 +30,7 @@ class TutorCourseSeeder extends Seeder
             'user_id' => 2,
         ]);
         TutorCourse::create([
-            'enabled' => true,
+            'enabled' => false,
             'course_id' => 4,
             'user_id' => 3,
         ]);
