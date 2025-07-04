@@ -9,9 +9,9 @@ use App\Models\Course;
 use App\Models\ContentView;
 use Exception;
 use Google_Client;
-// use Google_Service_YouTube;
 use DateInterval;
 use Google_Service_YouTube;
+use Google_Service_YouTube_Video;
 class WatchingController extends Controller
 {
 
@@ -77,7 +77,7 @@ class WatchingController extends Controller
             'registrations' => fn($q) => $q->where('user_id', $userId)->select('id', 'course_id', 'user_id', 'annulment'),
             'tutors:id,name,lastname,email',
             'modules' => fn($q) => $q->where('enabled', true)->orderBy('order')->select('id', 'name', 'order', 'course_id'),
-            'modules.chapters' => fn($q) => $q->where('enabled', true)->orderBy('order')->select('id', 'name', 'order', 'module_id'),
+            'modules.chapters' => fn($q) => $q->where('enabled', true)->orderBy('order')->select('id', 'title', 'order', 'module_id'),
             'modules.chapters.learningContent' => fn($q) => $q->where('enabled', true)->select('id', 'url', 'chapter_id', 'type_content_id'),
             'modules.chapters.learningContent.contentViews' => fn($q) => $q->where('user_id', $userId)->select('id', 'learning_content_id', 'user_id', 'updated_at'),
             'modules.chapters.learningContent.typeLearningContent:id,name',
@@ -136,7 +136,7 @@ class WatchingController extends Controller
             $client = new Google_Client();
             $client->setDeveloperKey(env('YOUTUBE_API_KEY'));
 
-            $youtube = new \Google_Service_YouTube($client);
+            $youtube = new Google_Service_YouTube($client);
 
             $videoResponse = $youtube->videos->listVideos('contentDetails,snippet', [
                 'id' => $videoId,
