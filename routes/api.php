@@ -4,7 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\{
     CourseController,StartController,RegistrationController,WatchingController,ModuleController,
-    ChapterController
+    ChapterController,LearningContentController
 };
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -32,6 +32,9 @@ Route::prefix('chapter')->group(function () {
     Route::put('/{id}/update', [ChapterController::class, 'updateChapter']);
     Route::delete('/{id}/soft-delete', [ChapterController::class, 'softDeleteChapter']);
     Route::post('/update-order', [ChapterController::class, 'updateOrderChapters']);
+});
+Route::prefix('learning-content')->group(function () {
+     Route::post('/create', [LearningContentController::class, 'createLearningContent']);
 });
 Route::prefix('start')->group(function () {
     Route::get('/top-popular-courses', [StartController::class, 'topPopularCourses']);

@@ -13,7 +13,7 @@ class TypeLearningContentSeeder extends Seeder
     public function run(): void
     {
         TypeLearningContent::create([
-            'name' => 'pm4',
+            'name' => 'cloudinary',
             'max_size' => '500MB',
             'min_duration_seconds' => '60',
             'max_duration_seconds' => '3600',
