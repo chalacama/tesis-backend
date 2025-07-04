@@ -9,7 +9,6 @@ class TutorCourse extends Model
 {
     protected $fillable = [
         'enabled',
-        'order',
         'course_id',
         'user_id',
     ];

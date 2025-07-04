@@ -15,14 +15,12 @@ class QuestionsSeeder extends Seeder
         Question::create([
             'statement' => '¿Cuál es la capital de Francia?',
             'spot' => 1,
-            'enabled' => true,
             'type_questions_id' => 1,
             'chapter_id' => 1
         ]);
         Question::create([
             'statement' => 'Explica el ciclo de vida de una petición HTTP.',
             'spot' => 1.5,
-            'enabled' => true,
             'type_questions_id' => 1,
             'chapter_id' => 2
         ]);

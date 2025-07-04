@@ -35,8 +35,7 @@ class CommentFactory extends Factory
             // Por defecto, los comentarios son de nivel superior (no son respuestas).
             'parent_id' => null,
             
-            // Por defecto, los comentarios están habilitados.
-            'enabled' => true,
+            
         ];
     }
 }

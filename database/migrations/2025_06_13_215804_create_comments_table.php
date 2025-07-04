@@ -25,9 +25,9 @@ return new class extends Migration
             // Columnas polimórficas. Creará commentable_id y commentable_type.
             $table->morphs('commentable');
             
-            $table->boolean('enabled')->default(true);
-            $table->timestamps();
 
+            $table->timestamps();
+            $table->softDeletes();
             // Definimos la llave foránea para las respuestas (apunta a la misma tabla).
             $table->foreign('parent_id')->references('id')->on('comments')->onDelete('cascade');
         });
