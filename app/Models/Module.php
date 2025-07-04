@@ -7,17 +7,30 @@ use App\Models\Course;
 use App\Models\Chapter;
 use App\Models\ModuleAttempt;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\EloquentSortable\Sortable;
+use Spatie\EloquentSortable\SortableTrait;
 
-class Module extends Model
+class Module extends Model implements Sortable
 {
-    use SoftDeletes; 
+    use SoftDeletes,SortableTrait; 
+    
+    public $sortable = [
+        'order_column_name' => 'order',
+        'sort_when_creating' => true,
+    ];
+
     protected $fillable = [
         'name',
-        'order',
+        'order', // 'order' todavía debe estar en fillable
         'enabled',
         'course_id',
     ];
 
+    // Este método sigue siendo el mismo y es correcto
+    public function buildSortQuery()
+    {
+        return static::query()->where('course_id', $this->course_id);
+    }
     /**
      * Relación: un módulo pertenece a un curso.
      */

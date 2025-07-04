@@ -24,6 +24,8 @@ Route::prefix('module')->group(function () {
     Route::put('/{id}/update', [ModuleController::class, 'updateModule']);
     Route::put('/{id}/activate', [ModuleController::class, 'activateModule']);
     Route::delete('/{id}/soft-delete', [ModuleController::class, 'softDeleteModule']);
+    Route::post('/update-order', [ModuleController::class, 'updateOrder']);
+
 });
 Route::prefix('chapter')->group(function () {
     Route::post('/create', [ChapterController::class, 'createChapter']);

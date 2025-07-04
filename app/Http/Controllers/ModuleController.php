@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Module;
 use App\Models\Course;
 use Illuminate\Http\Request;
-;
+
 
 class ModuleController extends Controller
 {
@@ -17,7 +17,7 @@ public function createModule(Request $request)
     $validated = $request->validate([
         'course_id' => 'required|exists:courses,id',
         'name'      => 'required|string|max:255',
-        'order'     => 'required|integer'
+        // 'order'     => 'required|integer'
         
     ]);
 
@@ -36,7 +36,7 @@ public function createModule(Request $request)
     // Laravel se encarga de la respuesta de error 422 si la validación falla.
     $validatedData = $request->validate([
         'name'      => 'sometimes|string|max:255',
-        'order'     => 'sometimes|integer',
+        // 'order'     => 'sometimes|integer',
         
     ]);
 
@@ -102,6 +102,22 @@ public function softDeleteModule($id)
 
     return response()->json([
         'message' => 'Módulo enviado a papelería correctamente'
+    ]);
+}
+public function updateOrder(Request $request)
+{
+    // 1. Validar que recibimos un array de IDs.
+    $validated = $request->validate([
+        'modules'   => 'required|array',
+        'modules.*' => 'integer|exists:modules,id', // Valida que cada ID exista en la tabla modules
+    ]);
+
+    // 2. Llama al método estático del modelo para reordenar.
+    Module::setNewOrder($validated['modules']);
+
+    // 3. Devuelve una respuesta de éxito.
+    return response()->json([
+        'message' => 'El orden de los módulos ha sido actualizado.'
     ]);
 }
 }
