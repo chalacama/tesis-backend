@@ -37,7 +37,7 @@ class WatchingController extends Controller
             try {
                 $client = new Google_Client();
                 $client->setDeveloperKey(env('YOUTUBE_API_KEY'));
-                $youtube = new \Google_Service_YouTube($client);
+                $youtube = new Google_Service_YouTube($client);
 
                 // La API permite solicitar hasta 50 IDs a la vez, separados por comas.
                 $videoResponse = $youtube->videos->listVideos('contentDetails', [
