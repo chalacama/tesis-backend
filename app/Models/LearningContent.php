@@ -8,8 +8,11 @@ use App\Models\Chapter;
 use App\Models\CompletedContent;
 use App\Models\ContentView;
 use App\Models\LikeLearningContent;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
 class LearningContent extends Model
 {
+    use SoftDeletes;
     protected $fillable = [
         'url',
         'enabled',

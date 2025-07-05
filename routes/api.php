@@ -34,7 +34,11 @@ Route::prefix('chapter')->group(function () {
     Route::post('/update-order', [ChapterController::class, 'updateOrderChapters']);
 });
 Route::prefix('learning-content')->group(function () {
-     Route::post('/create', [LearningContentController::class, 'createLearningContent']);
+    Route::prefix('/cloudinary')->group(function () {
+        Route::post('/create-video', [LearningContentController::class, 'createVideoCloudinary']);
+        Route::delete('/{id}/destroy-video', [LearningContentController::class, 'destroyVideoCloudinary']);
+    });
+     
 });
 Route::prefix('start')->group(function () {
     Route::get('/top-popular-courses', [StartController::class, 'topPopularCourses']);
