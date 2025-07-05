@@ -15,8 +15,8 @@ class TypeLearningContentSeeder extends Seeder
         TypeLearningContent::create([
             'name' => 'cloudinary',
             'max_size_mb' => 500.00,
-            'min_duration_seconds' => '120',
-            'max_duration_seconds' => '480',
+            'min_duration_seconds' => 120,
+            'max_duration_seconds' => 480,
             'enabled' => true,
         ]);
         TypeLearningContent::create([

@@ -38,7 +38,7 @@ Route::prefix('learning-content')->group(function () {
         Route::post('/create-video', [LearningContentController::class, 'createVideoCloudinary']);
         Route::delete('/{id}/destroy-video', [LearningContentController::class, 'destroyVideoCloudinary']);
     });
-     
+    Route::delete('/{id}/soft-delete', [LearningContentController::class, 'softDeleteModule']);     
 });
 Route::prefix('start')->group(function () {
     Route::get('/top-popular-courses', [StartController::class, 'topPopularCourses']);
