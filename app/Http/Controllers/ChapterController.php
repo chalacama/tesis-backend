@@ -73,4 +73,44 @@ public function updateOrderChapters(Request $request)
         'message' => 'El orden de los capitulos ha sido actualizado.'
     ]);
 }
+public function activateChapter(Request $request, $id)
+{
+    $validated = $request->validate([
+        'activate' => 'required|boolean',
+    ]);
+
+    $chapter = Chapter::find($id);
+
+    if (!$chapter) {
+        return response()->json(['message' => 'Capítulo no encontrado'], 404);
+    }
+
+    if ($validated['activate'] && $chapter->enabled) {
+        return response()->json([
+            'message' => 'El capítulo ya está activado',
+            'chapter' => $chapter
+        ]);
+    }
+
+    if (!$validated['activate'] && !$chapter->enabled) {
+        return response()->json([
+            'message' => 'El capítulo ya está desactivado',
+            'chapter' => $chapter
+        ]);
+    }
+
+    if ($validated['activate']) {
+        $chapter->enabled = true;
+    } else {
+        $chapter->enabled = false;
+    }
+
+    $chapter->save();
+
+    return response()->json([
+        'message' => $validated['activate'] ? 'Capítulo publicado correctamente' : 'Capítulo archivado correctamente',
+        'chapter' => $chapter
+    ]);
+}
+
 }

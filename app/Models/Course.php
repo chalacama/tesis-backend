@@ -36,7 +36,7 @@ class Course extends Model
     public function tutors()
     {
         return $this->belongsToMany(User::class, 'tutor_courses')
-            ->withPivot('enabled', 'order')
+            ->withPivot('enabled')
             ->withTimestamps();
     }
 

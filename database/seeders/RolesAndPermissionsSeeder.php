@@ -31,23 +31,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'activar cursos',
             'asignar tutor a cursos',
         ];
-        /* $modulePermissions = [
-            'crear modulos',
-            'editar modulos',
-            'borrar modulos',
-            'ver modulos',
-            'activar modulos',
-        ];
-        
-        $formPermissions = [
-            'crear formularios',
-            'editar formularios',
-            'borrar formularios',
-            'ver formularios',
-            'activar formularios',
-        ]; */
-        
-
+    
         // Unir todos los permisos
         $permissions = array_merge($coursePermissions,$userPermissions);
 

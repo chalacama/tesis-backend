@@ -22,6 +22,8 @@ use App\Models\UserAnswer;
 use App\Models\ModuleAttempt;
 use App\Models\LikeLearningContent;
 use App\Models\SavedCourse;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
@@ -167,5 +169,12 @@ class User extends Authenticatable
     public function categoryInterests()
     {
         return $this->hasMany(UserCategoryInterest::class);
+    }
+    /**
+     * Relación uno a muchos con LikeComment.
+     */
+    public function likeComments(): HasMany
+    {
+        return $this->hasMany(LikeComment::class);
     }
 }

@@ -4,7 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\{
     CourseController,StartController,RegistrationController,WatchingController,ModuleController,
-    ChapterController,LearningContentController
+    ChapterController,LearningContentController,TutorCourseController
 };
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -32,14 +32,26 @@ Route::prefix('chapter')->group(function () {
     Route::put('/{id}/update', [ChapterController::class, 'updateChapter']);
     Route::delete('/{id}/soft-delete', [ChapterController::class, 'softDeleteChapter']);
     Route::post('/update-order', [ChapterController::class, 'updateOrderChapters']);
+    Route::put('/{id}/activate', [ChapterController::class, 'activateChapte']);
 });
 Route::prefix('learning-content')->group(function () {
     Route::prefix('/cloudinary')->group(function () {
         Route::post('/create-video', [LearningContentController::class, 'createVideoCloudinary']);
         Route::delete('/{id}/destroy-video', [LearningContentController::class, 'destroyVideoCloudinary']);
     });
-    Route::delete('/{id}/soft-delete', [LearningContentController::class, 'softDeleteModule']);     
+    Route::delete('/{id}/soft-delete', [LearningContentController::class, 'softDeleteModule']);
+    Route::put('/{id}/activate', [LearningContentController::class, 'activateLearningContent']);     
 });
+Route::prefix('tutor-course')->group(function () {
+    Route::post('/create', [TutorCourseController::class, 'create'])
+        ->middleware(['auth:sanctum', 'permission:asignar tutor a cursos'])
+        ->name('tutor-course.create');
+});
+
+
+
+
+
 Route::prefix('start')->group(function () {
     Route::get('/top-popular-courses', [StartController::class, 'topPopularCourses']);
     Route::get('/top-best-rated-courses', [StartController::class, 'topBestRatedCourses']);

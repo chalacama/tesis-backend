@@ -61,5 +61,12 @@ class Comment extends Model
     {
         return $this->belongsTo(Course::class, 'curso_id');
     } */
+   /**
+     * Relación uno a muchos con LikeComment.
+     */
+    public function likeComments(): HasMany
+    {
+        return $this->hasMany(LikeComment::class);
+    }
     
 }

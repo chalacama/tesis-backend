@@ -12,8 +12,7 @@ use Cloudinary\Cloudinary;
 use Exception;
 
 class LearningContentController extends Controller
-{
-    
+{    
     public function createVideoCloudinary(Request $request)
     {
         // 1. Validación de entrada
@@ -139,5 +138,44 @@ public function destroyVideoCloudinary($id)
             'message' => 'Contenido enviado a papelería correctamente'
         ]);
     }
+    public function activateLearningContent(Request $request, $id)
+{
+    $validated = $request->validate([
+        'activate' => 'required|boolean',
+    ]);
+
+    $learningContent = LearningContent::find($id);
+
+    if (!$learningContent) {
+        return response()->json(['message' => 'Contenido de aprendizaje no encontrado'], 404);
+    }
+
+    if ($validated['activate'] && $learningContent->enabled) {
+        return response()->json([
+            'message' => 'El contenido de aprendizaje ya está activado',
+            'learning_content' => $learningContent
+        ]);
+    }
+
+    if (!$validated['activate'] && !$learningContent->enabled) {
+        return response()->json([
+            'message' => 'El contenido de aprendizaje ya está desactivado',
+            'learning_content' => $learningContent
+        ]);
+    }
+
+    if ($validated['activate']) {
+        $learningContent->enabled = true;
+    } else {
+        $learningContent->enabled = false;
+    }
+
+    $learningContent->save();
+
+    return response()->json([
+        'message' => $validated['activate'] ? 'Contenido de aprendizaje publicado correctamente' : 'Contenido de aprendizaje archivado correctamente',
+        'learning_content' => $learningContent
+    ]);
+}
 
 }
