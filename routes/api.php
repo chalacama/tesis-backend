@@ -4,11 +4,17 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\{
     CourseController,StartController,RegistrationController,WatchingController,ModuleController,
-    ChapterController,LearningContentController,TutorCourseController
+    ChapterController,LearningContentController,TutorCourseController,AuthController
 };
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
+
+Route::prefix('auth')->group(function () {
+    Route::post('/google/callback', [AuthController::class, 'handleGoogleCallback']);
+
+
+});
 
 Route::prefix('course')->group(function () {
     Route::post('/create', [CourseController::class, 'createCourse']);

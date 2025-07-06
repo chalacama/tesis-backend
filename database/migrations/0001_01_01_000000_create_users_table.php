@@ -11,17 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
+    
         
         Schema::create('users', function (Blueprint $table) {
-            $table->id();
-            $table->string('email')->unique();
-            $table->string('password');
+            $table->id();            
+            $table->string('google_id')->nullable()->unique(); // Para el ID de Google
             $table->string('name');
             $table->string('lastname');
             $table->string('username')->unique();
-            $table->string('registration_method')->nullable();
+            $table->string('email')->unique();
+            $table->string('password')->nullable(); // Contraseña opcional
+            $table->string('registration_method')->default('email'); // Método de registro
+            
             $table->timestamp('email_verified_at')->nullable();
-            $table->string('firebase_Uuid')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

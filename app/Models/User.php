@@ -23,11 +23,12 @@ use App\Models\ModuleAttempt;
 use App\Models\LikeLearningContent;
 use App\Models\SavedCourse;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasRoles;
+    use  HasApiTokens, HasFactory, Notifiable, HasRoles;
 
     /**
      * The attributes that are mass assignable.
@@ -35,9 +36,13 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
+        'google_id',      // Añadido
         'name',
+        'lastname',       // Añadido
+        'username',       // Añadido
         'email',
         'password',
+        'registration_method', // Añadido
     ];
     
     /**
