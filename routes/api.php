@@ -12,8 +12,13 @@ Route::get('/user', function (Request $request) {
 
 Route::prefix('auth')->group(function () {
     Route::post('/google/callback', [AuthController::class, 'handleGoogleCallback']);
-
-
+    // Registro tradicional
+    Route::post('/register', [AuthController::class, 'register']);
+    // Login tradicional
+    Route::post('/login', [AuthController::class, 'login']);
+    // Logout (protegida por Sanctum)
+    // Solo un usuario autenticado puede cerrar sesión.
+    Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
 });
 
 Route::prefix('course')->group(function () {
