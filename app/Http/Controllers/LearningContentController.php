@@ -60,6 +60,7 @@ class LearningContentController extends Controller
                 [
                     'resource_type' => 'video',
                     'folder'        => 'learning_content/videos',
+                    'type' => 'private'
                 ]
             );
         } catch (Exception $e) {
