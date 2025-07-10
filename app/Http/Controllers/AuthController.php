@@ -110,6 +110,7 @@ class AuthController extends Controller
             'access_token' => $token,
             'token_type' => 'Bearer',
             'user' => $user,
+            'role' => $user->getRoleNames()[0], // Agrega el rol del usuario
         ], 201); // 201 Created
     }
 
@@ -144,6 +145,7 @@ class AuthController extends Controller
             'access_token' => $token,
             'token_type' => 'Bearer',
             'user' => $user,
+            'role' => $user->getRoleNames()[0], // Agrega el rol del usuario
         ]);
     }
 
@@ -185,7 +187,7 @@ class AuthController extends Controller
                     'email_verified_at' => now(),
                 ]
             );
-
+            // 3. Asignar rol por defecto (si usas spatie/laravel-permission)
             if ($user->wasRecentlyCreated) {
                 $user->assignRole('student');
             }
@@ -198,6 +200,7 @@ class AuthController extends Controller
                 'access_token' => $token,
                 'token_type' => 'Bearer',
                 'user' => $user,
+                'role' => $user->getRoleNames()[0], // Agrega el rol del usuario
             ]);
 
         } catch (\Exception $e) {

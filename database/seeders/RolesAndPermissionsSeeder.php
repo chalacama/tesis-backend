@@ -16,54 +16,62 @@ class RolesAndPermissionsSeeder extends Seeder
         // Limpia la caché de permisos
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
-        // Permisos agrupados por gestión
-        $userPermissions = [
-            'crear usuarios',
-            'editar usuarios',
-            'borrar usuarios',
-            'ver usuarios',
+        // 1. Lista de permisos por recurso
+        $permissionsByResource = [
+            'users' => [
+                'create', 'read', 'read-hidden', 'update', 'delete', 'destroy'
+            ],
+            'courses' => [
+                'create', 'read', 'read-hidden', 'update', 'delete', 'destroy', 'activate', 'assign-tutor'
+            ],
+            'modules' => [
+                'create', 'read', 'read-hidden', 'update', 'delete', 'destroy', 'activate', 'update-order'
+            ],
+            'chapters' => [
+                'create', 'read', 'read-hidden', 'update', 'delete', 'destroy', 'activate', 'update-order'
+            ],
+            'learning-contents' => [
+                'create', 'read', 'read-hidden', 'update', 'delete', 'destroy', 'activate'
+            ],
+            'tutor-courses' => [
+                'create', 'update', 'delete', 'activate', 'destroy'
+            ],
+            'registration' => [
+                'create', 'cancel', 'delete','destroy'
+            ],
         ];
-        $coursePermissions = [
-            'crear cursos',
-            'editar cursos',
-            'borrar cursos',
-            'ver cursos',
-            'activar cursos',
-            'asignar tutor a cursos',
-        ];
-    
-        // Unir todos los permisos
-        $permissions = array_merge($coursePermissions,$userPermissions);
 
-        // Crear los permisos
-        foreach ($permissions as $permission) {
-            Permission::create(['name' => $permission]);
+        // 2. Genera y crea los permisos dinámicamente
+        foreach ($permissionsByResource as $resource => $actions) {
+            foreach ($actions as $action) {
+                Permission::create(['name' => "{$resource}.{$action}"]);
+            }
         }
 
-        // Crear roles y asignar permisos
-        
-        // Rol de Admin: recibe todos los permisos
-        $roleAdmin = Role::create(['name' => 'admin']);
-        $roleAdmin->givePermissionTo($permissions);
+        // 3. Crea Roles y Asigna Permisos
 
-        // Rol Tutor: puede gestionar formularios y módulos, y cursos
-        $tutorCoursePermissions = array_diff(
-        $coursePermissions,
-        ['borrar cursos', 'asignar tutor a cursos']
-        );
-        $tutorPermissions = array_merge($tutorCoursePermissions);
-        $roleTutor = Role::create(['name' => 'tutor']);
-        $roleTutor->givePermissionTo($tutorPermissions);
+        // ROL: Admin (Acceso total)
+        $adminRole = Role::create(['name' => 'admin']);
+        $adminRole->givePermissionTo(Permission::all());
 
-        // Rol Student: solo puede ver cursos
-        $studentPermissions = ['ver cursos'];
-        $roleStudent = Role::create(['name' => 'student']);
-        $roleStudent->givePermissionTo($studentPermissions);
+        // ROL: Tutor (Gestor de contenido, sin permisos destructivos ni de gestión de usuarios/tutores)
+        $tutorRole = Role::create(['name' => 'tutor']);
+        $tutorRole->givePermissionTo([
+            'courses.create', 'courses.read', 'courses.read-hidden', 'courses.update', 'courses.delete', 'courses.activate',
+            'modules.create', 'modules.read', 'modules.read-hidden', 'modules.update', 'modules.delete', 'modules.activate', 'modules.update-order',
+            'chapters.create', 'chapters.read', 'chapters.read-hidden', 'chapters.update', 'chapters.delete', 'chapters.activate', 'chapters.update-order',
+            'learning-contents.create', 'learning-contents.read', 'learning-contents.read-hidden', 'learning-contents.update', 'learning-contents.delete', 'learning-contents.activate',
+            'registration.create',
+        ]);
 
-        // Ejemplo: puedes crear roles específicos para cada gestión
-        // $roleCursos = Role::create(['name' => 'gestor_cursos']);
-        // $roleCursos->givePermissionTo($coursePermissions);
-        // $roleFormularios = Role::create(['name' => 'gestor_formularios']);
-        // $roleFormularios->givePermissionTo($formPermissions);
+        // ROL: Student (Solo puede ver contenido activo y público)
+        $studentRole = Role::create(['name' => 'student']);
+        $studentRole->givePermissionTo([
+            'courses.read',
+            'modules.read',
+            'chapters.read',
+            'learning-contents.read',
+            'registration.create',
+        ]);
     }
 }

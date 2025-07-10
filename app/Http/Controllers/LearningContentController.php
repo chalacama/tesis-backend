@@ -2,18 +2,20 @@
 
 namespace App\Http\Controllers;
 
-
+use App\Http\Requests\CreateVideoCloudinaryRequest;
+use App\Models\Chapter;
 use Illuminate\Http\Request;
 use App\Models\LearningContent;
 use App\Models\TypeLearningContent;
 use Cloudinary\Api\Admin\AdminApi;
 use Illuminate\Validation\ValidationException;
 use Cloudinary\Cloudinary;
+use Illuminate\Support\Facades\Log;
 use Exception;
 
 class LearningContentController extends Controller
 {    
-    public function createVideoCloudinary(Request $request)
+    /* public function createVideoCloudinary(Request $request)
     {
         // 1. Validación de entrada
         $validated = $request->validate([
@@ -51,23 +53,36 @@ class LearningContentController extends Controller
         }
 
         // 5. Subir video a Cloudinary
-        try {
-            $cloudinary = new Cloudinary(config('cloudinary.cloud_url'));
+        // 5. Subir video a Cloudinary
+try {
+    \Illuminate\Support\Facades\Log::info('Iniciando subida a Cloudinary...');
 
-            $upload = $cloudinary->uploadApi()->upload(
-                $request->file('file')->getRealPath(),
-                [
-                    'resource_type' => 'video',
-                    'folder'        => 'learning_content/videos',
-                    'type' => 'private'
-                ]
-            );
-        } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error al subir a Cloudinary: ' . $e->getMessage()
-            ], 500);
-        }
+    $cloudinary = new Cloudinary(config('cloudinary.cloud_url'));
+
+    $upload = $cloudinary->uploadApi()->upload(
+        $request->file('file')->getRealPath(),
+        [
+            'resource_type' => 'video',
+            'folder'        => 'learning_content/videos',
+            'type'          => 'private'
+        ]
+    );
+
+    \Illuminate\Support\Facades\Log::info('Subida a Cloudinary completada exitosamente.');
+
+} catch (\Cloudinary\Api\Exception\ApiError $e) {
+    \Illuminate\Support\Facades\Log::error('Error de API de Cloudinary: ' . $e->getMessage());
+    return response()->json([
+        'success' => false,
+        'message' => 'Error de API al subir a Cloudinary: ' . $e->getMessage()
+    ], 500);
+} catch (Exception $e) {
+    \Illuminate\Support\Facades\Log::error('Error general al subir a Cloudinary: ' . $e->getMessage());
+    return response()->json([
+        'success' => false,
+        'message' => 'Error general al subir a Cloudinary: ' . $e->getMessage()
+    ], 500);
+}
 
         // 6. Crear registro en la base de datos
         $content = LearningContent::create([
@@ -82,8 +97,215 @@ class LearningContentController extends Controller
             'success' => true,
             'data'    => $content
         ], 201);
+    } */
+   /* public function createVideoCloudinary(Request $request)
+
+{
+    set_time_limit(300);
+    // 1. Validación de entrada
+    $validated = $request->validate([
+        'file' => 'required|file|mimetypes:video/mp4,video/quicktime,video/x-msvideo',
+        'chapter_id' => 'required|integer|exists:chapters,id',
+        'type_content_id' => 'required|integer|exists:type_learning_contents,id',
+        'duration_seconds' => 'required|integer|min:1',
+    ]);
+
+    // 2. Validar tipo de contenido
+    $type = TypeLearningContent::findOrFail($validated['type_content_id']);
+    if ($type->name !== 'cloudinary' || !$type->enabled) {
+        throw ValidationException::withMessages([
+            'type_content_id' => ['El tipo de contenido debe ser "cloudinary" y estar habilitado.']
+        ]);
     }
-   
+
+    // 3. Validar tamaño del archivo
+    $maxSizeKB = ((float) $type->max_size_mb) * 1024;
+    if (($request->file('file')->getSize() / 1024) > $maxSizeKB) {
+        throw ValidationException::withMessages([
+            'file' => ["El video supera el tamaño máximo permitido de {$type->max_size_mb}MB."]
+        ]);
+    }
+
+    // 4. Validar duración
+    $duration = $validated['duration_seconds'];
+    if ($duration < $type->min_duration_seconds || $duration > $type->max_duration_seconds) {
+        throw ValidationException::withMessages([
+            'duration_seconds' => [
+                "La duración debe estar entre {$type->min_duration_seconds} y {$type->max_duration_seconds} segundos."
+            ]
+        ]);
+    }
+
+    // 5. Subir video a Cloudinary
+    try {
+        $cloudinary = new Cloudinary(config('cloudinary.cloud_url'));
+        $upload = $cloudinary->uploadApi()->upload(
+            $request->file('file')->getRealPath(),
+            [
+                'resource_type' => 'video',
+                'folder' => 'learning_content/videos',
+                'type' => 'private'
+            ]
+        );
+    } catch (Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Error al subir a Cloudinary: ' . $e->getMessage()
+        ], 500);
+    }
+
+    // 6. Crear registro en la base de datos
+    $content = LearningContent::create([
+        'url' => $upload['secure_url'],
+        'enabled' => true,
+        'type_content_id' => $type->id,
+        'chapter_id' => $validated['chapter_id'],
+    ]);
+
+    // 7. Retornar éxito
+    return response()->json([
+        'success' => true,
+        'data' => $content
+    ], 201);
+} */
+/* public function createVideoCloudinary(Request $request)
+    {
+        set_time_limit(120);
+
+        // Paso 1: Validación básica de entrada
+        $validated = $request->validate([
+            'file' => 'required|file|mimetypes:video/mp4,video/quicktime,video/x-msvideo',
+            'chapter_id' => 'required|integer|exists:chapters,id',
+            'type_content_id' => 'required|integer|exists:type_learning_contents,id',
+            'duration_seconds' => 'required|integer|min:1',
+        ]);
+
+        // Paso 2: Verificar si el capítulo ya tiene contenido (relación uno a uno)
+        
+        $chapter = Chapter::find($validated['chapter_id']);
+        if ($chapter->learningContent()->exists()) {
+        throw ValidationException::withMessages([
+        'chapter_id' => ['Este capítulo ya tiene contenido asignado.']
+        ]);
+        }
+        // Paso 3: Validar el tipo de contenido
+        $type = TypeLearningContent::findOrFail($validated['type_content_id']);
+        if ($type->name !== 'cloudinary' || !$type->enabled) {
+            throw ValidationException::withMessages([
+                'type_content_id' => ['El tipo de contenido debe ser "cloudinary" y estar habilitado.']
+            ]);
+        }
+
+        // Paso 4: Validar tamaño del archivo
+        $maxSizeKB = ((float) $type->max_size_mb) * 1024;
+        if (($request->file('file')->getSize() / 1024) > $maxSizeKB) {
+            throw ValidationException::withMessages([
+                'file' => ["El video supera el tamaño máximo permitido de {$type->max_size_mb}MB."]
+            ]);
+        }
+
+        // Paso 5: Validar duración
+        $duration = $validated['duration_seconds'];
+        if ($duration < $type->min_duration_seconds || $duration > $type->max_duration_seconds) {
+            throw ValidationException::withMessages([
+                'duration_seconds' => [
+                    "La duración debe estar entre {$type->min_duration_seconds} y {$type->max_duration_seconds} segundos."
+                ]
+            ]);
+        }
+
+        // Paso 6: Subir el video a Cloudinary
+        try {
+            $cloudinary = new Cloudinary(config('cloudinary.cloud_url'));
+            $upload = $cloudinary->uploadApi()->upload(
+                $request->file('file')->getRealPath(),
+                [
+                    'resource_type' => 'video',
+                    'folder' => 'learning_content/videos',
+                    'type' => 'private'
+                ]
+            );
+        } catch (Exception $e) {
+            Log::error("Error al subir a Cloudinary: " . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al subir a Cloudinary. Por favor intenta nuevamente.'
+            ], 500);
+        }
+
+        // Paso 7: Crear el registro en la base de datos
+        $content = LearningContent::create([
+            'url' => $upload['secure_url'],
+            'enabled' => true,
+            'type_content_id' => $type->id,
+            'chapter_id' => $validated['chapter_id'],
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'data' => $content
+        ], 201);
+    } */
+
+
+// Método para obtener URL firmada del video
+public function getSecureVideoUrl($publicId) 
+{
+    $cloudinary = new Cloudinary(config('cloudinary.cloud_url'));
+    
+    $url = $cloudinary->video($publicId)
+        ->delivery('authenticated')
+        ->signUrl(true) // ¡Clave para la firma!
+        ->toUrl();
+    
+    return $url;
+    // Al generar la URL de entrega
+// $url = $cloudinary->tag('video')
+//     ->publicId('learning_content/videos/tu_video')
+//     ->delivery('authenticated')
+//     ->signUrl(true) // ¡Esto es clave!
+//     ->toUrl();
+}
+   public function createVideoCloudinary(CreateVideoCloudinaryRequest $request)
+    {
+        set_time_limit(300);
+
+        try {
+            $cloudinary = new Cloudinary(config('cloudinary.cloud_url'));
+            $upload = $cloudinary->uploadApi()->upload(
+                $request->validated()['file']->getRealPath(),
+                [
+                    'resource_type' => 'video',
+                    'folder' => 'learning_content/videos',
+                    /* 'type' => 'authenticated', */
+                    'chunk_size' => 6000000 // 6MB chunks
+                ]
+            );
+            // Generar URL firmada después de la subida
+        /* $signedUrl = $cloudinary->video($upload['public_id'])
+            ->delivery('authenticated')
+            ->signUrl(true) // ¡Clave para la firma!
+            ->toUrl(); */
+        } catch (Exception $e) {
+            Log::error("Error al subir a Cloudinary: " . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al subir a Cloudinary. Intenta nuevamente.'
+            ], 500);
+        }
+
+        $content = LearningContent::create([
+            'url' => $upload['secure_url'],
+            'enabled' => true,
+            'type_content_id' => $request->validated()['type_content_id'],
+            'chapter_id' => $request->validated()['chapter_id'],
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'data' => $content,//$signedUrl
+        ], 201);
+    }
 public function destroyVideoCloudinary($id)
     {
         // 1. Encuentra el registro en la BD o falla con un error 404
