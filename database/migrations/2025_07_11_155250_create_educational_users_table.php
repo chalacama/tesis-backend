@@ -11,18 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('user_information', function (Blueprint $table) {
+        Schema::create('educational_users', function (Blueprint $table) {
             $table->id();
-            $table->date('birthdate')->nullable();
-            $table->string('phone_number')->nullable();
-            $table->string('province')->nullable();
-            $table->string('canton')->nullable();
-            $table->string('parish')->nullable();
+            $table->unsignedBigInteger('sede_id')->unique();
             $table->unsignedBigInteger('user_id')->unique();
-
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-
+            $table->integer('level')->nullable();
+            $table->string('period')->nullable();
             $table->timestamps();
+
+            $table->foreign('sede_id')->references('id')->on('sedes')->onDelete('cascade');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
     }
 
@@ -31,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('user_information');
+        Schema::dropIfExists('educational_users');
     }
 };

@@ -11,9 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('academic_programs', function (Blueprint $table) {
+        Schema::create('educational_levels', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->text('description')->nullable();
+            $table->string('period')->nullable();
+            $table->integer('max_periods')->nullable();
             $table->timestamps();
         });
     }
@@ -23,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('academic_programs');
+        Schema::dropIfExists('educational_levels');
     }
 };

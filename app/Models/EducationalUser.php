@@ -1,30 +1,28 @@
 <?php
 
 namespace App\Models;
-
-use Illuminate\Database\Eloquent\Model;
+use App\Models\Sede;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use App\Models\User;
-class UserInformation extends Model
+use Illuminate\Database\Eloquent\Model;
+
+class EducationalUser extends Model
 {
     protected $fillable = [
-        'birthdate',
-        'phone_number',
-        'province',
-        'canton',
-        'parish',
+        'sede_id',
         'user_id',
+        'level',
+        'period',
     ];
 
-    /**
-     * Relación inversa uno a uno con User.
-     */
+    public function sede()
+    {
+        return $this->belongsTo(Sede::class);
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);
     }
-
-    
-
 }

@@ -13,22 +13,28 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Llamar al seeder de roles y permisos
+        // Roles and Permissions
         $this->call(RolesAndPermissionsSeeder::class);
-        // Llamar al seeder de usuarios
-        $this->call(SemestersSeeder::class);
+        //Gestion de usuarios
+
         $this->call(UsersSeeder::class);
-        $this->call(CareersSeeder::class);
-        $this->call(AcademicProgramsSeeder::class);
-        // Llamar al seeder de user_information
         $this->call(UserInformationSeeder::class);
-        // Llamar al seeder de cursos
+        //Gestion educativa
+        $this->call(EducationalUnitSeeder::class);
+        $this->call(CareersSeeder::class);
+        $this->call(SedeSeeder::class);
+        $this->call(EducationalLevelSeeder::class);
+        $this->call(UnitLevelSeeder::class);
+        $this->call(CareerSedeSeeder::class);
+        $this->call(EducationalUserSeeder::class);
+
+        //Gestion learning
         $this->call(CoursesSeeder::class);
-        // Llamar al seeder de course_certified
+
         $this->call(CourseCertifiedSeeder::class);
-        // Llamar al seeder de rating_courses
+
         $this->call(RatingCourseSeeder::class);
-        // Llamar al seeder de tutor_courses
+
         $this->call(TutorCourseSeeder::class);
         // Llamar al seeder de categorías
         $this->call(CategoriesSeeder::class);
@@ -72,7 +78,7 @@ class DatabaseSeeder extends Seeder
         
         $this->call(UserCategoryInterestSeeder::class);
 
-        $this->call(AcademicCareerSeeder::class);
+
         $this->call(LikeCommentSeeder::class);
         // User::factory(10)->create();
 

@@ -18,9 +18,6 @@ class UserInformationSeeder extends Seeder
             'province'         => 'Guayas',
             'canton'           => 'Guayaquil',
             'parish'           => 'Tarqui',
-            'academic_program' => 1, // Ejemplo: Campus Calceta
-            'career_id'        => 4, // Ejemplo: Computación
-            'semester_id'      => 10,
             'user_id'          => 1,
         ]);
         UserInformation::create([
@@ -29,9 +26,6 @@ class UserInformationSeeder extends Seeder
             'province'         => 'Galápagos',
             'canton'           => 'San Cristóbal',
             'parish'           => 'Puerto Baquerizo Moreno',
-            'academic_program' => 2, // Ejemplo: Sede Galápagos
-            'career_id'        => 6, // Ejemplo: Ingeniería Ambiental
-            'semester_id'      => null,
             'user_id'          => 2,
         ]);
         UserInformation::create([
@@ -40,9 +34,6 @@ class UserInformationSeeder extends Seeder
             'province'         => 'Manabí',
             'canton'           => 'Chone',
             'parish'           => 'San Antonio',
-            'academic_program' => 1,
-            'career_id'        => 7, // Ejemplo: Medicina Veterinaria
-            'semester_id'      => null,
             'user_id'          => 3,
         ]);
         UserInformation::create([
@@ -51,9 +42,6 @@ class UserInformationSeeder extends Seeder
             'province'         => 'Manabí',
             'canton'           => 'Calceta',
             'parish'           => 'Calceta',
-            'academic_program' => 1,
-            'career_id'        => 1, // Ejemplo: Administración de Empresas
-            'semester_id'      => 1,
             'user_id'          => 4,
         ]);
         UserInformation::create([
@@ -61,10 +49,7 @@ class UserInformationSeeder extends Seeder
             'phone_number'     => '0977777777',
             'province'         => 'Manabí',
             'canton'           => 'Chone',
-            'parish'           => 'Chone',
-            'academic_program' => 1,
-            'career_id'        => 2, // Ejemplo: Administración Pública
-            'semester_id'      => 2,
+            'parish'           => 'San Antonio',
             'user_id'          => 5,
         ]);
     }

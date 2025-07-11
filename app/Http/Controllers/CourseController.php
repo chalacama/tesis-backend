@@ -4,30 +4,15 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Course;
 use App\Models\TutorCourse;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 class CourseController extends Controller
 {
-    /* public function createCourse(Request $request)
-    {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-        ]);
-        $course = Course::create([
-            'title' => $validated['title'],
-            'description' => $validated['description'],
-            // Los demás campos toman el valor por defecto de la migración
-        ]);
-
-        return response()->json([
-            'message' => 'Curso creado correctamente',
-            'course' => $course
-        ], 201);
-    } */
-   public function createCourse(Request $request): JsonResponse
+    use AuthorizesRequests;
+   /* public function createCourse(Request $request): JsonResponse
 {
     $validated = $request->validate([
         'title' => 'required|string|max:255',
@@ -159,71 +144,6 @@ class CourseController extends Controller
         ]);
     }
     
-    public function getCourseDetail($id)
-    { 
-        $course = Course::with([
-            'categories',            // categorías del curso
-            'tutors',                // tutores del curso
-            'modules.chapters.learningContent', 
-            'modules.chapters.questions.typeQuestion', 
-            'modules.chapters.questions.answers',      
-        ])->find($id);
-
-        if (!$course) {
-            return response()->json(['message' => 'Curso no encontrado'], 404);
-        }
-
-        return response()->json([
-            'course' => $course
-        ]);
-    }
-/**
-     * Obtiene todos los cursos con su información agregada para una API.
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
-    /* public function getAllCourses(): JsonResponse
-    {
-        $courses = Course::query()
-            // Cargar relaciones con condiciones
-            ->with([
-                'miniatures' => fn($query) => $query->where('enabled', true),
-                'categories' => fn($query) => $query->where('enabled', true),
-                'certified:id,course_id,is_certified', // Cargar solo campos necesarios
-            ])
-            // Contar módulos activos
-            ->withCount(['modules as active_modules_count' => fn($query) => $query->where('enabled', true)])
-            // Contar el total de comentarios y respuestas de una sola vez
-            ->withCount(['allComments as total_comments_count' => fn($query) => $query->where('enabled', true)])
-            // Contar guardados e inscripciones
-            ->withCount(['savedCourses', 'registrations'])
-            // Sumar todas las estrellas de calificación
-            ->withSum('ratingCourses as total_stars', 'stars')
-            // Obtener solo cursos que están habilitados
-            ->where('enabled', true)
-            ->get()
-            // Transformar la colección para una respuesta de API limpia
-            ->map(function ($course) {
-                // El campo 'total_stars' puede ser null si no hay calificaciones, lo convertimos a 0.
-                $course->total_stars = (int) $course->total_stars;
-
-                // Simplificar la información del certificado
-                $course->is_certified = $course->certified ? $course->certified->is_certified : false;
-
-                // Formatear las categorías para que solo muestren id y nombre
-                $course->categorias = $course->categories->map(fn($cat) => [
-                    'id' => $cat->id,
-                    'name' => $cat->name
-                ]);
-
-                // Eliminar las relaciones completas para no exponer datos innecesarios en la API
-                unset($course->certified, $course->categories);
-
-                return $course;
-            });
-
-        return response()->json(['courses' => $courses]);
-    } */
 public function getAllCourses(): JsonResponse
 {
     $user = Auth::user();
@@ -270,5 +190,126 @@ public function getAllCourses(): JsonResponse
         });
 
     return response()->json(['courses' => $courses]);
+} */
+public function createCourse(Request $request): JsonResponse
+    {
+        // Laravel automáticamente usará CoursePolicy@create
+        $this->authorize('create', Course::class);
+
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+        ]);
+
+        // La lógica de creación es la misma...
+        $course = Course::create($validated);
+        
+        // Si es tutor, se asigna automáticamente al curso
+        if (Auth::user()->hasRole('tutor')) {
+            $course->tutors()->attach(Auth::id(), ['enabled' => true]);
+        }
+
+        return response()->json(['message' => 'Curso creado', 'course' => $course], 201);
+    }
+
+    public function updateCourse(Request $request, Course $course): JsonResponse // Usando Route Model Binding
+    {
+        // Laravel automáticamente pasará el $course a CoursePolicy@update
+        // Si la autorización falla, lanzará una excepción 403 Forbidden automáticamente.
+        $this->authorize('update', $course);
+
+        $validated = $request->validate([
+            'title' => 'sometimes|required|string|max:255',
+            'description' => 'sometimes|required|string',
+        ]);
+
+        $course->update($validated);
+
+        return response()->json(['message' => 'Curso actualizado', 'course' => $course]);
+    }
+    
+    public function activateCourse(Request $request, Course $course): JsonResponse
+    {
+        $this->authorize('activate', $course);
+
+        // ... tu lógica para activar/desactivar ...
+        $validated = $request->validate(['activate' => 'required|boolean']);
+        $course->enabled = $validated['activate'];
+        $course->save();
+
+        return response()->json(['message' => 'Estado del curso actualizado', 'course' => $course]);
+    }
+    
+    public function softDeleteCourse(Course $course): JsonResponse
+    {
+        $this->authorize('delete', $course);
+
+        $course->delete();
+
+        return response()->json(['message' => 'Curso enviado a papelería']);
+    }
+
+    public function getAllCourses(): JsonResponse
+{
+    // Autoriza si el usuario puede ver la lista de cursos del backend
+    $this->authorize('viewAny', Course::class);
+
+    $user = Auth::user();
+    $query = Course::query(); // La query base
+
+    // Si es tutor, la policy ya nos dio acceso, ahora filtramos para que vea solo los suyos.
+    if ($user->hasRole('tutor')) {
+        $query->whereHas('tutors', fn($q) => $q->where('users.id', $user->id));
+    }
+    // Si es admin, no se aplica el filtro y ve todos los cursos.
+
+    $courses = $query
+        ->with([
+            'miniatures' => fn($q) => $q->where('enabled', true),
+            'categories' => fn($q) => $q->where('enabled', true),
+            'certified:id,course_id,is_certified',
+        ])
+        ->withCount([
+            'modules as active_modules_count' => fn($q) => $q->where('enabled', true),
+            'allComments as total_comments_count' => fn($q) => $q->where('enabled', true),
+            'savedCourses',
+            'registrations',
+        ])
+        ->withSum('ratingCourses as total_stars', 'stars')
+        ->where('enabled', true)
+        ->get()
+        ->map(function ($course) {
+            $course->total_stars = (int) $course->total_stars;
+            $course->is_certified = $course->certified ? $course->certified->is_certified : false;
+
+            $course->categorias = $course->categories->map(fn($cat) => [
+                'id' => $cat->id,
+                'name' => $cat->name
+            ]);
+
+            unset($course->certified, $course->categories);
+
+            return $course;
+        });
+
+    return response()->json(['courses' => $courses]);
 }
+public function getCourseDetail(Course $course):JsonResponse
+    { 
+        $courseInfo = Course::with([
+            'categories',            // categorías del curso
+            'tutors',                // tutores del curso
+            'modules.chapters.learningContent', 
+            'modules.chapters.questions.typeQuestion', 
+            'modules.chapters.questions.answers',      
+        ])->find($course);
+
+        if (!$courseInfo) {
+            return response()->json(['message' => 'Curso no encontrado'], 404);
+        }
+
+        return response()->json([
+            'course' => $course
+        ]);
+    }
 }

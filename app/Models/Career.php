@@ -8,6 +8,7 @@ class Career extends Model
 {
     protected $fillable = [
         'name',
+        'max_semesters',
         'url_logo'
     ];
 

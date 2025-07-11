@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('careers', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->integer('max_semesters')->default(10);
             $table->string('url_logo')->nullable();
             $table->timestamps();
         });

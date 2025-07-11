@@ -15,34 +15,37 @@ class CoursesSeeder extends Seeder
         // id : 1
         Course::create([
             'title' => 'Laravel Básico',
-            'description' => 'Curso introductorio a Laravel.',           
-            'enabled' => true, 
-            // 'archived_at' => null,
-            // 'published_at' =>'2025-06-22 10:30:00'
+            'description' => 'Curso introductorio a Laravel.',
+            'private' => true,       
+            'enabled' => false, 
+            
         ]);
         // id : 2
         Course::create([
             'title' => 'Angular Básico',
             'description' => 'Curso introductorio a Angular.',
+            'private' => false,
             'enabled' => true,
-            // 'archived_at' => '2025-05-22 10:30:00',
-            // 'published_at' =>'2025-06-25 10:30:00'
+            
+            
         ]);
         // id : 3
         Course::create([
             'title' => 'PHP Avanzado',
             'description' => 'Curso avanzado de PHP.',
+            'private' => false,
             'enabled' => true,
-            // 'archived_at' => null,
-            // 'published_at' =>'2025-08-15 10:30:00'
+            
+            
         ]);
         // id : 4
         Course::create([
             'title' => 'Java Avanzado',
             'description' => 'Curso avanzado de Java.',
+            'private' => false,
             'enabled' => false,
-            // 'archived_at' => '2025-07-22 10:30:00',
-            // 'published_at' =>'2025-06-30 10:30:00'
+            
+           
         ]);
     }
 }

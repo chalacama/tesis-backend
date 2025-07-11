@@ -11,12 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('academic_careers', function (Blueprint $table) {
+        Schema::create('sedes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('academic_program_id')->constrained()->onDelete('cascade');
-            $table->foreignId('career_id')->constrained()->onDelete('cascade');
-            $table->unique(['academic_program_id', 'career_id']); // Restricción de unicidad
+            $table->string('province');
+            $table->string('canton');
+            $table->unsignedBigInteger('educational_unit_id');
             $table->timestamps();
+
+            $table->foreign('educational_unit_id')->references('id')
+            ->on('educational_units')
+            ->onDelete('cascade');
         });
     }
 
@@ -25,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('academic_careers');
+        Schema::dropIfExists('sedes');
     }
 };

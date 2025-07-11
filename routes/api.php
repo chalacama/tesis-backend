@@ -21,14 +21,18 @@ Route::prefix('auth')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
 
     Route::prefix('course')->group(function () {
-        Route::post('/create', [CourseController::class, 'createCourse'])->middleware('permission:courses.create');
-        Route::put('/{id}/update', [CourseController::class, 'updateCourse'])->middleware('permission:courses.update');
-        Route::put('/{id}/activate', [CourseController::class, 'activateCourse'])->middleware('permission:courses.activate');
-        Route::delete('/{id}/soft-delete', [CourseController::class, 'softDeleteCourse'])->middleware('permission:courses.delete');
-               
-        Route::get('/all', [CourseController::class, 'getAllCourses'])->middleware('permission:courses.read-hidden');
-        
-        Route::get('/{id}/detail', [CourseController::class, 'getCourseDetail'])->middleware('permission:read-hidden');
+        // Route::post('/create', [CourseController::class, 'createCourse'])->middleware('permission:courses.create');
+        // Route::put('/{id}/update', [CourseController::class, 'updateCourse'])->middleware('permission:courses.update');
+        // Route::put('/{id}/activate', [CourseController::class, 'activateCourse'])->middleware('permission:courses.activate');
+        // Route::delete('/{id}/soft-delete', [CourseController::class, 'softDeleteCourse'])->middleware('permission:courses.delete');               
+        // Route::get('/all', [CourseController::class, 'getAllCourses'])->middleware('permission:courses.read-hidden');        
+        // Route::get('/{id}/detail', [CourseController::class, 'getCourseDetail'])->middleware('permission:read-hidden');
+    Route::post('/create', [CourseController::class, 'createCourse'])->middleware('permission:courses.create');
+    Route::put('/{course}/update', [CourseController::class, 'updateCourse'])->middleware('permission:courses.update');
+    Route::put('/{course}/activate', [CourseController::class, 'activateCourse'])->middleware('permission:courses.activate');
+    Route::delete('/{course}/soft-delete', [CourseController::class, 'softDeleteCourse'])->middleware('permission:courses.delete');
+    Route::get('/detail', [CourseController::class, 'getCourseDetail'])->middleware('permission:read-hidden');
+    Route::get('/{course}/all', [CourseController::class, 'getAllCourses'])->middleware('permission:courses.read-hidden');
     });
 
     Route::prefix('module')->group(function () {

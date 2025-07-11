@@ -4,20 +4,18 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use App\Models\AcademicProgram;
+use App\Models\Sede;
 use App\Models\Career;
-class AcademicCareer extends Model
+class CareerSede extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
-        'academic_program_id',
+        'sede_id',
         'career_id',
     ];
 
-    public function academicProgram()
+    public function sede()
     {
-        return $this->belongsTo(AcademicProgram::class);
+        return $this->belongsTo(Sede::class);
     }
 
     public function career()

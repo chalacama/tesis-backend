@@ -13,6 +13,8 @@ use App\Models\Module;
 use App\Models\Registration;
 use App\Models\SavedCourse;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Ramsey\Uuid\Uuid;
+use Illuminate\Support\Str;
 class Course extends Model
 {
     use SoftDeletes,HasFactory; 
@@ -20,8 +22,49 @@ class Course extends Model
     protected $fillable = [
     'title',
     'description',
+    'private',
+    'code',
     'enabled',
     ];
+     protected $casts = [
+        'private' => 'boolean',
+        'enabled' => 'boolean',
+    ];
+    protected static function booted(): void
+    {
+        static::creating(function (Course $course) {
+            // Generar código solo si el curso es privado y no se ha proporcionado uno.
+            if ($course->private && is_null($course->code)) {
+                $course->code = self::generateUniqueCode();
+            }
+        });
+    }
+
+    /**
+     * Genera un código de invitación único y legible para los humanos.
+     *
+     * @param int $length La longitud del código a generar.
+     * @return string El código único generado.
+     */
+    public static function generateUniqueCode(int $length = 7): string
+    {
+        // Caracteres permitidos: se excluyen caracteres ambiguos como 0, O, 1, I, L.
+        $characters = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+        $charactersLength = strlen($characters);
+        $randomString = '';
+
+        // Bucle para asegurar que el código generado sea único en la base de datos.
+        do {
+            $randomString = '';
+            for ($i = 0; $i < $length; $i++) {
+                // Usamos random_int para una generación criptográficamente segura.
+                $randomString .= $characters[random_int(0, $charactersLength - 1)];
+            }
+        } while (self::where('code', $randomString)->exists()); // Verifica si el código ya existe.
+
+        return $randomString;
+    }
+
     /**
      * Relación uno a muchos con TutorCourse.
      */

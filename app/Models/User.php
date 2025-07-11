@@ -75,6 +75,13 @@ class User extends Authenticatable
         return $this->hasOne(UserInformation::class);
     }
     /**
+     * Relación uno a uno con EducationalUser.
+     */
+    public function educationalUser()
+    {
+        return $this->hasOne(EducationalUser::class);
+    }
+    /**
      * Relación uno a muchos con RatingCourse.
      */
     public function ratingCourses()
