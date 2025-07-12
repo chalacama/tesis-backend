@@ -18,7 +18,7 @@ return new class extends Migration
             $table->unsignedBigInteger('type_questions_id');
             $table->unsignedBigInteger('chapter_id');
             $table->timestamps();
-
+            $table->softDeletes();
             $table->foreign('type_questions_id')->references('id')->on('type_questions')->onDelete('cascade');
             $table->foreign('chapter_id')->references('id')->on('chapters')->onDelete('cascade');
         });

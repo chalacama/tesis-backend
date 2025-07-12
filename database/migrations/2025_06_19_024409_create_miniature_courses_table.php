@@ -15,10 +15,9 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('course_id');
             $table->string('url');
-            $table->boolean('enabled')->default(false);
             $table->integer('order')->default(1);
             $table->timestamps();
-
+            $table->softDeletes();
             $table->foreign('course_id')->references('id')->on('courses')->onDelete('cascade');
         });
     }

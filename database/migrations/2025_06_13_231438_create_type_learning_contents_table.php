@@ -17,8 +17,8 @@ return new class extends Migration
             $table->decimal('max_size_mb', 6, 2)->nullable();
             $table->integer('min_duration_seconds')->nullable();
             $table->integer('max_duration_seconds')->nullable();
-            $table->boolean('enabled')->default(false);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

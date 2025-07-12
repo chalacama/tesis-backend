@@ -15,7 +15,6 @@ class LearningContent extends Model
     use SoftDeletes;
     protected $fillable = [
         'url',
-        'enabled',
         'type_content_id',
         'chapter_id'
     ];

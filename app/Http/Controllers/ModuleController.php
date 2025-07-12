@@ -5,12 +5,15 @@ namespace App\Http\Controllers;
 use App\Models\Module;
 use App\Models\Course;
 use Illuminate\Http\Request;
-
-
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 class ModuleController extends Controller
 {
-
-public function store(Request $request)
+use AuthorizesRequests;
+public function store(Request $request): JsonResponse
 {
     $this->authorize('create', Module::class);
     $validated = $request->validate([

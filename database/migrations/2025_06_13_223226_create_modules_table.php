@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->integer('order')->default(1);
-            $table->boolean('enabled')->default(true);
             $table->unsignedBigInteger('course_id');
             $table->timestamps();
             $table->softDeletes();

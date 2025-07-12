@@ -17,7 +17,6 @@ return new class extends Migration
             $table->text('description')->nullable();
             
             $table->integer('order')->default(1);
-            $table->boolean('enabled')->default(true);
             $table->unsignedBigInteger('module_id');
             $table->timestamps();
             $table->softDeletes();

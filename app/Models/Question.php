@@ -7,12 +7,13 @@ use App\Models\TypeQuestion;
 use App\Models\Answer;
 use App\Models\UserAnswer;
 use App\Models\Chapter;
+use Illuminate\Database\Eloquent\SoftDeletes;
 class Question extends Model
 {
+    use SoftDeletes;
     protected $fillable = [
         'statement',
         'spot',
-        'enabled',
         'type_questions_id',
         'chapter_id',
     ];

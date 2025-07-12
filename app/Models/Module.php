@@ -9,6 +9,7 @@ use App\Models\ModuleAttempt;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\EloquentSortable\Sortable;
 use Spatie\EloquentSortable\SortableTrait;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Module extends Model implements Sortable
 {
@@ -22,9 +23,10 @@ class Module extends Model implements Sortable
     protected $fillable = [
         'name',
         'order',
-        'enabled',
         'course_id',
     ];
+   
+    
 
     // Este método sigue siendo el mismo y es correcto
     public function buildSortQuery()

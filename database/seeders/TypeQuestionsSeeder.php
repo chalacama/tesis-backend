@@ -14,11 +14,9 @@ class TypeQuestionsSeeder extends Seeder
     {
         TypeQuestion::create([
             'nombre' => 'Opción múltiple',
-            'enabled' => true,
         ]);
         TypeQuestion::create([
             'nombre' => 'Varias opciones',
-            'enabled' => false,
         ]);
     }
 }

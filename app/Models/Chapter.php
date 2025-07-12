@@ -20,7 +20,6 @@ class Chapter extends Model implements Sortable
         'title',
         'description',
         'order',
-        'enabled',
         'module_id',
     ];
     public function buildSortQuery()

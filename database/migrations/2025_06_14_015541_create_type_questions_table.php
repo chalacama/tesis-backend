@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('type_questions', function (Blueprint $table) {
             $table->id();
             $table->string('nombre');
-            $table->boolean('enabled')->default(false);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

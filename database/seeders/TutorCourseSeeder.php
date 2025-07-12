@@ -14,23 +14,19 @@ class TutorCourseSeeder extends Seeder
     public function run(): void
     {
         TutorCourse::create([
-            'enabled' => true,
             'course_id' => 1, // Asegúrate de que el curso con ID 1 exista
             'user_id' => 2,   // Asegúrate de que el usuario con ID 1 exista
         ]);
         
         TutorCourse::create([
-            'enabled' => true,
             'course_id' => 2,
             'user_id' => 3,
         ]);
         TutorCourse::create([
-            'enabled' => true,
             'course_id' => 3,
             'user_id' => 2,
         ]);
         TutorCourse::create([
-            'enabled' => false,
             'course_id' => 4,
             'user_id' => 3,
         ]);

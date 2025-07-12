@@ -44,7 +44,7 @@ class ModulePolicy
 
     public function delete(User $user, Module $module): bool
     {
-        return $user->hasPermissionTo('modules.delete') && $module->course->tutors()->where('users.id', $user->id)->exists();
+        return $user->hasPermissionTo('modules.archive') && $module->course->tutors()->where('users.id', $user->id)->exists();
     }    
     /**
      * Determine whether the user can restore the model.

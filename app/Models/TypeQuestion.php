@@ -4,11 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Question;
+use Illuminate\Database\Eloquent\SoftDeletes;
 class TypeQuestion extends Model
 {
+    use SoftDeletes;
     protected $fillable = [
         'nombre',
-        'enabled',
     ];
 
     /**
