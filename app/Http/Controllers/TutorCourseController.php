@@ -88,10 +88,6 @@ private function delete($id)
     return response()->json(['message' => 'Asignación de tutor a curso eliminada correctamente']);
 }
 
-public function archived($id)
-{
-    return $this->delete($id);
-}
 public function change(CreateTutorCourseRequest $request): JsonResponse
 {
     $validated = $request->validated();

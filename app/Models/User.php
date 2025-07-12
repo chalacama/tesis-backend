@@ -24,11 +24,14 @@ use App\Models\LikeLearningContent;
 use App\Models\SavedCourse;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Laravel\Sanctum\HasApiTokens;
+use App\Models\UserCategoryInterest;
+use App\Models\LikeComment;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use  HasApiTokens, HasFactory, Notifiable, HasRoles;
+    use SoftDeletes , HasApiTokens, HasFactory, Notifiable, HasRoles;
 
     /**
      * The attributes that are mass assignable.
@@ -101,19 +104,45 @@ class User extends Authenticatable
     /**
      * Relación uno a muchos con TutorCourse.
      */
-    public function tutorCourses()
+    /* public function tutorCourses()
     {
         return $this->hasMany(TutorCourse::class);
-    }
+    } */
 
     /**
      * Relación muchos a muchos con Course a través de tutor_courses (cursos donde es tutor).
      */
-    public function tutoredCourses()
+    /* public function tutoredCourses()
     {
         return $this->belongsToMany(Course::class, 'tutor_courses')
             ->withPivot('enabled', 'order')
             ->withTimestamps();
+    } */
+    /**
+     * Relación muchos a muchos con cursos a través de la tabla pivote tutor_courses.
+     * Incluye el campo 'is_owner' de la tabla pivote.
+     */
+    public function tutoredCourses()
+    {
+        return $this->belongsToMany(Course::class, 'tutor_courses')
+                    ->withPivot('is_owner') // Carga el campo 'is_owner' de la tabla pivote
+                    ->withTimestamps(); // Carga created_at y updated_at de la tabla pivote
+    }
+
+    /**
+     * Obtiene los cursos donde el usuario es el dueño.
+     */
+    public function ownedCourses()
+    {
+        return $this->coursesAsTutor()->wherePivot('is_owner', true);
+    }
+
+    /**
+     * Obtiene los cursos donde el usuario es un colaborador.
+     */
+    public function collaboratedCourses()
+    {
+        return $this->coursesAsTutor()->wherePivot('is_owner', false);
     }
     /**
      * Relación uno a muchos con Comment.

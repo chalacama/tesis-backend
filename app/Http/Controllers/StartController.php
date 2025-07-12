@@ -7,16 +7,15 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Course;
 
 class StartController extends Controller
-{
-    
-    
+{    
     public function topPopularCourses()
-    {
+    { 
     $courses = Course::with($this->getCourseWithRelations())
         ->where('enabled', true)
         ->withCount('registrations')
         ->withCount('savedCourses')
         ->orderByDesc(DB::raw('registrations_count + saved_courses_count'))
+        ->take(7)
         ->get();
         return response()->json([
         'courses' => $this->formatCourses($courses)
@@ -63,7 +62,7 @@ class StartController extends Controller
             : [];
         //Elimina los sobrantes
         unset($course->certified, $course->tutorCourses, $course->miniatures,$course->categories);
-         
+    
         return $course;
     });
 }
@@ -72,17 +71,10 @@ class StartController extends Controller
 {
     return [
         'certified:id,course_id,is_certified',
-        'tutorCourses' => function($q) {
-            $q->where('enabled', true);
-        },
-        'tutorCourses.user.userInformation.career', // Trae la carrera del tutor
-        'categories'=> function($q) {
-            $q->where('enabled', true);
-        }
-        ,
-        'miniatures' => function($q) {
-            $q->where('enabled', true);
-        }
+        'tutorCourses' ,
+        // 'tutorCourses.user.educationalUser.sede.careerSedes', // Trae la carrera del tutor
+        'categories',
+        'miniatures'
     ];
 }
     public function topBestRatedCourses()
@@ -93,6 +85,7 @@ class StartController extends Controller
         ->withCount('savedCourses')
         ->withSum('ratingCourses as total_stars', 'stars')
         ->orderByDesc('total_stars')
+        ->take(7)
         ->get();
 
     return response()->json([
@@ -107,6 +100,7 @@ class StartController extends Controller
         ->withCount('registrations')
         ->withCount('savedCourses')
         ->orderByDesc('updated_at')
+        ->take(7)
         ->get();
 
     return response()->json([
@@ -120,6 +114,7 @@ public function topCreatedCourses()
         ->withCount('registrations')
         ->withCount('savedCourses')
         ->orderByDesc('created_at')
+        ->take(7)
         ->get();
 
     return response()->json([
@@ -148,6 +143,7 @@ public function recommendCoursesByUserInterest($userId)
         ->withCount('registrations')
         ->withCount('savedCourses')
         ->orderByDesc('created_at')
+        ->take(7)
         ->get();
 
     return response()->json([

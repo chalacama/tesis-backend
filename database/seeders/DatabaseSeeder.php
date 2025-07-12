@@ -78,7 +78,7 @@ class DatabaseSeeder extends Seeder
         
         $this->call(UserCategoryInterestSeeder::class);
 
-
+        $this->call(CareerCourseSeeder::class);
         $this->call(LikeCommentSeeder::class);
         // User::factory(10)->create();
 

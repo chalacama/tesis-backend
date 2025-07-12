@@ -57,16 +57,6 @@ class CoursePolicy
         // 2. Es uno de los tutores asignados a ESE curso.
         return $user->hasPermissionTo('courses.update') && $course->tutors()->where('users.id', $user->id)->exists();
     }
-
-    /**
-     * Determina si el usuario puede activar/desactivar un curso específico.
-     */
-    public function activate(User $user, Course $course): bool
-    {
-        // Reutilizamos la misma lógica que para actualizar.
-        return $this->update($user, $course);
-    }
-
     /**
      * Determina si el usuario puede eliminar un curso específico.
      */

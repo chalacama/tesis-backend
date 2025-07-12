@@ -14,8 +14,8 @@ class TutorCourseSeeder extends Seeder
     public function run(): void
     {
         TutorCourse::create([
-            'course_id' => 1, // Asegúrate de que el curso con ID 1 exista
-            'user_id' => 2,   // Asegúrate de que el usuario con ID 1 exista
+            'course_id' => 1, 
+            'user_id' => 2,   
         ]);
         
         TutorCourse::create([

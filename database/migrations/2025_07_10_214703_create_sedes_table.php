@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('canton');
             $table->unsignedBigInteger('educational_unit_id');
             $table->timestamps();
+            $table->softDeletes();
 
             $table->foreign('educational_unit_id')->references('id')
             ->on('educational_units')

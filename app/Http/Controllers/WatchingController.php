@@ -64,9 +64,9 @@ class WatchingController extends Controller
             'categories:id,name',
             'registrations' => fn($q) => $q->where('user_id', $userId)->select('id', 'course_id', 'user_id', 'annulment'),
             'tutors:id,name,lastname,email',
-            'modules' => fn($q) => $q->where('enabled', true)->orderBy('order')->select('id', 'name', 'order', 'course_id'),
-            'modules.chapters' => fn($q) => $q->where('enabled', true)->orderBy('order')->select('id', 'title', 'order', 'module_id'),
-            'modules.chapters.learningContent' => fn($q) => $q->where('enabled', true)->select('id', 'url', 'chapter_id', 'type_content_id'),
+            'modules' => fn($q) => $q->orderBy('order')->select('id', 'name', 'order', 'course_id'),
+            'modules.chapters' => fn($q) => $q->orderBy('order')->select('id', 'title', 'order', 'module_id'),
+            'modules.chapters.learningContent' => fn($q) => $q->select('id', 'url', 'chapter_id', 'type_content_id'),
             'modules.chapters.learningContent.contentViews' => fn($q) => $q->where('user_id', $userId)->select('id', 'learning_content_id', 'user_id', 'updated_at'),
             'modules.chapters.learningContent.typeLearningContent:id,name',
         ])
@@ -191,15 +191,10 @@ public function showContent(Request $request)
     $contentViewId = $request->input('content_view_id');
     // Obtener el contenido de aprendizaje asociado al ContentView
     $contentView = ContentView::with([
-        'learningContent' => function ($q) {
-            $q->where('enabled', true);
-        },
-        'learningContent.typeLearningContent' => function ($q) {
-            $q->where('enabled', true);
-        },
-        'learningContent.chapter' => function ($q) {
-            $q->where('enabled', true);
-        },
+        'learningContent',
+        'learningContent.typeLearningContent' ,
+        'learningContent.chapter'
+       
     ])
     ->where('id', $contentViewId)
     ->first();
@@ -210,9 +205,9 @@ public function showContent(Request $request)
 
     return response()->json([
         'content_view' => $contentView->only(['id', 'user_id', 'learning_content_id', 'second_seen']),
-        'learning_content' => $contentView->learningContent->only(['id', 'url', 'enabled', 'type_content_id']),
+        'learning_content' => $contentView->learningContent->only(['id', 'url', 'type_content_id']),
         'type_learning_content' => $contentView->learningContent->typeLearningContent->only(['id', 'name', 'max_size', 'min_duration_seconds', 'max_duration_seconds']),
-        'chapter' => $contentView->learningContent->chapter->only(['id', 'name', 'description', 'order', 'enabled']),
+        'chapter' => $contentView->learningContent->chapter->only(['id', 'name', 'description', 'order']),
     ]);
 }
 

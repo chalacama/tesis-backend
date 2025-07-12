@@ -65,23 +65,38 @@ class Course extends Model
         return $randomString;
     }
 
-    /**
-     * Relación uno a muchos con TutorCourse.
-     */
-    public function tutorCourses()
-    {
-        return $this->hasMany(TutorCourse::class);
-    }
-
-    /**
-     * Relación muchos a muchos con User a través de tutor_courses (tutores del curso).
+    
+/**
+     * Relación muchos a muchos con usuarios a través de la tabla pivote tutor_courses.
+     * Incluye el campo 'is_owner' de la tabla pivote.
      */
     public function tutors()
     {
         return $this->belongsToMany(User::class, 'tutor_courses')
-            ->withPivot('enabled')
-            ->withTimestamps();
+                    ->withPivot('is_owner') // Carga el campo 'is_owner' de la tabla pivote
+                    ->withTimestamps(); // Carga created_at y updated_at de la tabla pivote
     }
+
+    /**
+     * Obtiene el dueño del curso.
+     * Asume que solo hay un dueño por curso.
+     */
+    public function owner()
+    {
+        return $this->tutors()->wherePivot('is_owner', true);
+    }
+
+    /**
+     * Obtiene los tutores colaboradores del curso.
+     */
+    public function collaborators()
+    {
+        return $this->tutors()->wherePivot('is_owner', false);
+    }
+    /**
+     * Relación muchos a muchos con User a través de tutor_courses (tutores del curso).
+     */
+    
 
     /**
      * Relación uno a muchos con RatingCourse.
@@ -163,4 +178,8 @@ class Course extends Model
     {
         return $this->hasMany(MiniatureCourse::class);
     }
+    public function careers()
+{
+    return $this->belongsToMany(Career::class, 'career_courses');
+}
 }

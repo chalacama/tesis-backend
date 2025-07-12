@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('organization_domain')->nullable()->unique();
             $table->string('url_logo')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

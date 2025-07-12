@@ -18,8 +18,7 @@ class Comment extends Model
         'texto',
         'parent_id',
         'commentable_id',
-        'commentable_type',
-        'enabled',
+        'commentable_type'
     ];
 
     /**

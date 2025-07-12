@@ -18,7 +18,7 @@ class CourseController extends Controller
         $this->authorize('viewAny', Course::class);
 
         $user = Auth::user();
-        $query = Course::query(); // La query base
+        $query = Course::query()->withTrashed(); // La query base
 
         // Si es tutor, la policy ya nos dio acceso, ahora filtramos para que vea solo los suyos.
         if ($user->hasRole('tutor')) {
@@ -28,13 +28,13 @@ class CourseController extends Controller
 
         $courses = $query
             ->with([
-                'miniatures' => fn($q) => $q->where('enabled', true),
-                'categories' => fn($q) => $q->where('enabled', true),
+                'miniatures',
+                'categories',
                 'certified:id,course_id,is_certified',
             ])
             ->withCount([
                 'modules as modules_count',
-                'allComments as total_comments_count' => fn($q) => $q->where('enabled', true),
+                'allComments as total_comments_count',
                 'savedCourses',
                 'registrations',
         ])
@@ -80,11 +80,22 @@ class CourseController extends Controller
     { 
         $this->authorize('view', $course);
         $courseInfo = Course::with([
-            'categories',            // categorías del curso
-            'tutors',                // tutores del curso
-            'modules.chapters.learningContent', 
-            'modules.chapters.questions.typeQuestion', 
-            'modules.chapters.questions.answers',      
+            // Incluye módulos eliminados
+            'modules' => function ($query) {
+                $query->withTrashed()
+                    ->with([
+                        // Incluye capítulos eliminados
+                        'chapters' => function ($chapterQuery) {
+                            $chapterQuery->withTrashed()
+                                ->with([
+                                    // Incluye contenidos eliminados
+                                    'learningContent' => function ($lcQuery) {
+                                        $lcQuery->withTrashed();
+                                    }
+                                ]);
+                        }
+                    ]);
+            }      
         ])->find($course->id);
 
         if (!$courseInfo) {
@@ -125,18 +136,7 @@ class CourseController extends Controller
 
         $item->restore();
         return response()->json(['message' => 'Item restored successfully.']); */
-    }
-    public function activate(Request $request, Course $course): JsonResponse
-    {
-        $this->authorize('activate', $course);
-
-        // ... tu lógica para activar/desactivar ...
-        $validated = $request->validate(['activate' => 'required|boolean']);
-        $course->enabled = $validated['activate'];
-        $course->save();
-
-        return response()->json(['message' => 'Estado del curso actualizado', 'course' => $course]);
-    }    
+    }     
     public function archived(Course $course): JsonResponse
     {
         $this->authorize('delete', $course);

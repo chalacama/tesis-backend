@@ -37,11 +37,6 @@ class ModulePolicy
         return $user->hasPermissionTo('modules.update') && $module->course->tutors()->where('users.id', $user->id)->exists();
     }
 
-    public function activate(User $user, Module $module): bool
-    {
-        return $this->update($user, $module);
-    }
-
     public function delete(User $user, Module $module): bool
     {
         return $user->hasPermissionTo('modules.archive') && $module->course->tutors()->where('users.id', $user->id)->exists();

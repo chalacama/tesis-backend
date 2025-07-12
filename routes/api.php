@@ -23,7 +23,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('course')->group(function () {        
         Route::post('/store', [CourseController::class, 'store'])->middleware('permission:courses.create');
         Route::put('/{course}/update', [CourseController::class, 'update'])->middleware('permission:courses.update');
-        Route::put('/{course}/activate', [CourseController::class, 'activate'])->middleware('permission:courses.update');
         Route::delete('/{course}/archived', [CourseController::class, 'archived'])->middleware('permission:courses.archived');
         Route::get('/{course}/show', [CourseController::class, 'show'])->middleware('permission:courses.read-hidden');
         Route::get('/index', [CourseController::class, 'index'])->middleware('permission:courses.read-hidden');
@@ -32,7 +31,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('module')->group(function () {
         Route::post('/store', [ModuleController::class, 'store'])->middleware('permission:modules.create');
         Route::put('/{module}/update', [ModuleController::class, 'update'])->middleware('permission:modules.update');
-        Route::put('/{module}/activate', [ModuleController::class, 'activate'])->middleware('permission:modules.update');
         Route::delete('/{module}/archived', [ModuleController::class, 'archived'])->middleware('permission:modules.archived');
         Route::post('/reorder', [ModuleController::class, 'reorder'])->middleware('permission:modules.update');
     });
@@ -40,7 +38,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('chapter')->group(function () {
         Route::post('/store', [ChapterController::class, 'store'])->middleware('permission:chapters.create');
         Route::put('/{chapter}/update', [ChapterController::class, 'update'])->middleware('permission:chapters.update');
-        Route::put('/{chapter}/activate', [ChapterController::class, 'activate'])->middleware('permission:chapters.update');
         Route::delete('/{chapter}/archived', [ChapterController::class, 'archived'])->middleware('permission:chapters.archived');
         Route::post('/reorder', [ChapterController::class, 'reorder'])->middleware('permission:chapters.update');
     });
@@ -51,7 +48,6 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::delete('/{id}/destroy', [LearningContentController::class, 'destroyCloud'])->middleware('permission:learning-contents.destroy');
         });
         Route::delete('/{id}/archived', [LearningContentController::class, 'archived'])->middleware('permission:learning-contents.archived');
-        Route::put('/{id}/activate', [LearningContentController::class, 'activate'])->middleware('permission:learning-contents.update');
         Route::prefix('/youtube')->group(function () {
             
         });
@@ -61,7 +57,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('tutor-course')->group(function () {
         Route::post('/store', [TutorCourseController::class, 'store'])->middleware('permission:tutor-courses.create');
         Route::post('/change', [TutorCourseController::class, 'change'])->middleware('permission:tutor-courses.update');
-        Route::put('/{id}/activate', [TutorCourseController::class, 'activate'])->middleware('permission:tutor-courses.update');
         Route::delete('/{id}/archived', [TutorCourseController::class, 'archived'])->middleware('permission:tutor-courses.archived');
     });
     Route::prefix('registration')->group(function () {

@@ -13,14 +13,16 @@ return new class extends Migration
     {
         Schema::create('educational_users', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('sede_id')->unique();
-            $table->unsignedBigInteger('user_id')->unique();
+            $table->unsignedBigInteger('sede_id');
+            $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('career_id')->nullable();
+            $table->unsignedBigInteger('educational_level_id')->nullable();
             $table->integer('level')->nullable();
-            $table->string('period')->nullable();
             $table->timestamps();
 
             $table->foreign('sede_id')->references('id')->on('sedes')->onDelete('cascade');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('career_id')->references('id')->on('careers')->onDelete('set null');
         });
     }
 

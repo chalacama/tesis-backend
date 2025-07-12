@@ -47,35 +47,7 @@ public function update(Request $request, Module $module)
         'module'  => $module
     ], 200);
 }
-public function activate(Request $request, Module $module)
-{
-    $this->authorize('activate', $module);
 
-    $validated = $request->validate([
-        'activate' => 'required|boolean',
-    ]);
-
-    if ($validated['activate'] && $module->enabled) {
-        return response()->json([
-            'message' => 'El módulo ya está activado',
-            'module' => $module
-        ]);
-    }
-    if (!$validated['activate'] && !$module->enabled) {
-        return response()->json([
-            'message' => 'El módulo ya está desactivado',
-            'module' => $module
-        ]);
-    }
-
-    $module->enabled = $validated['activate'];
-    $module->save();
-
-    return response()->json([
-        'message' => $validated['activate'] ? 'Módulo activado correctamente' : 'Módulo desactivado correctamente',
-        'module' => $module
-    ]);
-}
 
 public function archived(Module $module)
 {

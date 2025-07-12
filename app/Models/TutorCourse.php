@@ -12,6 +12,7 @@ class TutorCourse extends Model
     protected $fillable = [
         'course_id',
         'user_id',
+        'is_owner',
     ];
 
     /**
@@ -29,4 +30,5 @@ class TutorCourse extends Model
     {
         return $this->belongsTo(Course::class);
     }
+    
 }

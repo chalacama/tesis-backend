@@ -17,6 +17,7 @@ return new class extends Migration
             $table->integer('max_semesters')->default(10);
             $table->string('url_logo')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
