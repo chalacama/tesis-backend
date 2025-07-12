@@ -29,7 +29,12 @@ class CoursePolicy
         // Solo administradores y tutores pueden ver la lista de cursos del backend.
         return $user->hasRole('tutor'); // El admin ya fue aprobado por el método before()
     }
-
+    public function view(User $user, Course $course): bool
+    {
+    // Admin ya tiene acceso por el método before
+    // Tutor puede ver si está asignado
+    return $user->hasRole('tutor') && $course->tutors()->where('users.id', $user->id)->exists();
+    }
     /**
      * Determina si el usuario puede crear cursos.
      * (Reemplaza la lógica de tu método createCourse)
@@ -68,5 +73,16 @@ class CoursePolicy
     public function delete(User $user, Course $course): bool
     {
         return $user->hasPermissionTo('courses.delete') && $course->tutors()->where('users.id', $user->id)->exists();
+    }
+    /**
+     * Determine whether the user can permanently delete the model.
+     */
+    public function forceDelete(User $user, Module $module): bool
+    {
+        return false;
+    }
+    public function restore(User $user, Module $module): bool
+    {
+        return false;
     }
 }

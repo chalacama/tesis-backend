@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Chapter;
 class ChapterController extends Controller
 {
-    public function createChapter(Request $request)
+public function store(Request $request)
 {
     $validated = $request->validate([
         'title' => 'required|string|max:255',
@@ -21,7 +21,7 @@ class ChapterController extends Controller
         'chapter' => $chapter
     ]);
 }
-public function updateChapters(Request $request, $id)
+public function update(Request $request, $id)
 {
     $validated = $request->validate([
         'title' => 'required|string',
@@ -43,7 +43,7 @@ public function updateChapters(Request $request, $id)
     ]);
 }
 
-public function softDeleteChapter($id)
+public function archived($id)
 {
     $chapter = Chapter::find($id);
 
@@ -57,7 +57,7 @@ public function softDeleteChapter($id)
         'message' => 'Capítulo eliminado correctamente'
     ]);
 }
-public function updateOrderChapters(Request $request)
+public function reorder(Request $request)
 {
     // 1. Validar que recibimos un array de IDs.
     $validated = $request->validate([
@@ -73,7 +73,7 @@ public function updateOrderChapters(Request $request)
         'message' => 'El orden de los capitulos ha sido actualizado.'
     ]);
 }
-public function activateChapter(Request $request, $id)
+public function activate(Request $request, $id)
 {
     $validated = $request->validate([
         'activate' => 'required|boolean',

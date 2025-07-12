@@ -19,25 +19,25 @@ class RolesAndPermissionsSeeder extends Seeder
         // 1. Lista de permisos por recurso
         $permissionsByResource = [
             'users' => [
-                'create', 'read', 'read-hidden', 'update', 'delete', 'destroy'
+                'create', 'read', 'read-hidden', 'update', 'archived', 'destroy'
             ],
             'courses' => [
-                'create', 'read', 'read-hidden', 'update', 'delete', 'destroy', 'activate', 'assign-tutor'
+                'create', 'read', 'read-hidden', 'update', 'archived', 'destroy', 'assign-tutor'
             ],
             'modules' => [
-                'create', 'read', 'read-hidden', 'update', 'delete', 'destroy', 'activate', 'update-order'
+                'create', 'read', 'read-hidden', 'update', 'archived', 'destroy'
             ],
             'chapters' => [
-                'create', 'read', 'read-hidden', 'update', 'delete', 'destroy', 'activate', 'update-order'
+                'create', 'read', 'read-hidden', 'update', 'archived', 'destroy',
             ],
             'learning-contents' => [
-                'create', 'read', 'read-hidden', 'update', 'delete', 'destroy', 'activate'
+                'create', 'read', 'read-hidden', 'update', 'archived', 'destroy',
             ],
             'tutor-courses' => [
-                'create', 'update', 'delete', 'activate', 'destroy'
+                'create', 'update', 'archived', 'destroy'
             ],
             'registration' => [
-                'create', 'cancel', 'delete','destroy'
+                'create', 'cancel', 'archived','destroy'
             ],
         ];
 
@@ -57,11 +57,12 @@ class RolesAndPermissionsSeeder extends Seeder
         // ROL: Tutor (Gestor de contenido, sin permisos destructivos ni de gestión de usuarios/tutores)
         $tutorRole = Role::create(['name' => 'tutor']);
         $tutorRole->givePermissionTo([
-            'courses.create', 'courses.read', 'courses.read-hidden', 'courses.update', 'courses.delete', 'courses.activate',
-            'modules.create', 'modules.read', 'modules.read-hidden', 'modules.update', 'modules.delete', 'modules.activate', 'modules.update-order',
-            'chapters.create', 'chapters.read', 'chapters.read-hidden', 'chapters.update', 'chapters.delete', 'chapters.activate', 'chapters.update-order',
-            'learning-contents.create', 'learning-contents.read', 'learning-contents.read-hidden', 'learning-contents.update', 'learning-contents.delete', 'learning-contents.activate',
-            'registration.create',
+            
+            'courses.create', 'courses.read', 'courses.read-hidden', 'courses.update', 'courses.archived',
+            'modules.create', 'modules.read', 'modules.read-hidden', 'modules.update', 'modules.archived',
+            'chapters.create', 'chapters.read', 'chapters.read-hidden', 'chapters.update', 'chapters.archived',
+            'learning-contents.create', 'learning-contents.read', 'learning-contents.read-hidden', 'learning-contents.update', 'learning-contents.archived',
+            'registration.create','registration.cancel'
         ]);
 
         // ROL: Student (Solo puede ver contenido activo y público)
@@ -71,7 +72,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'modules.read',
             'chapters.read',
             'learning-contents.read',
-            'registration.create',
+            'registration.create', 'registration.cancel'
         ]);
     }
 }

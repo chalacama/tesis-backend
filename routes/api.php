@@ -20,64 +20,62 @@ Route::prefix('auth')->group(function () {
 // == RUTAS DE GESTIÓN (Protegidas por autenticación y permisos) ==
 Route::middleware('auth:sanctum')->group(function () {
 
-    Route::prefix('course')->group(function () {
-        // Route::post('/create', [CourseController::class, 'createCourse'])->middleware('permission:courses.create');
-        // Route::put('/{id}/update', [CourseController::class, 'updateCourse'])->middleware('permission:courses.update');
-        // Route::put('/{id}/activate', [CourseController::class, 'activateCourse'])->middleware('permission:courses.activate');
-        // Route::delete('/{id}/soft-delete', [CourseController::class, 'softDeleteCourse'])->middleware('permission:courses.delete');               
-        // Route::get('/all', [CourseController::class, 'getAllCourses'])->middleware('permission:courses.read-hidden');        
-        // Route::get('/{id}/detail', [CourseController::class, 'getCourseDetail'])->middleware('permission:read-hidden');
-    Route::post('/create', [CourseController::class, 'createCourse'])->middleware('permission:courses.create');
-    Route::put('/{course}/update', [CourseController::class, 'updateCourse'])->middleware('permission:courses.update');
-    Route::put('/{course}/activate', [CourseController::class, 'activateCourse'])->middleware('permission:courses.activate');
-    Route::delete('/{course}/soft-delete', [CourseController::class, 'softDeleteCourse'])->middleware('permission:courses.delete');
-    Route::get('/detail', [CourseController::class, 'getCourseDetail'])->middleware('permission:read-hidden');
-    Route::get('/{course}/all', [CourseController::class, 'getAllCourses'])->middleware('permission:courses.read-hidden');
+    Route::prefix('course')->group(function () {        
+        Route::post('/store', [CourseController::class, 'store'])->middleware('permission:courses.create');
+        Route::put('/{course}/update', [CourseController::class, 'update'])->middleware('permission:courses.update');
+        Route::put('/{course}/activate', [CourseController::class, 'activate'])->middleware('permission:courses.update');
+        Route::delete('/{course}/archived', [CourseController::class, 'archived'])->middleware('permission:courses.archived');
+        Route::get('/{course}/show', [CourseController::class, 'show'])->middleware('permission:courses.read-hidden');
+        Route::get('/index', [CourseController::class, 'index'])->middleware('permission:courses.read-hidden');
     });
 
     Route::prefix('module')->group(function () {
-        Route::post('/create', [ModuleController::class, 'createModule'])->middleware('permission:modules.create');
-        Route::put('/{id}/update', [ModuleController::class, 'updateModule'])->middleware('permission:modules.update');
-        Route::put('/{id}/activate', [ModuleController::class, 'activateModule'])->middleware('permission:modules.activate');
-        Route::delete('/{id}/soft-delete', [ModuleController::class, 'softDeleteModule'])->middleware('permission:modules.delete');
-        Route::post('/update-order', [ModuleController::class, 'updateOrderModules'])->middleware('permission:modules.update-order');
+        Route::post('/store', [ModuleController::class, 'store'])->middleware('permission:modules.create');
+        Route::put('/{module}/update', [ModuleController::class, 'update'])->middleware('permission:modules.update');
+        Route::put('/{module}/activate', [ModuleController::class, 'activate'])->middleware('permission:modules.update');
+        Route::delete('/{module}/archived', [ModuleController::class, 'archived'])->middleware('permission:modules.archived');
+        Route::post('/reorder', [ModuleController::class, 'reorder'])->middleware('permission:modules.update');
     });
 
     Route::prefix('chapter')->group(function () {
-        Route::post('/create', [ChapterController::class, 'createChapter'])->middleware('permission:chapters.create');
-        Route::put('/{id}/update', [ChapterController::class, 'updateChapter'])->middleware('permission:chapters.update');
-        Route::put('/{id}/activate', [ChapterController::class, 'activateChapte'])->middleware('permission:chapters.activate');
-        Route::delete('/{id}/soft-delete', [ChapterController::class, 'softDeleteChapter'])->middleware('permission:chapters.delete');
-        Route::post('/update-order', [ChapterController::class, 'updateOrderChapters'])->middleware('permission:chapters.update-order');
+        Route::post('/store', [ChapterController::class, 'store'])->middleware('permission:chapters.create');
+        Route::put('/{chapter}/update', [ChapterController::class, 'update'])->middleware('permission:chapters.update');
+        Route::put('/{chapter}/activate', [ChapterController::class, 'activate'])->middleware('permission:chapters.update');
+        Route::delete('/{chapter}/archived', [ChapterController::class, 'archived'])->middleware('permission:chapters.archived');
+        Route::post('/reorder', [ChapterController::class, 'reorder'])->middleware('permission:chapters.update');
     });
 
     Route::prefix('learning-content')->group(function () {
-        Route::prefix('/cloudinary')->group(function () {
-            Route::post('/create-video', [LearningContentController::class, 'createVideoCloudinary'])->middleware('permission:learning-contents.create');
-            
-            Route::delete('/{id}/destroy-video', [LearningContentController::class, 'destroyVideoCloudinary'])->middleware('permission:learning-contents.destroy');
+        Route::prefix('/cloud')->group(function () {
+            Route::post('/store', [LearningContentController::class, 'storeCloud'])->middleware('permission:learning-contents.create');            
+            Route::delete('/{id}/destroy', [LearningContentController::class, 'destroyCloud'])->middleware('permission:learning-contents.destroy');
         });
-        Route::delete('/{id}/soft-delete', [LearningContentController::class, 'softDeleteModule'])->middleware('permission:learning-contents.delete');
-        Route::put('/{id}/activate', [LearningContentController::class, 'activateLearningContent'])->middleware('permission:learning-contents.activate');
+        Route::delete('/{id}/archived', [LearningContentController::class, 'archived'])->middleware('permission:learning-contents.archived');
+        Route::put('/{id}/activate', [LearningContentController::class, 'activate'])->middleware('permission:learning-contents.update');
+        Route::prefix('/youtube')->group(function () {
+            
+        });
     });
 
     
     Route::prefix('tutor-course')->group(function () {
-        Route::post('/create', [TutorCourseController::class, 'createTutorCourse'])->middleware('permission:tutor-courses.create');
-        Route::post('/change', [TutorCourseController::class, 'changeTutorCourse'])->middleware('permission:tutor-courses.update');
-        Route::put('/{id}/activate', [TutorCourseController::class, 'activateTutorCourse'])->middleware('permission:tutor-courses.activate');
-        Route::delete('/{id}/destroy', [TutorCourseController::class, 'destroyTutorCourse'])->middleware('permission:tutor-courses.destroy');
+        Route::post('/store', [TutorCourseController::class, 'store'])->middleware('permission:tutor-courses.create');
+        Route::post('/change', [TutorCourseController::class, 'change'])->middleware('permission:tutor-courses.update');
+        Route::put('/{id}/activate', [TutorCourseController::class, 'activate'])->middleware('permission:tutor-courses.update');
+        Route::delete('/{id}/archived', [TutorCourseController::class, 'archived'])->middleware('permission:tutor-courses.archived');
     });
-    Route::prefix('register')->group(function () {
-        Route::post('/user-to-course', [RegistrationController::class, 'registerUserToCourse'])->middleware('permission:tutor-courses.delete');
-        Route::post('/cancel-user-to-course', [RegistrationController::class, 'cancelRegistrationUserToCourse'])->middleware('permission:tutor-courses.delete');
+    Route::prefix('registration')->group(function () {
+        Route::post('/store', [RegistrationController::class, 'store'])->middleware('permission:registration.create');
+        Route::post('/cancel', [RegistrationController::class, 'cancel'])->middleware('permission:registration.cancel');
 
     });
     Route::prefix('watching')->group(function () {
-        Route::get('/{courseId}/list-content/{userId}', [WatchingController::class, 'getListContent'])->middleware('permission:courses.read');
-        Route::post('/youtube-detail', [WatchingController::class, 'getYtVideoDetail'])->middleware('permission:courses.read-hidden');
-        Route::post('/content-view', [WatchingController::class, 'getContentViewById'])->middleware('permission:courses.read');
-}); 
+        
+        Route::get('/{courseId}/course-index/{userId}', [WatchingController::class, 'indexCourse'])->middleware('permission:courses.read');        
+        Route::post('/content-show', [WatchingController::class, 'showContent'])->middleware('permission:courses.read');
+        Route::post('/yt-show', [WatchingController::class, 'showYt'])->middleware('permission:courses.read-hidden');
+        
+});  
 });
 
 

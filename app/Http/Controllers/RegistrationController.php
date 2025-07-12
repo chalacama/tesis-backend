@@ -11,7 +11,7 @@ class RegistrationController extends Controller
 {
     
 
-public function registerUserToCourse(Request $request)
+public function store(Request $request)
 {
     $request->validate([
         'user_id' => 'required|integer',
@@ -44,7 +44,7 @@ public function registerUserToCourse(Request $request)
 
     return response()->json(['message' => 'Usuario registrado en el curso con éxito']);
 }
-public function cancelRegistrationUserToCourse(Request $request)
+public function cancel(Request $request)
 {
     $request->validate([
         'user_id' => 'required|integer',

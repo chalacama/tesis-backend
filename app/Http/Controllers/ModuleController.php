@@ -10,61 +10,48 @@ use Illuminate\Http\Request;
 class ModuleController extends Controller
 {
 
-public function createModule(Request $request)
+public function store(Request $request)
 {
-    // 1. Validar la petición. La regla 'exists' ya confirma que el curso es válido.
-    // Laravel se encarga de la respuesta de error si la validación falla.
+    $this->authorize('create', Module::class);
     $validated = $request->validate([
         'course_id' => 'required|exists:courses,id',
         'name'      => 'required|string|max:255',
-        // 'order'     => 'required|integer'
-        
     ]);
 
-    // 2. Crear el módulo usando asignación masiva.
+    $course = Course::findOrFail($validated['course_id']);
+    // Verifica que el usuario pueda crear módulos en ese curso
+    $this->authorize('update', $course);
+
     $module = Module::create($validated);
 
-    // 3. Devolver la respuesta de éxito.
     return response()->json([
         'message' => 'Módulo creado correctamente',
         'module'  => $module
     ], 201);
 }
-    public function updateModule(Request $request, $id)
+public function update(Request $request, Module $module)
 {
-    // 1. Validar solo los datos que vienen en la petición.
-    // Laravel se encarga de la respuesta de error 422 si la validación falla.
+    $this->authorize('update', $module);
+
     $validatedData = $request->validate([
-        'name'      => 'sometimes|string|max:255',
-        // 'order'     => 'sometimes|integer',
-        
+        'name' => 'sometimes|string|max:255',
     ]);
 
-    $module = Module::find($id);
-
-        if (!$module) {
-            return response()->json(['message' => 'Curso no encontrado'], 404);
-        }
-    // 2. Actualizar el módulo con los datos validados.
     $module->update($validatedData);
 
-    // 3. Devolver la respuesta de éxito con el módulo actualizado.
     return response()->json([
         'message' => 'Módulo actualizado correctamente',
         'module'  => $module
     ], 200);
 }
-public function activateModule(Request $request, $id)
+public function activate(Request $request, Module $module)
 {
+    $this->authorize('activate', $module);
+
     $validated = $request->validate([
         'activate' => 'required|boolean',
     ]);
 
-    $module = Module::find($id);
-
-    if (!$module) {
-        return response()->json(['message' => 'Módulo no encontrado'], 404);
-    }
     if ($validated['activate'] && $module->enabled) {
         return response()->json([
             'message' => 'El módulo ya está activado',
@@ -77,12 +64,8 @@ public function activateModule(Request $request, $id)
             'module' => $module
         ]);
     }
-    if ($validated['activate']) {
-        $module->enabled = true;
-    } else {
-        $module->enabled = false;
-    }
 
+    $module->enabled = $validated['activate'];
     $module->save();
 
     return response()->json([
@@ -90,13 +73,10 @@ public function activateModule(Request $request, $id)
         'module' => $module
     ]);
 }
-public function softDeleteModule($id)
-{
-    $module = Module::find($id);
 
-    if (!$module) {
-        return response()->json(['message' => 'Módulo no encontrado'], 404);
-    }
+public function archived(Module $module)
+{
+    $this->authorize('delete', $module);
 
     $module->delete();
 
@@ -104,18 +84,18 @@ public function softDeleteModule($id)
         'message' => 'Módulo enviado a papelería correctamente'
     ]);
 }
-public function updateOrderModules(Request $request)
+
+public function reorder(Request $request)
 {
-    // 1. Validar que recibimos un array de IDs.
+    $this->authorize('update', Module::class);
+
     $validated = $request->validate([
         'modules'   => 'required|array',
-        'modules.*' => 'integer|exists:modules,id', // Valida que cada ID exista en la tabla modules
+        'modules.*' => 'integer|exists:modules,id',
     ]);
 
-    // 2. Llama al método estático del modelo para reordenar.
     Module::setNewOrder($validated['modules']);
 
-    // 3. Devuelve una respuesta de éxito.
     return response()->json([
         'message' => 'El orden de los módulos ha sido actualizado.'
     ]);

@@ -14,14 +14,7 @@ use Google_Service_YouTube;
 use Google_Service_YouTube_Video;
 class WatchingController extends Controller
 {
-
-    /**
-     * Obtiene la duración de múltiples videos de YouTube en una sola llamada a la API.
-     * Utiliza caché para evitar llamadas repetidas.
-     *
-     * @param array $videoIds
-     * @return array
-     */
+    
     private function getYouTubeDurationsInBulk(array $videoIds): array
     {
         if (empty($videoIds)) {
@@ -63,12 +56,7 @@ class WatchingController extends Controller
             }
         });
     }
-
-
-    /**
-     * FUNCIÓN OPTIMIZADA
-     */
-    public function getListContent($courseId, $userId)
+    public function indexCourse($courseId, $userId)
     {
         // 1. OPTIMIZACIÓN DE CONSULTA: Selecciona solo las columnas necesarias.
         // Asegúrate de incluir las claves foráneas (user_id, course_id, module_id, etc.)
@@ -115,13 +103,6 @@ class WatchingController extends Controller
         // La lógica de 'registered', 'last_view_id', y 'makeHidden' se moverá al Resource.
         return new CourseResource($course);
     }
-    
-    /**
-     * Obtiene los detalles de un video de YouTube, incluyendo la duración en segundos.
-     *
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
-     */
     private function getApiYt($url){
         
         $videoId = $this->extractYtVideoId($url);
@@ -172,7 +153,7 @@ class WatchingController extends Controller
         return $seconds . ' s';
     }
 }
-    public function getYtVideoDetail(Request $request)
+    public function showYt(Request $request)
     {
         $request->validate([
             'url' => 'required|url'
@@ -183,12 +164,6 @@ class WatchingController extends Controller
         
     }
 
-    /**
-     * Extrae el ID del video de varias formatos de URL de YouTube.
-     *
-     * @param string $url
-     * @return string|null
-     */
     private function extractYtVideoId(string $url): ?string
     {
         $pattern = '/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/';
@@ -211,7 +186,7 @@ class WatchingController extends Controller
     }
 
 
-public function getContentViewById(Request $request)
+public function showContent(Request $request)
 {
     $contentViewId = $request->input('content_view_id');
     // Obtener el contenido de aprendizaje asociado al ContentView
