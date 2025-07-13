@@ -17,10 +17,10 @@ class UsersSeeder extends Seeder
         $admins = [
             [
                 'name' => 'admin', // id : 1
-                'lastname' => 'prime',
-                'username' => 'admin.prime',
-                'email' => 'admin.prime@example.com',
-                'password' => bcrypt('admin123'),
+                'lastname' => 'espam',
+                'username' => 'adminespam',
+                'email' => 'admin.espam@espam.edu.ec',
+                'password' => bcrypt('S3cur3P@ssw0rd!2025'),
             ],
             // Puedes agregar más admins aquí
         ];
@@ -36,14 +36,14 @@ class UsersSeeder extends Seeder
                 'name' => 'Ana', // id : 2
                 'lastname' => 'García',
                 'username' => 'anag',
-                'email' => 'ana@example.com',
+                'email' => 'luis.chalacama@espam.edu.ec',
                 'password' => bcrypt('password123'),
             ],
             [
                 'name' => 'Philip', // id : 3
                 'lastname' => 'Chala',
                 'username' => 'chalacama',
-                'email' => 'Chala@example.com',
+                'email' => 'chala@espam.edu.ec',
                 'password' => bcrypt('password123'),
             ],
             // Puedes agregar más tutores aquí
@@ -60,14 +60,14 @@ class UsersSeeder extends Seeder
                 'name' => 'Juan', // id : 4
                 'lastname' => 'Pérez',
                 'username' => 'juanp',
-                'email' => 'juan@example.com',
+                'email' => 'juan@gmail.com',
                 'password' => bcrypt('password123'),
             ],
             [
                 'name' => 'Oliver', // id : 5
                 'lastname' => 'Loor',
                 'username' => 'looroliver',
-                'email' => 'oliver@example.com',
+                'email' => 'oliver@gmail.com',
                 'password' => bcrypt('password123'),
             ],
             // Puedes agregar más estudiantes aquí

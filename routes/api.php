@@ -4,7 +4,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\{
     CourseController,StartController,RegistrationController,WatchingController,ModuleController,
-    ChapterController,LearningContentController,TutorCourseController,AuthController
+    ChapterController,LearningContentController,TutorCourseController,AuthController,
+    CourseInvitationController
 };
 // == RUTAS PÚBLICAS Y DE AUTENTICACIÓN ==
 Route::get('/user', function (Request $request) {
@@ -48,28 +49,25 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::delete('/{id}/destroy', [LearningContentController::class, 'destroyCloud'])->middleware('permission:learning-contents.destroy');
         });
         Route::delete('/{id}/archived', [LearningContentController::class, 'archived'])->middleware('permission:learning-contents.archived');
-        Route::prefix('/youtube')->group(function () {
-            
+        Route::prefix('/youtube')->group(function () {            
         });
+    });    
+    Route::prefix('tutor-course')->group(function () {        
+        // Route::post('/store', [TutorCourseController::class, 'store'])->middleware('permission:tutor-courses.create');
+        // Route::post('/change', [TutorCourseController::class, 'change'])->middleware('permission:tutor-courses.update');
+        // Route::delete('/{TutorCourse}/archived', [TutorCourseController::class, 'archived'])->middleware('permission:tutor-courses.archived');
     });
-
-    
-    Route::prefix('tutor-course')->group(function () {
-        Route::post('/store', [TutorCourseController::class, 'store'])->middleware('permission:tutor-courses.create');
-        Route::post('/change', [TutorCourseController::class, 'change'])->middleware('permission:tutor-courses.update');
-        Route::delete('/{id}/archived', [TutorCourseController::class, 'archived'])->middleware('permission:tutor-courses.archived');
+    Route::prefix('invitation')->group(function () {
+        Route::post('{course}/store', [CourseInvitationController::class, 'store'])->middleware('permission:tutor-courses.invite-collaborator');    
     });
     Route::prefix('registration')->group(function () {
         Route::post('/store', [RegistrationController::class, 'store'])->middleware('permission:registration.create');
         Route::post('/cancel', [RegistrationController::class, 'cancel'])->middleware('permission:registration.cancel');
-
     });
-    Route::prefix('watching')->group(function () {
-        
+    Route::prefix('watching')->group(function () {        
         Route::get('/{courseId}/course-index/{userId}', [WatchingController::class, 'indexCourse'])->middleware('permission:courses.read');        
         Route::post('/content-show', [WatchingController::class, 'showContent'])->middleware('permission:courses.read');
-        Route::post('/yt-show', [WatchingController::class, 'showYt'])->middleware('permission:courses.read-hidden');
-        
+        Route::post('/yt-show', [WatchingController::class, 'showYt'])->middleware('permission:courses.read-hidden');        
 });  
 });
 
@@ -85,7 +83,7 @@ Route::prefix('start')->group(function () {
     Route::get('/recommend-courses/{userId}', [StartController::class, 'recommendCoursesByUserInterest'])->middleware(['auth:sanctum', 'permission:courses.read']);
     
 });
-
+Route::post('invitation/accept', [CourseInvitationController::class, 'accept']);
 
 
 // ->middleware(['auth:sanctum', 'permission:asignar tutor a cursos'])->name('tutor-course.activate');

@@ -22,7 +22,7 @@ class RolesAndPermissionsSeeder extends Seeder
                 'create', 'read', 'read-hidden', 'update', 'archived', 'destroy'
             ],
             'courses' => [
-                'create', 'read', 'read-hidden', 'update', 'archived', 'destroy', 'assign-tutor'
+                'create', 'read', 'read-hidden', 'update', 'archived', 'destroy'
             ],
             'modules' => [
                 'create', 'read', 'read-hidden', 'update', 'archived', 'destroy'
@@ -34,7 +34,7 @@ class RolesAndPermissionsSeeder extends Seeder
                 'create', 'read', 'read-hidden', 'update', 'archived', 'destroy',
             ],
             'tutor-courses' => [
-                'create', 'update', 'archived', 'destroy'
+                'create-owner', 'invite-collaborator','archived-collaborator', 'change-owner',  'archived-owner',
             ],
             'registration' => [
                 'create', 'cancel', 'archived','destroy'
@@ -62,7 +62,8 @@ class RolesAndPermissionsSeeder extends Seeder
             'modules.create', 'modules.read', 'modules.read-hidden', 'modules.update', 'modules.archived',
             'chapters.create', 'chapters.read', 'chapters.read-hidden', 'chapters.update', 'chapters.archived',
             'learning-contents.create', 'learning-contents.read', 'learning-contents.read-hidden', 'learning-contents.update', 'learning-contents.archived',
-            'registration.create','registration.cancel'
+            'registration.create','registration.cancel',
+            'tutor-courses.invite-collaborator', 'tutor-courses.archived-collaborator',
         ]);
 
         // ROL: Student (Solo puede ver contenido activo y público)

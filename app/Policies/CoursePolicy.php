@@ -75,4 +75,5 @@ class CoursePolicy
     {
         return false;
     }
+    
 }

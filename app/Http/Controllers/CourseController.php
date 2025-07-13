@@ -13,49 +13,68 @@ class CourseController extends Controller
 {
     use AuthorizesRequests;
     public function index(): JsonResponse
-    {
-        // Autoriza si el usuario puede ver la lista de cursos del backend
-        $this->authorize('viewAny', Course::class);
+{
+    $this->authorize('viewAny', Course::class);
 
-        $user = Auth::user();
-        $query = Course::query()->withTrashed(); // La query base
+    $user = Auth::user();
+    $query = Course::query()->withTrashed();
 
-        // Si es tutor, la policy ya nos dio acceso, ahora filtramos para que vea solo los suyos.
-        if ($user->hasRole('tutor')) {
+    if ($user->hasRole('tutor')) {
         $query->whereHas('tutors', fn($q) => $q->where('users.id', $user->id));
-        }
-        // Si es admin, no se aplica el filtro y ve todos los cursos.
+    }
 
-        $courses = $query
-            ->with([
-                'miniatures',
-                'categories',
-                'certified:id,course_id,is_certified',
-            ])
-            ->withCount([
-                'modules as modules_count',
-                'allComments as total_comments_count',
-                'savedCourses',
-                'registrations',
+    $courses = $query
+        ->with([
+            'miniatures',
+            'categories',
+            'certified:id,course_id,is_certified',
+            'tutors.userInformation', // Para obtener apellido
+        ])
+        ->withCount([
+            'modules as modules_count',
+            'allComments as total_comments_count',
+            'savedCourses',
+            'registrations',
         ])
         ->withSum('ratingCourses as total_stars', 'stars')
+        ->orderBy('title') // Orden alfabético de cursos
         ->get()
         ->map(function ($course) {
             $course->total_stars = (int) $course->total_stars;
             $course->is_certified = $course->certified ? $course->certified->is_certified : false;
-
             $course->categorias = $course->categories->map(fn($cat) => [
                 'id' => $cat->id,
                 'name' => $cat->name
             ]);
-
             unset($course->certified, $course->categories);
+
+            // Tutores
+            $tutores = $course->tutors->map(function ($tutor) {
+                return [
+                    'id' => $tutor->id,
+                    'name' => $tutor->name,
+                    'lastname' => $tutor->userInformation->lastname ?? '',
+                    'is_owner' => (bool) $tutor->pivot->is_owner,
+                ];
+            });
+
+            // Ordena colaboradores por apellido
+            $colaboradores = $tutores->where('is_owner', false)->sortBy('lastname')->values();
+            $dueno = $tutores->where('is_owner', true)->first();
+
+            if (!$dueno && $tutores->isEmpty()) {
+                $course->creador = 'ESPAM MFL';
+                $course->colaboradores = [];
+            } else {
+                $course->creador = $dueno ? ($dueno['name'] . ' ' . $dueno['lastname']) : 'ESPAM MFL';
+                $course->colaboradores = $colaboradores->map(fn($col) => $col['name'] . ' ' . $col['lastname']);
+            }
 
             return $course;
         });
 
-        return response()->json(['courses' => $courses]);
-    }    
+    return response()->json(['courses' => $courses]);
+}  
     public function store(Request $request): JsonResponse
     {
         // Laravel automáticamente usará CoursePolicy@create

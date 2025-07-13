@@ -182,4 +182,8 @@ class Course extends Model
 {
     return $this->belongsToMany(Career::class, 'career_courses');
 }
+public function invitations()
+{
+    return $this->hasMany(CourseInvitation::class);
+}
 }
