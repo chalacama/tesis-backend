@@ -25,6 +25,7 @@ class Course extends Model
     'private',
     'code',
     'enabled',
+    'difficulty_id',
     ];
      protected $casts = [
         'private' => 'boolean',
@@ -122,6 +123,7 @@ class Course extends Model
     {
         return $this->belongsToMany(Category::class, 'category_courses');
     }
+    
     /**
      * RELACIÓN DE COMENTARIOS ACTUALIZADA
      *
@@ -186,4 +188,11 @@ public function invitations()
 {
     return $this->hasMany(CourseInvitation::class);
 }
+/**
+     * Relación pertenece a Difficulty.
+     */
+    public function difficulty()
+    {
+        return $this->belongsTo(Difficulty::class);
+    }
 }

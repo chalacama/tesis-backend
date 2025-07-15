@@ -27,6 +27,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/{course}/archived', [CourseController::class, 'archived'])->middleware('permission:courses.archived');
         Route::get('/{course}/show', [CourseController::class, 'show'])->middleware('permission:courses.read-hidden');
         Route::get('/index', [CourseController::class, 'index'])->middleware('permission:courses.read-hidden');
+        Route::put('/{course}/active', [CourseController::class, 'active'])->middleware('permission:courses.update');
+        Route::post('/{course}/reset-code', [CourseController::class, 'resetCode'])->middleware('permission:courses.update');
     });
 
     Route::prefix('module')->group(function () {
@@ -80,7 +82,8 @@ Route::prefix('start')->group(function () {
     Route::get('/top-best-rated-courses', [StartController::class, 'topBestRatedCourses']);
     Route::get('/top-updated-courses', [StartController::class, 'topUpdatedCourses']);
     Route::get('/top-created-courses', [StartController::class, 'topCreatedCourses']);
-    Route::get('/recommend-courses/{userId}', [StartController::class, 'recommendCoursesByUserInterest'])->middleware(['auth:sanctum', 'permission:courses.read']);
+    // esta ruta aun no esta lista
+    // Route::get('/recommend-courses/{userId}', [StartController::class, 'recommendCoursesByUserInterest'])->middleware(['auth:sanctum', 'permission:courses.read']);
     
 });
 Route::post('invitation/accept', [CourseInvitationController::class, 'accept']);

@@ -19,10 +19,9 @@ return new class extends Migration
             $table->boolean('private')->default(false);
             $table->string('code')->nullable()->unique();
             $table->boolean('enabled')->default(false);
-
+            $table->foreignId('difficulty_id')->constrained()->onDelete('restrict');
             $table->timestamps();
-            $table->softDeletes();
-           
+            $table->softDeletes();           
         });
     }
 

@@ -18,6 +18,7 @@ class CoursesSeeder extends Seeder
             'description' => 'Curso introductorio a Laravel.',
             'private' => true,       
             'enabled' => false, 
+            'difficulty_id' => 1, // Assuming 'Beginner' difficulty
             
         ]);
         // id : 2
@@ -26,7 +27,7 @@ class CoursesSeeder extends Seeder
             'description' => 'Curso introductorio a Angular.',
             'private' => false,
             'enabled' => true,
-            
+            'difficulty_id' => 2,
             
         ]);
         // id : 3
@@ -35,7 +36,7 @@ class CoursesSeeder extends Seeder
             'description' => 'Curso avanzado de PHP.',
             'private' => false,
             'enabled' => true,
-            
+            'difficulty_id' => 1,
             
         ]);
         // id : 4
@@ -44,8 +45,7 @@ class CoursesSeeder extends Seeder
             'description' => 'Curso avanzado de Java.',
             'private' => false,
             'enabled' => false,
-            
-           
+            'difficulty_id' => 3, 
         ]);
     }
 }

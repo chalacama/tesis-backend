@@ -27,7 +27,7 @@ class DatabaseSeeder extends Seeder
         $this->call(UnitLevelSeeder::class);
         $this->call(CareerSedeSeeder::class);
         $this->call(EducationalUserSeeder::class);
-
+        $this->call(DifficultySeeder::class);
         //Gestion learning
         $this->call(CoursesSeeder::class);
 

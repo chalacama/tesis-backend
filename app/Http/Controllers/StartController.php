@@ -5,9 +5,70 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\Course;
-
+use Illuminate\Support\Str;
 class StartController extends Controller
 {    
+    private function formatCourses($courses)
+    {
+        return $courses->map(function ($course) {
+            // Format essential course data
+            $formatted = [
+                'id' => $course->id,
+                'title' => $course->title,
+                'description' => Str::limit($course->description, 200), // Limit description for UX
+                'created_at' => $course->created_at
+                    ? \Carbon\Carbon::parse($course->created_at)->locale('es')->isoFormat('D MMM YYYY')
+                    : null,
+                'is_certified' => $course->certified ? $course->certified->is_certified : false,
+                'thumbnails' => $course->miniatures->sortBy('order')->map(fn($miniature) => [
+                    'url' => $course->miniatures->where('deleted_at', null)->value('url'), // Only non-deleted miniatures, ordered
+                    'order' => $miniature->order
+                ])->values(),
+                'tutor' => $this->getTutorData($course),
+                'category' => $course->categories->sortBy('pivot.order')->first() 
+                    ? [
+                        'id' => $course->categories->sortBy('pivot.order')->first()->id,
+                        'name' => $course->categories->sortBy('pivot.order')->first()->name
+                    ] 
+                    : null,
+                'careers' => $course->careers->map(fn($career) => [
+                    'id' => $career->id,
+                    'logo_url' => $career->url_logo // For career logo icons
+                ])->values(),
+                'difficulty' => $course->difficulty ? [
+                    'id' => $course->difficulty->id,
+                    'name' => $course->difficulty->name
+                ] : null,
+                'registrations_count' => $course->registrations_count ?? 0,
+                'saved_courses_count' => $course->saved_courses_count ?? 0,
+                'average_rating' => $course->ratingCourses->avg('stars') ?? 0 // For UX
+            ];
+
+            return $formatted;
+        });
+    }
+
+    private function getTutorData($course)
+    {
+        $owner = $course->tutors->where('pivot.is_owner', true)->first();
+        return $owner 
+            ? ['name' => $owner->name . ' ' . $owner->lastname]
+            : ['name' => 'ESPAM MFL'];
+    }
+
+    private function getCourseWithRelations()
+    {
+        return [
+            'certified:id,course_id,is_certified',
+            'tutors:id,name,lastname', // Only necessary tutor fields
+            'categories:id,name,category_courses.order', // Include pivot order for sorting
+            'miniatures:id,course_id,url,order,deleted_at', // Include order and deleted_at for sorting/filtering
+            'careers:id,url_logo', // For career logo icons
+            'difficulty:id,name', // Difficulty details
+            'ratingCourses:course_id,stars' // For average rating
+        ];
+    }
+
     public function topPopularCourses()
     { 
     $courses = Course::with($this->getCourseWithRelations())
@@ -15,68 +76,14 @@ class StartController extends Controller
         ->withCount('registrations')
         ->withCount('savedCourses')
         ->orderByDesc(DB::raw('registrations_count + saved_courses_count'))
-        ->take(7)
+        ->take(5)
         ->get();
         return response()->json([
         'courses' => $this->formatCourses($courses)
     ]);
     }
     
-    private function formatCourses($courses)
-{
-    return $courses->map(function ($course) {
-        $course->created_at_formatted = $course->created_at
-            ? \Carbon\Carbon::parse($course->created_at)->locale('es')->isoFormat('D MMM YYYY')
-            : null;
-        $course->is_certified = $course->certified ? $course->certified->is_certified : false;
-
-        // Tutor principal y carrera
-        if ($course->tutorCourses && $course->tutorCourses->count() > 0) {
-            $tutor = $course->tutorCourses->first()->user;
-            $course->tutor_name = $tutor ? $tutor->name . ' ' . $tutor->lastname : 'ESPAM MFL';
-            $course->tutor_career_info = ($tutor && $tutor->userInformation && $tutor->userInformation->career)
-    ? [
-        'id' => $tutor->userInformation->career->id,
-        'name' => $tutor->userInformation->career->name,
-        'url_logo' => $tutor->userInformation->career->url_logo
-    ]
-    : null;
-        } else {
-            $course->tutor_name = 'ESPAM MFL';
-            $course->tutor_career = null;
-        }
-
-        // Miniatura principal habilitada
-        $course->miniature_url = ($course->miniatures && $course->miniatures->count() > 0)
-            ? $course->miniatures->first()->url
-            : null;
-
-        // Unir id y name de categorías en un solo array de objetos
-        $course->categorias = $course->categories
-            ? $course->categories->map(function($cat) {
-                return [
-                    'id' => $cat->id,
-                    'name' => $cat->name
-                ];
-            })->values()
-            : [];
-        //Elimina los sobrantes
-        unset($course->certified, $course->tutorCourses, $course->miniatures,$course->categories);
     
-        return $course;
-    });
-}
-
-    private function getCourseWithRelations()
-{
-    return [
-        'certified:id,course_id,is_certified',
-        'tutorCourses' ,
-        // 'tutorCourses.user.educationalUser.sede.careerSedes', // Trae la carrera del tutor
-        'categories',
-        'miniatures'
-    ];
-}
     public function topBestRatedCourses()
     {
     $courses = Course::with($this->getCourseWithRelations())
@@ -85,7 +92,7 @@ class StartController extends Controller
         ->withCount('savedCourses')
         ->withSum('ratingCourses as total_stars', 'stars')
         ->orderByDesc('total_stars')
-        ->take(7)
+        ->take(5)
         ->get();
 
     return response()->json([
@@ -100,7 +107,7 @@ class StartController extends Controller
         ->withCount('registrations')
         ->withCount('savedCourses')
         ->orderByDesc('updated_at')
-        ->take(7)
+        ->take(5)
         ->get();
 
     return response()->json([
@@ -114,7 +121,7 @@ public function topCreatedCourses()
         ->withCount('registrations')
         ->withCount('savedCourses')
         ->orderByDesc('created_at')
-        ->take(7)
+        ->take(5)
         ->get();
 
     return response()->json([
@@ -143,7 +150,7 @@ public function recommendCoursesByUserInterest($userId)
         ->withCount('registrations')
         ->withCount('savedCourses')
         ->orderByDesc('created_at')
-        ->take(7)
+        ->take(5)
         ->get();
 
     return response()->json([
