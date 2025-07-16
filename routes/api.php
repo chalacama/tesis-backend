@@ -17,6 +17,9 @@ Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/google/callback', [AuthController::class, 'handleGoogleCallback']);
     Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+    Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])
+    ->middleware('signed')
+    ->name('verification.verify');
 });
 // == RUTAS DE GESTIÓN (Protegidas por autenticación y permisos) ==
 Route::middleware('auth:sanctum')->group(function () {

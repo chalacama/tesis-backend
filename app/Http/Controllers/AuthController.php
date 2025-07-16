@@ -13,71 +13,8 @@ use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Http\JsonResponse;
 class AuthController extends Controller
 {
-    /* public function handleGoogleCallback(Request $request)
-    {
-        // 1. Validar que el frontend envió un token
-        $request->validate([
-            'token' => 'required|string',
-        ]);
-
-        try {
-            // 2. Verificar el token de Google usando Socialite en modo "stateless"
-            $googleUser = Socialite::driver('google')->stateless()->userFromToken($request->token);
-
-            // Separar el nombre y apellido del nombre completo de Google
-            $fullName = explode(' ', $googleUser->name, 2);
-            $firstName = $fullName[0];
-            $lastName = isset($fullName[1]) ? $fullName[1] : ''; // Apellido es opcional
-
-            // 3. Buscar o crear el usuario en tu base de datos
-            $user = User::updateOrCreate(
-                [
-                    // Criterio de búsqueda: el email que nos da Google
-                    'email' => $googleUser->email,
-                ],
-                [
-                    // Datos para crear o actualizar
-                    'google_id' => $googleUser->id,
-                    'name' => $firstName,
-                    'lastname' => $lastName,
-                    // Creamos un username único por si acaso ya existe
-                    'username' => $googleUser->nickname ?? Str::slug($googleUser->name) . '_' . uniqid(),
-                    'registration_method' => 'google',
-                    'email_verified_at' => now(), // El email de Google ya está verificado
-                ]
-            );
-
-            // 4. Asignar rol de "student" si es un usuario nuevo
-            if ($user->wasRecentlyCreated) {
-                $user->assignRole('student');
-            }
-
-            // 5. Crear un token de Sanctum para el usuario
-            $token = $user->createToken('auth_token_google')->plainTextToken;
-
-            // 6. Devolver la respuesta al frontend
-            return response()->json([
-                'access_token' => $token,
-                'token_type' => 'Bearer',
-                'user' => $user,
-            ]);
-
-        } catch (\Exception $e) {
-           // Esto te dará el mensaje exacto del error, el archivo y la línea.
-    Log::error('Error de autenticación con Google: ' . $e->getMessage() . ' en ' . $e->getFile() . ':' . $e->getLine());
     
-    // Devuelve un error más específico si estás en modo de depuración
-    return response()->json([
-        'error' => 'La autenticación con Google falló.',
-        'message' => config('app.debug') ? $e->getMessage() : 'Ocurrió un error inesperado.'
-    ], 401);
-        }
-    } */
-    /**
-     * REGISTRO TRADICIONAL
-     * Crea un nuevo usuario a partir de un formulario.
-     */
-    public function register(Request $request): JsonResponse
+public function register(Request $request): JsonResponse
     {
         // 1. Validación estricta de los datos de entrada
         $request->validate([
@@ -85,7 +22,7 @@ class AuthController extends Controller
             'lastname' => 'required|string|max:255',
             'username' => 'required|string|max:255|unique:users,username',
             'email' => 'required|string|email|max:255|unique:users,email',
-            'password' => ['required', 'confirmed', Password::defaults()], // 'confirmed' busca un campo 'password_confirmation'
+            'password' => ['required', 'confirmed', Password::defaults()],
         ]);
 
         // 2. Creación del usuario
@@ -94,24 +31,21 @@ class AuthController extends Controller
             'lastname' => $request->lastname,
             'username' => $request->username,
             'email' => $request->email,
-            'password' => Hash::make($request->password), // ¡CRÍTICO! Hashear siempre la contraseña
-            'registration_method' => 'email', // Método de registro tradicional
+            'password' => Hash::make($request->password),
+            'registration_method' => 'email',
         ]);
 
-        // 3. Asignar rol por defecto (si usas spatie/laravel-permission)
+        // 3. Asignar rol por defecto
         $user->assignRole('student');
 
-        // 4. Crear un token para que el usuario inicie sesión inmediatamente
-        $token = $user->createToken('auth_token_register')->plainTextToken;
+        // 4. Enviar correo de verificación
+        $user->sendEmailVerificationNotification();
 
-        // 5. Devolver la respuesta
+        // 5. Devolver respuesta
         return response()->json([
-            'message' => 'Usuario registrado exitosamente.',
-            'access_token' => $token,
-            'token_type' => 'Bearer',
+            'message' => 'Usuario registrado exitosamente. Por favor, verifica tu correo electrónico.',
             'user' => $user,
-            'role' => $user->getRoleNames()[0], // Agrega el rol del usuario
-        ], 201); // 201 Created
+        ], 201);
     }
 
     /**
@@ -135,6 +69,11 @@ class AuthController extends Controller
         // 3. Si la autenticación es exitosa, obtener el usuario
         $user = User::where('email', $request->email)->firstOrFail();
 
+        // Verificar si el correo está verificado
+        if (!$user->hasVerifiedEmail()) {
+            return response()->json(['message' => 'Por favor, verifica tu correo electrónico antes de iniciar sesión.'], 403);
+        }
+
         // 4. Revocar tokens antiguos y crear uno nuevo para mayor seguridad
         $user->tokens()->delete();
         $token = $user->createToken('auth_token_login')->plainTextToken;
@@ -148,7 +87,6 @@ class AuthController extends Controller
             'role' => $user->getRoleNames()[0], // Agrega el rol del usuario
         ]);
     }
-
     /**
      * LOGOUT (CIERRE DE SESIÓN)
      * Invalida el token actual del usuario. Funciona para AMBOS métodos.
