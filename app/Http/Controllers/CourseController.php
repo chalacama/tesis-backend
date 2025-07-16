@@ -17,7 +17,7 @@ class CourseController extends Controller
     use AuthorizesRequests;
     public function index(Request $request): JsonResponse
     {
-        $this->authorize('viewAny', Course::class);
+        $this->authorize('viewAnyHidden', Course::class);
 
         $perPage = $request->query('per_page', 10);
         $page = $request->query('page', 1);
@@ -161,7 +161,7 @@ class CourseController extends Controller
 
     public function show(Course $course): JsonResponse
     {
-        $this->authorize('view', $course);
+        $this->authorize('viewHidden', $course);
 
         $user = Auth::user();
         $cacheKey = 'course_show_' . $course->id . '_user_' . $user->id;

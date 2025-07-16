@@ -176,9 +176,9 @@ class Course extends Model
     /**
      * Relación uno a muchos con MiniatureCourse.
      */
-    public function miniatures()
+    public function miniature()
     {
-        return $this->hasMany(MiniatureCourse::class);
+        return $this->hasOne(MiniatureCourse::class);
     }
     public function careers()
 {

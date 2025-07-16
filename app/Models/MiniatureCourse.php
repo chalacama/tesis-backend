@@ -9,8 +9,7 @@ class MiniatureCourse extends Model
     use SoftDeletes;
     protected $fillable = [
         'course_id',
-        'url',
-        'order'
+        'url'
     ];
 
     /**

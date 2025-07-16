@@ -24,16 +24,27 @@ class CoursePolicy
      * Determina si el usuario puede ver la lista de cursos en el panel de gestión.
      * (Reemplaza la lógica de tu método getAllCourses)
      */
-    public function viewAny(User $user): bool
+    public function viewAnyHidden(User $user): bool
     {
         // Solo administradores y tutores pueden ver la lista de cursos del backend.
         return $user->hasRole('tutor'); // El admin ya fue aprobado por el método before()
+    }
+    public function viewHidden(User $user, Course $course): bool
+    {
+    // Admin ya tiene acceso por el método before
+    // Tutor puede ver si está asignado
+    return $user->hasRole('tutor') && $course->tutors()->where('users.id', $user->id)->exists();
+    }
+    public function viewAny(User $user): bool
+    {
+        return $user && $user->hasPermissionTo('courses.read');
+        
     }
     public function view(User $user, Course $course): bool
     {
     // Admin ya tiene acceso por el método before
     // Tutor puede ver si está asignado
-    return $user->hasRole('tutor') && $course->tutors()->where('users.id', $user->id)->exists();
+    // return $user->hasRole('tutor') && $course->tutors()->where('users.id', $user->id)->exists();
     }
     /**
      * Determina si el usuario puede crear cursos.
