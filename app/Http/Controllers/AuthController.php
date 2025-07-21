@@ -123,6 +123,7 @@ public function register(Request $request): JsonResponse
                     'username' => $googleUser->nickname ?? Str::slug($googleUser->name) . '_' . uniqid(),
                     'registration_method' => 'google',
                     'email_verified_at' => now(),
+                    'profile_picture_url' => $googleUser->avatar,
                 ]
             );
             // 3. Asignar rol por defecto (si usas spatie/laravel-permission)

@@ -21,6 +21,7 @@ class UsersSeeder extends Seeder
                 'username' => 'adminespam',
                 'email' => 'admin.espam@espam.edu.ec',
                 'password' => bcrypt('S3cur3P@ssw0rd!2025'),
+                'profile_picture_url' => 'https://i.pinimg.com/736x/70/aa/d2/70aad2738a5e301652843930582fffaa.jpg'
             ],
             // Puedes agregar más admins aquí
         ];
@@ -33,11 +34,12 @@ class UsersSeeder extends Seeder
         // Usuarios tutor
         $tutors = [
             [
-                'name' => 'Ana', // id : 2
-                'lastname' => 'García',
+                'name' => 'Luis', // id : 2
+                'lastname' => 'Mendoza',
                 'username' => 'anag',
                 'email' => 'luis.chalacama@espam.edu.ec',
                 'password' => bcrypt('password123'),
+                'profile_picture_url' => 'https://i.pinimg.com/474x/e8/7c/32/e87c325d2487e441901df6330f2b7ad6.jpg'
             ],
             [
                 'name' => 'Philip', // id : 3
@@ -62,6 +64,7 @@ class UsersSeeder extends Seeder
                 'username' => 'juanp',
                 'email' => 'juan@gmail.com',
                 'password' => bcrypt('password123'),
+                'profile_picture_url' => 'https://i.pinimg.com/736x/83/30/7d/83307da0f2648ecb70a70d585f1f3486.jpg'
             ],
             [
                 'name' => 'Oliver', // id : 5

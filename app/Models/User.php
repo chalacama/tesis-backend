@@ -46,6 +46,7 @@ class User extends Authenticatable
         'email',
         'password',
         'registration_method', // Añadido
+        'profile_picture_url',
     ];
     
     /**

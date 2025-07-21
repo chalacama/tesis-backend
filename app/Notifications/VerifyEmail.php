@@ -11,7 +11,7 @@ class VerifyEmail extends VerifyEmailBase
     public function toMail($notifiable)
     {
         // Get the redirect route from config and combine with FRONTEND_URL
-        $redirectUrl = config('frontend.url') . config('frontend.routes.dashboard');
+        $redirectUrl = config('frontend.url') . config('frontend.routes.home');
 
         // Generate the signed verification URL with a redirect parameter
         $verificationUrl = URL::temporarySignedRoute(

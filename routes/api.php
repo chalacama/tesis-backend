@@ -75,11 +75,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/yt-show', [WatchingController::class, 'showYt'])->middleware('permission:courses.read-hidden');        
 });  
 Route::prefix('start')->group(function () {
-    Route::get('/top-popular-courses', [StartController::class, 'topPopularCourses']);
-    Route::get('/top-best-rated-courses', [StartController::class, 'topBestRatedCourses']);
-    Route::get('/top-updated-courses', [StartController::class, 'topUpdatedCourses']);
-    Route::get('/top-created-courses', [StartController::class, 'topCreatedCourses']);
-    Route::get('/recommend-courses', [StartController::class, 'recommendCoursesByUserInterest'])->middleware('auth:sanctum');
+    Route::get('/top-popular-courses', [StartController::class, 'topPopularCourses'])->middleware('permission:courses.read');
+    Route::get('/top-best-rated-courses', [StartController::class, 'topBestRatedCourses'])->middleware('permission:courses.read');
+    Route::get('/top-updated-courses', [StartController::class, 'topUpdatedCourses'])->middleware('permission:courses.read');
+    Route::get('/top-created-courses', [StartController::class, 'topCreatedCourses'])->middleware('permission:courses.read');
+    Route::get('/recommend-courses', [StartController::class, 'recommendCoursesByUserInterest'])->middleware('permission:courses.read');
 });
 });
 
