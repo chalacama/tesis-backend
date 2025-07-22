@@ -16,10 +16,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class StartController extends Controller
 {    
-    /* public function __construct()
-    {
-        $this->authorizeResource(Course::class, 'course');
-    } */
+    
    use HandlesAuthorization, AuthorizesRequests;
 
     public function topPopularCourses()
@@ -171,8 +168,15 @@ class StartController extends Controller
     {
         $owner = $course->tutors->where('pivot.is_owner', true)->first();
         return $owner
-            ? ['name' => $owner->name . ' ' . $owner->lastname]
-            : ['name' => 'ESPAM MFL'];
+        ? [
+            'name' => $owner->name . ' ' . $owner->lastname,
+            'profile_picture_url' => $owner->profile_picture_url ?? null
+        ]
+        : [
+            'name' => 'Digi Mentor',
+            'profile_picture_url' => null
+        ];
+
     }
 
     private function getCourseWithRelations()
