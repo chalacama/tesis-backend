@@ -28,7 +28,7 @@ class StartController extends Controller
             ->where('enabled', true)
             ->withCount(['registrations', 'savedCourses'])
             ->orderByDesc(DB::raw('registrations_count + saved_courses_count'))
-            ->take(5)
+            ->take(6)
             ->get();
 
         return response()->json([
@@ -46,7 +46,7 @@ class StartController extends Controller
             ->withCount(['registrations', 'savedCourses'])
             ->withSum('ratingCourses as total_stars', 'stars')
             ->orderByDesc('total_stars')
-            ->take(5)
+            ->take(6)
             ->get();
 
         return response()->json([
@@ -63,7 +63,7 @@ class StartController extends Controller
             ->where('enabled', true)
             ->withCount(['registrations', 'savedCourses'])
             ->orderByDesc('updated_at')
-            ->take(5)
+            ->take(6)
             ->get();
 
         return response()->json([
@@ -80,7 +80,7 @@ class StartController extends Controller
             ->where('enabled', true)
             ->withCount(['registrations', 'savedCourses'])
             ->orderByDesc('created_at')
-            ->take(5)
+            ->take(6)
             ->get();
 
         return response()->json([
@@ -113,7 +113,7 @@ class StartController extends Controller
             })
             ->withCount(['registrations', 'savedCourses'])
             ->orderByDesc('created_at')
-            ->take(5)
+            ->take(6)
             ->get();
 
         return response()->json([
@@ -183,7 +183,7 @@ class StartController extends Controller
     {
         return [
             'certified:id,course_id,is_certified',
-            'tutors:id,name,lastname',
+            'tutors:id,name,lastname,profile_picture_url',
             'categories:id,name,category_courses.order',
             'miniature:id,course_id,url,deleted_at',
             'careers:id,url_logo',

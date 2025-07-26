@@ -35,7 +35,7 @@ class UsersSeeder extends Seeder
         $tutors = [
             [
                 'name' => 'Luis', // id : 2
-                'lastname' => '',
+                'lastname' => 'Mañeña',
                 'username' => 'bautista69',
                 'email' => 'luis.chalacama@espam.edu.ec',
                 'password' => bcrypt('password123'),
