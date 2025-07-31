@@ -55,7 +55,7 @@ class CourseController extends Controller
 
             return $query
                 ->with([
-                    'miniatures' => fn($q) => $q->select('miniature_courses.id', 'miniature_courses.course_id', 'miniature_courses.url'),
+                    'miniature' => fn($q) => $q->select('miniature_courses.id', 'miniature_courses.course_id', 'miniature_courses.url'),
                     'categories' => fn($q) => $q->select('categories.id', 'categories.name'),
                     'certified' => fn($q) => $q->select('course_certifieds.id', 'course_certifieds.course_id', 'course_certifieds.is_certified'),
                     'tutors' => fn($q) => $q->select('users.id', 'users.name', 'users.lastname'),
@@ -80,6 +80,10 @@ class CourseController extends Controller
                         'registrations_count' => $course->registrations_count,
                         'total_stars' => (int) $course->total_stars,
                         'is_certified' => $course->certified ? $course->certified->is_certified : false,
+                        'miniature' => $course->miniature ? [
+                            'id' => $course->miniature->id,
+                            'url' => $course->miniature->url,
+                        ] : null,
                         'difficulty' => $course->difficulty ? [
                             'id' => $course->difficulty->id,
                             'name' => $course->difficulty->name,
@@ -108,7 +112,7 @@ class CourseController extends Controller
     private function getCreator(Course $course): string
     {
         $owner = $course->tutors->firstWhere('pivot.is_owner', true);
-        return $owner ? ($owner->name . ' ' . ($owner->lastname ?? '')) : 'ESPAM MFL';
+        return $owner ? ($owner->name . ' ' . ($owner->lastname ?? '')) : 'Digi Mentor';
     }
 
     private function getCollaborators(Course $course): array

@@ -19,107 +19,6 @@ class StartController extends Controller
     
    use HandlesAuthorization, AuthorizesRequests;
 
-    public function topPopularCourses()
-    {
-        $this->authorize('viewAny', Course::class);
-        $user = Auth::user();
-
-        $courses = Course::with($this->getCourseWithRelations())
-            ->where('enabled', true)
-            ->withCount(['registrations', 'savedCourses'])
-            ->orderByDesc(DB::raw('registrations_count + saved_courses_count'))
-            ->take(6)
-            ->get();
-
-        return response()->json([
-            'courses' => $this->formatCourses($courses, $user)
-        ]);
-    }
-
-    public function topBestRatedCourses()
-    {
-        $this->authorize('viewAny', Course::class);
-        $user = Auth::user();
-
-        $courses = Course::with($this->getCourseWithRelations())
-            ->where('enabled', true)
-            ->withCount(['registrations', 'savedCourses'])
-            ->withSum('ratingCourses as total_stars', 'stars')
-            ->orderByDesc('total_stars')
-            ->take(6)
-            ->get();
-
-        return response()->json([
-            'courses' => $this->formatCourses($courses, $user)
-        ]);
-    }
-
-    public function topUpdatedCourses()
-    {
-        $this->authorize('viewAny', Course::class);
-        $user = Auth::user();
-
-        $courses = Course::with($this->getCourseWithRelations())
-            ->where('enabled', true)
-            ->withCount(['registrations', 'savedCourses'])
-            ->orderByDesc('updated_at')
-            ->take(6)
-            ->get();
-
-        return response()->json([
-            'courses' => $this->formatCourses($courses, $user)
-        ]);
-    }
-
-    public function topCreatedCourses()
-    {
-        $this->authorize('viewAny', Course::class);
-        $user = Auth::user();
-
-        $courses = Course::with($this->getCourseWithRelations())
-            ->where('enabled', true)
-            ->withCount(['registrations', 'savedCourses'])
-            ->orderByDesc('created_at')
-            ->take(6)
-            ->get();
-
-        return response()->json([
-            'courses' => $this->formatCourses($courses, $user)
-        ]);
-    }
-
-    public function recommendCoursesByUserInterest()
-    {
-        $this->authorize('viewAny', Course::class);
-        $user = Auth::user();
-
-        if (!$user) {
-            return response()->json(['courses' => []]);
-        }
-
-        $categoryIds = DB::table('user_category_interests')
-            ->where('user_id', $user->id)
-            ->pluck('category_id')
-            ->toArray();
-
-        if (empty($categoryIds)) {
-            return response()->json(['courses' => []]);
-        }
-
-        $courses = Course::with($this->getCourseWithRelations())
-            ->where('enabled', true)
-            ->whereHas('categories', function ($q) use ($categoryIds) {
-                $q->whereIn('categories.id', $categoryIds);
-            })
-            ->withCount(['registrations', 'savedCourses'])
-            ->orderByDesc('created_at')
-            ->take(6)
-            ->get();
-
-        return response()->json([
-            'courses' => $this->formatCourses($courses, $user)
-        ]);
-    }
 
     private function formatCourses($courses, ?User $user)
     {
@@ -173,7 +72,7 @@ class StartController extends Controller
             'profile_picture_url' => $owner->profile_picture_url ?? null
         ]
         : [
-            'name' => 'Digi Mentor',
+            'name' => null,
             'profile_picture_url' => null
         ];
 
@@ -195,6 +94,116 @@ class StartController extends Controller
             'modules.chapters:id,module_id,order',
             'modules.chapters.learningContent:id,chapter_id,url'
         ];
+    }
+
+    public function getCoursesByFilter(Request $request)
+    {
+    $this->authorize('viewAny', Course::class);
+    $user = Auth::user();
+    $filter = $request->query('filter', 'all');
+    $perPage = $request->query('per_page', 6);
+    $page = $request->query('page', 1);
+
+    $query = Course::with($this->getCourseWithRelations())
+        ->where('enabled', true)
+        ->withCount(['registrations', 'savedCourses'])
+        ->withSum('ratingCourses as total_stars', 'stars');
+
+    if ($filter === 'recommended') {
+    $recommendedCategories = DB::table('registrations as r')
+        ->join('category_courses as cc', 'r.course_id', '=', 'cc.course_id')
+        ->join('categories as c', 'cc.category_id', '=', 'c.id')
+        ->select(
+            'c.id',
+            DB::raw('SUM(CASE WHEN cc.order = 1 THEN 2 ELSE 1 END) as interest_score')
+        )
+        ->where('r.user_id', $user->id)
+        ->where('r.annulment', false)
+        ->groupBy('c.id')
+        ->orderByDesc('interest_score')
+        ->limit(5)
+        ->pluck('c.id') // Solo nos interesan los IDs para el filtro
+        ->toArray();
+
+        if (empty($recommendedCategories)) {
+        return response()->json([
+            'courses' => [],
+            'has_more' => false,
+            'current_page' => (int)$page
+        ]);
+        }
+
+        $query->whereHas('categories', function ($q) use ($recommendedCategories) {
+        $q->whereIn('categories.id', $recommendedCategories);
+        });
+
+    $query->orderByDesc('created_at');
+    }
+
+
+    if ($filter === 'best_rated') {
+        $query->orderByDesc('total_stars');
+    }
+
+    if ($filter === 'popular') {
+        $query->orderByDesc(DB::raw('registrations_count + saved_courses_count'));
+    }
+
+    if ($filter === 'updated') {
+        $query->orderByDesc('updated_at');
+    }
+
+    if ($filter === 'created') {
+        $query->orderByDesc('created_at');
+    }
+
+    if ($filter === 'all') {
+    // Paso 1: Obtener categorías más relevantes para el usuario
+    $recommendedCategories = DB::table('registrations as r')
+        ->join('category_courses as cc', 'r.course_id', '=', 'cc.course_id')
+        ->join('categories as c', 'cc.category_id', '=', 'c.id')
+        ->select(
+            'c.id',
+            DB::raw('SUM(CASE WHEN cc.order = 1 THEN 2 ELSE 1 END) as interest_score')
+        )
+        ->where('r.user_id', $user->id)
+        ->where('r.annulment', false)
+        ->groupBy('c.id')
+        ->orderByDesc('interest_score')
+        ->limit(5)
+        ->pluck('c.id')
+        ->toArray();
+
+    // Paso 2: Aplicar ordenamiento personalizado
+    $query->orderByRaw("
+        CASE 
+            WHEN EXISTS (
+                SELECT 1 
+                FROM category_courses cc 
+                WHERE cc.course_id = courses.id 
+                AND cc.category_id IN (" . implode(',', $recommendedCategories ?: [0]) . ")
+            ) THEN 1
+            ELSE 2
+        END
+    ")
+    ->orderByDesc('total_stars')
+    ->orderByDesc(DB::raw('registrations_count + saved_courses_count'));
+    }
+
+
+    $courses = $query->skip(($page - 1) * $perPage)->take($perPage + 1)->get();
+
+    // Detectar si hay más cursos disponibles
+    $hasMore = $courses->count() > $perPage;
+    if ($hasMore) {
+        $courses = $courses->slice(0, $perPage);
+    }
+
+    return response()->json([
+        'courses' => $this->formatCourses($courses, $user),
+        'has_more' => $hasMore,
+        'current_page' => (int)$page
+    ]);
     }
 
 
