@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\EducationalLevel;
-
+use App\Models\Career;
 class EducationalUser extends Model
 {
     protected $fillable = [
@@ -66,4 +66,9 @@ public static function boot()
 {
     return $this->hasMany(\App\Models\UnitLevel::class, 'educational_unit_id');
 } */
+public function career()
+{
+    return $this->belongsTo(Career::class);
+}
+
 }

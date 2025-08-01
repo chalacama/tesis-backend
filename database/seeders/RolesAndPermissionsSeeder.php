@@ -39,6 +39,12 @@ class RolesAndPermissionsSeeder extends Seeder
             'registration' => [
                 'create', 'cancel', 'archived','destroy'
             ],
+            'sedes' => [
+                'create', 'read', 'read-hidden', 'update','archived','destroy'
+            ],
+            'profiles' => [
+                'create', 'read', 'read-hidden', 'update'
+            ]
         ];
 
         // 2. Genera y crea los permisos dinámicamente
@@ -57,18 +63,22 @@ class RolesAndPermissionsSeeder extends Seeder
         // ROL: Tutor (Gestor de contenido, sin permisos destructivos ni de gestión de usuarios/tutores)
         $tutorRole = Role::create(['name' => 'tutor']);
         $tutorRole->givePermissionTo([
-            
+            'sedes.read',
+            'profiles.create','profiles.read', 'profiles.read-hidden', 'profiles.update',
             'courses.create', 'courses.read', 'courses.read-hidden', 'courses.update', 'courses.archived',
             'modules.create', 'modules.read', 'modules.read-hidden', 'modules.update', 'modules.archived',
             'chapters.create', 'chapters.read', 'chapters.read-hidden', 'chapters.update', 'chapters.archived',
             'learning-contents.create', 'learning-contents.read', 'learning-contents.read-hidden', 'learning-contents.update', 'learning-contents.archived',
             'registration.create','registration.cancel',
             'tutor-courses.invite-collaborator', 'tutor-courses.archived-collaborator',
+            
         ]);
 
         // ROL: Student (Solo puede ver contenido activo y público)
         $studentRole = Role::create(['name' => 'student']);
         $studentRole->givePermissionTo([
+            'sedes.read',
+            'profiles.create','profiles.read', 'profiles.read-hidden', 'profiles.update',
             'courses.read',
             'modules.read',
             'chapters.read',

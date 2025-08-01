@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\{
     CourseController,StartController,RegistrationController,WatchingController,ModuleController,
     ChapterController,LearningContentController,TutorCourseController,AuthController,
-    CourseInvitationController
+    CourseInvitationController,UserInformationController, EducationalUserController, SedeController
 };
 // == RUTAS PÚBLICAS Y DE AUTENTICACIÓN ==
 Route::get('/user', function (Request $request) {
@@ -74,10 +74,25 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/content-show', [WatchingController::class, 'showContent'])->middleware('permission:courses.read');
         Route::post('/yt-show', [WatchingController::class, 'showYt'])->middleware('permission:courses.read-hidden');        
 });  
-Route::prefix('start')->group(function () {
+    Route::prefix('start')->group(function () {
     Route::get('/courses-by-filter', [StartController::class, 'getCoursesByFilter'])->middleware('permission:courses.read');
 
 });
+    Route::prefix('profile')->group(function () {
+        Route::prefix('/info')->group(function () {    
+            Route::get('/show', [UserInformationController::class, 'show'])->middleware('permission:profiles.read-hidden');
+            Route::put('/update', [UserInformationController::class, 'update'])->middleware('permission:profiles.update');   
+        });
+        Route::prefix('/education')->group(function () {    
+            Route::get('/show', [EducationalUserController::class, 'show'])->middleware('permission:profiles.read-hidden');
+            Route::put('/update', [EducationalUserController::class, 'update'])->middleware('permission:profiles.update');
+        });     
+    });
+    Route::prefix('sede')->group(function () {    
+            Route::get('/show', [SedeController::class, 'show'])->middleware('permission:sedes.read');
+            Route::put('/update', [SedeController::class, 'update'])->middleware('permission:sedes.update');
+            Route::get('/index', [SedeController::class, 'index'])->middleware('permission:sedes.read'); 
+    });
 });
 
 

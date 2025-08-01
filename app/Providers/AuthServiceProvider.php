@@ -8,6 +8,10 @@ use App\Policies\ModulePolicy;
 use App\Policies\CoursePolicy;
 use App\Policies\CourseInvitationPolicy;
 use App\Models\CourseInvitation;
+use App\Models\User;
+use App\Policies\UserPolicy;
+use App\Models\Sede;
+use App\Policies\SedePolicy;
 // use Illuminate\Support\ServiceProvider;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 class AuthServiceProvider extends ServiceProvider
@@ -17,6 +21,8 @@ class AuthServiceProvider extends ServiceProvider
         Course::class => CoursePolicy::class,
         Module::class => ModulePolicy::class,
         CourseInvitation::class => CourseInvitationPolicy::class,
+        User::class => UserPolicy::class,
+        Sede::class => SedePolicy::class,
     ];
     /**
      * Register services.
