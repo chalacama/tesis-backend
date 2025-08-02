@@ -16,98 +16,91 @@ class CourseController extends Controller
 {
     use AuthorizesRequests;
     public function index(Request $request): JsonResponse
-    {
-        $this->authorize('viewAnyHidden', Course::class);
+{
+    $this->authorize('viewAnyHidden', Course::class);
 
-        $perPage = $request->query('per_page', 10);
-        $page = $request->query('page', 1);
-        $search = $request->query('search');
-        $filters = $request->query('filters', []);
+    $perPage = $request->query('per_page', 10);
+    $search = $request->query('search');
+    $filters = $request->query('filters', []);
+    $user = Auth::user();
 
-        $user = Auth::user();
-        $cacheKey = 'courses_index_' . $user->id . '_page_' . $page . '_per_' . $perPage . '_search_' . md5($search ?? '') . '_filters_' . md5(json_encode($filters));
+    $query = Course::query()->withTrashed();
 
-        $courses = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($user, $perPage, $search, $filters) {
-            $query = Course::query()->withTrashed();
-
-            if ($user->hasRole('tutor')) {
-                $query->whereHas('tutors', fn($q) => $q->where('users.id', $user->id));
-            }
-
-            if ($search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('title', 'like', '%' . $search . '%')
-                    ->orWhere('description', 'like', '%' . $search . '%');
-                });
-            }
-
-            if (!empty($filters)) {
-                if (isset($filters['enabled'])) {
-                    $query->where('enabled', $filters['enabled']);
-                }
-                if (isset($filters['private'])) {
-                    $query->where('private', $filters['private']);
-                }
-                if (isset($filters['difficulty_id'])) {
-                    $query->where('difficulty_id', $filters['difficulty_id']);
-                }
-            }
-
-            return $query
-                ->with([
-                    'miniature' => fn($q) => $q->select('miniature_courses.id', 'miniature_courses.course_id', 'miniature_courses.url'),
-                    'categories' => fn($q) => $q->select('categories.id', 'categories.name'),
-                    'certified' => fn($q) => $q->select('course_certifieds.id', 'course_certifieds.course_id', 'course_certifieds.is_certified'),
-                    'tutors' => fn($q) => $q->select('users.id', 'users.name', 'users.lastname'),
-                    'difficulty' => fn($q) => $q->select('difficulties.id', 'difficulties.name'),
-                ])
-                ->withCount(['modules', 'allComments', 'savedCourses', 'registrations'])
-                ->withSum('ratingCourses as total_stars', 'stars')
-                ->orderBy('created_at', 'desc')
-                ->paginate($perPage)
-                ->through(function ($course) {
-                    return [
-                        'id' => $course->id,
-                        'title' => $course->title,
-                        'description' => $course->description,
-                        'private' => $course->private,
-                        'code' => $course->code,
-                        'enabled' => $course->enabled,
-                        'deleted_at' => $course->deleted_at,
-                        'modules_count' => $course->modules_count,
-                        'total_comments_count' => $course->all_comments_count,
-                        'saved_courses_count' => $course->saved_courses_count,
-                        'registrations_count' => $course->registrations_count,
-                        'total_stars' => (int) $course->total_stars,
-                        'is_certified' => $course->certified ? $course->certified->is_certified : false,
-                        'miniature' => $course->miniature ? [
-                            'id' => $course->miniature->id,
-                            'url' => $course->miniature->url,
-                        ] : null,
-                        'difficulty' => $course->difficulty ? [
-                            'id' => $course->difficulty->id,
-                            'name' => $course->difficulty->name,
-                        ] : null,
-                        'categorias' => $course->categories->map(fn($cat) => [
-                            'id' => $cat->id,
-                            'name' => $cat->name,
-                        ]),
-                        'creador' => $this->getCreator($course),
-                        'colaboradores' => $this->getCollaborators($course),
-                    ];
-                });
-        });
-
-        return response()->json([
-            'courses' => $courses->items(),
-            'pagination' => [
-                'total' => $courses->total(),
-                'per_page' => $courses->perPage(),
-                'current_page' => $courses->currentPage(),
-                'last_page' => $courses->lastPage(),
-            ],
-        ]);
+    // 🔐 Filtro para tutores: solo ver cursos donde colaboran
+    if ($user->hasRole('tutor')) {
+        $query->whereHas('tutors', fn($q) => $q->where('users.id', $user->id));
     }
+
+    // 🔎 Búsqueda por título o descripción
+    if ($search) {
+        $query->where(function ($q) use ($search) {
+            $q->where('title', 'like', "%{$search}%")
+            ->orWhere('description', 'like', "%{$search}%");
+        });
+    }
+
+    // 🎛️ Filtros opcionales
+    if (!empty($filters)) {
+        $query->when(isset($filters['enabled']), fn($q) => $q->where('enabled', $filters['enabled']));
+        $query->when(isset($filters['private']), fn($q) => $q->where('private', $filters['private']));
+        $query->when(isset($filters['difficulty_id']), fn($q) => $q->where('difficulty_id', $filters['difficulty_id']));
+    }
+
+    // 🧠 Relaciones necesarias y métricas resumidas
+    $courses = $query->with([
+        'miniature:id,course_id,url',
+        'categories:id,name',
+        'certified:id,course_id,is_certified',
+        'tutors:id,name,lastname',
+        'difficulty:id,name'
+    ])
+    ->withCount(['modules', 'allComments', 'savedCourses', 'registrations'])
+    ->withSum('ratingCourses as total_stars', 'stars')
+    ->orderBy('created_at', 'desc')
+    ->paginate($perPage)
+    ->through(function ($course) {
+        return [
+            'id' => $course->id,
+            'title' => $course->title,
+            'description' => $course->description,
+            'private' => $course->private,
+            'code' => $course->code,
+            'enabled' => $course->enabled,
+            'deleted_at' => $course->deleted_at,
+            'modules_count' => $course->modules_count,
+            'total_comments_count' => $course->all_comments_count,
+            'saved_courses_count' => $course->saved_courses_count,
+            'registrations_count' => $course->registrations_count,
+            'total_stars' => (int) $course->total_stars,
+            'is_certified' => $course->certified?->is_certified ?? false,
+            'miniature' => $course->miniature ? [
+                'id' => $course->miniature->id,
+                'url' => $course->miniature->url,
+            ] : null,
+            'difficulty' => $course->difficulty ? [
+                'id' => $course->difficulty->id,
+                'name' => $course->difficulty->name,
+            ] : null,
+            'categorias' => $course->categories->map(fn($cat) => [
+                'id' => $cat->id,
+                'name' => $cat->name,
+            ]),
+            'creador' => $this->getCreator($course),
+            'colaboradores' => $this->getCollaborators($course),
+        ];
+    });
+
+    return response()->json([
+        'courses' => $courses->items(),
+        'pagination' => [
+            'total' => $courses->total(),
+            'per_page' => $courses->perPage(),
+            'current_page' => $courses->currentPage(),
+            'last_page' => $courses->lastPage(),
+        ],
+    ]);
+}
+
 
     private function getCreator(Course $course): string
     {
@@ -126,43 +119,73 @@ class CourseController extends Controller
     }
 
     public function store(Request $request): JsonResponse
-    {
-        $this->authorize('create', Course::class);
+{
+    $this->authorize('create', Course::class);
 
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'difficulty_id' => 'required|exists:difficulties,id',
-            'private' => 'sometimes|boolean',
-            
-        ]);
+    $validated = $request->validate([
+        'title' => 'required|string|max:255',
+        'description' => 'required|string',
+        'difficulty_id' => 'required|exists:difficulties,id',
+        'private' => 'sometimes|boolean',
+    ]);
 
-        $data = array_merge($validated, [
-            'enabled' => false,
-            'private' => $validated['private'] ?? false,
-        ]);
+    $data = array_merge($validated, [
+        'enabled' => false,
+        'private' => $validated['private'] ?? false,
+    ]);
 
-        $course = Course::create($data);
+    $course = Course::create($data);
 
-        if (Auth::user()->hasRole('tutor')) {
-            $course->tutors()->attach(Auth::id(), ['is_owner' => true]);
-        }
-
-        Cache::forget('courses_index_' . Auth::id() . '_page_*');
-
-        return response()->json([
-            'message' => 'Curso creado exitosamente',
-            'course' => [
-                'id' => $course->id,
-                'title' => $course->title,
-                'description' => $course->description,
-                'private' => $course->private,
-                'code' => $course->code,
-                'enabled' => $course->enabled,
-                'difficulty_id' => $course->difficulty_id,
-            ],
-        ], 201);
+    // Asociar tutor creador como propietario
+    if (Auth::user()->hasRole('tutor')) {
+        $course->tutors()->attach(Auth::id(), ['is_owner' => true]);
     }
+
+    // Recargar relaciones necesarias para construir la misma estructura que index()
+    $course->load([
+        'miniature:id,course_id,url',
+        'categories:id,name',
+        'certified:id,course_id,is_certified',
+        'tutors:id,name,lastname',
+        'difficulty:id,name'
+    ])
+    ->loadCount(['modules', 'allComments', 'savedCourses', 'registrations'])
+    ->loadSum('ratingCourses as total_stars', 'stars');
+
+    return response()->json([
+        'message' => 'Curso creado exitosamente',
+        'course' => [
+            'id' => $course->id,
+            'title' => $course->title,
+            'description' => $course->description,
+            'private' => $course->private,
+            'code' => $course->code,
+            'enabled' => $course->enabled,
+            'deleted_at' => $course->deleted_at,
+            'modules_count' => $course->modules_count,
+            'total_comments_count' => $course->all_comments_count,
+            'saved_courses_count' => $course->saved_courses_count,
+            'registrations_count' => $course->registrations_count,
+            'total_stars' => (int) $course->total_stars,
+            'is_certified' => $course->certified?->is_certified ?? false,
+            'miniature' => $course->miniature ? [
+                'id' => $course->miniature->id,
+                'url' => $course->miniature->url,
+            ] : null,
+            'difficulty' => $course->difficulty ? [
+                'id' => $course->difficulty->id,
+                'name' => $course->difficulty->name,
+            ] : null,
+            'categorias' => $course->categories->map(fn($cat) => [
+                'id' => $cat->id,
+                'name' => $cat->name,
+            ]),
+            'creador' => $this->getCreator($course),
+            'colaboradores' => $this->getCollaborators($course),
+        ]
+    ], 201);
+}
+
 
     public function show(Course $course): JsonResponse
     {
