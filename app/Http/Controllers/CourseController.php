@@ -63,7 +63,7 @@ class CourseController extends Controller
                 ])
                 ->withCount(['modules', 'allComments', 'savedCourses', 'registrations'])
                 ->withSum('ratingCourses as total_stars', 'stars')
-                ->orderBy('courses.title')
+                ->orderBy('created_at', 'desc')
                 ->paginate($perPage)
                 ->through(function ($course) {
                     return [
@@ -132,8 +132,9 @@ class CourseController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'private' => 'sometimes|boolean',
             'difficulty_id' => 'required|exists:difficulties,id',
+            'private' => 'sometimes|boolean',
+            
         ]);
 
         $data = array_merge($validated, [
@@ -170,7 +171,7 @@ class CourseController extends Controller
         $user = Auth::user();
         $cacheKey = 'course_show_' . $course->id . '_user_' . $user->id;
 
-        $courseInfo = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($course) {
+        $courseInfo = Cache::remember($cacheKey, now()->addMinutes(0.10), function () use ($course) {
             return Course::query()
                 ->with([
                     'miniatures' => fn($q) => $q->select('miniature_courses.id', 'miniature_courses.course_id', 'miniature_courses.url'),

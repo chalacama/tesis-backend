@@ -17,7 +17,7 @@ class SedePolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('sedes.read');
+        return $user->can('education.read');
     }
 
     /**

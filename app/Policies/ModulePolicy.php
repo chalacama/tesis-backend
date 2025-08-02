@@ -29,17 +29,17 @@ class ModulePolicy
 
     public function create(User $user): bool
     {
-        return $user->hasPermissionTo('modules.create');
+        return $user->hasPermissionTo('course.create');
     }
 
     public function update(User $user, Module $module): bool
     {
-        return $user->hasPermissionTo('modules.update') && $module->course->tutors()->where('users.id', $user->id)->exists();
+        return $user->hasPermissionTo('course.update') && $module->course->tutors()->where('users.id', $user->id)->exists();
     }
 
     public function delete(User $user, Module $module): bool
     {
-        return $user->hasPermissionTo('modules.archive') && $module->course->tutors()->where('users.id', $user->id)->exists();
+        return $user->hasPermissionTo('course.archive') && $module->course->tutors()->where('users.id', $user->id)->exists();
     }    
     /**
      * Determine whether the user can restore the model.

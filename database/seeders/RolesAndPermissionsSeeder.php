@@ -18,33 +18,28 @@ class RolesAndPermissionsSeeder extends Seeder
 
         // 1. Lista de permisos por recurso
         $permissionsByResource = [
-            'users' => [
-                'create', 'read', 'read-hidden', 'update', 'archived', 'destroy'
+            'user' => [
+                'create', 'read', 'read.hidden', 'update', 'archived', 'destroy'
             ],
-            'courses' => [
-                'create', 'read', 'read-hidden', 'update', 'archived', 'destroy'
+            'course' => [
+                'create', 'read', 'read.hidden', 'update', 'archived', 'destroy'
             ],
-            'modules' => [
-                'create', 'read', 'read-hidden', 'update', 'archived', 'destroy'
+            'course.setting' => [
+                'create', 'read', 'read.hidden', 'update'
             ],
-            'chapters' => [
-                'create', 'read', 'read-hidden', 'update', 'archived', 'destroy',
+            'course.tutor' => [
+                'owner.create', 'collaborator.invite','collaborator.archived', 'owner.change',  'owner.archived',
             ],
-            'learning-contents' => [
-                'create', 'read', 'read-hidden', 'update', 'archived', 'destroy',
-            ],
-            'tutor-courses' => [
-                'create-owner', 'invite-collaborator','archived-collaborator', 'change-owner',  'archived-owner',
-            ],
-            'registration' => [
+            'course.registration' => [
                 'create', 'cancel', 'archived','destroy'
             ],
-            'sedes' => [
-                'create', 'read', 'read-hidden', 'update','archived','destroy'
+            'education' => [
+                'create', 'read', 'read.hidden', 'update','archived','destroy'
             ],
-            'profiles' => [
-                'create', 'read', 'read-hidden', 'update'
-            ]
+            'profile' => [
+                'create', 'read', 'read.hidden', 'update'
+            ],
+            
         ];
 
         // 2. Genera y crea los permisos dinámicamente
@@ -63,27 +58,23 @@ class RolesAndPermissionsSeeder extends Seeder
         // ROL: Tutor (Gestor de contenido, sin permisos destructivos ni de gestión de usuarios/tutores)
         $tutorRole = Role::create(['name' => 'tutor']);
         $tutorRole->givePermissionTo([
-            'sedes.read',
-            'profiles.create','profiles.read', 'profiles.read-hidden', 'profiles.update',
-            'courses.create', 'courses.read', 'courses.read-hidden', 'courses.update', 'courses.archived',
-            'modules.create', 'modules.read', 'modules.read-hidden', 'modules.update', 'modules.archived',
-            'chapters.create', 'chapters.read', 'chapters.read-hidden', 'chapters.update', 'chapters.archived',
-            'learning-contents.create', 'learning-contents.read', 'learning-contents.read-hidden', 'learning-contents.update', 'learning-contents.archived',
-            'registration.create','registration.cancel',
-            'tutor-courses.invite-collaborator', 'tutor-courses.archived-collaborator',
+            'education.read',
+            'profile.create','profile.read', 'profile.update',
+            'course.create', 'course.read', 'course.read.hidden', 'course.update', 'course.archived',
+            'course.setting.read',
+            'course.tutor.collaborator.invite', 'course.tutor.collaborator.archived',
+            'course.registration.create','course.registration.cancel',
+            
             
         ]);
 
         // ROL: Student (Solo puede ver contenido activo y público)
         $studentRole = Role::create(['name' => 'student']);
         $studentRole->givePermissionTo([
-            'sedes.read',
-            'profiles.create','profiles.read', 'profiles.read-hidden', 'profiles.update',
-            'courses.read',
-            'modules.read',
-            'chapters.read',
-            'learning-contents.read',
-            'registration.create', 'registration.cancel'
+            'education.read',
+            'profile.create','profile.read', 'profile.update',
+            'course.read',
+            'course.registration.create', 'course.registration.cancel'
         ]);
     }
 }

@@ -31,6 +31,7 @@ class Course extends Model
         'private' => 'boolean',
         'enabled' => 'boolean',
     ];
+    public $timestamps = true;
     protected static function booted(): void
     {
         static::creating(function (Course $course) {

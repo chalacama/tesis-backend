@@ -37,7 +37,7 @@ class CoursePolicy
     }
     public function viewAny(User $user): bool
     {
-        return $user && $user->hasPermissionTo('courses.read');
+        return $user && $user->hasPermissionTo('course.read');
         
     }
     public function view(User $user, Course $course): bool
@@ -54,7 +54,7 @@ class CoursePolicy
     {
         // Un usuario puede crear un curso si tiene el permiso.
         // El rol 'student' no lo tiene, así que esto funciona.
-        return $user->hasPermissionTo('courses.create');
+        return $user->hasPermissionTo('course.create');
     }
 
     /**
@@ -66,14 +66,14 @@ class CoursePolicy
         // Un usuario puede actualizar un curso si:
         // 1. Tiene el permiso general 'courses.update' Y
         // 2. Es uno de los tutores asignados a ESE curso.
-        return $user->hasPermissionTo('courses.update') && $course->tutors()->where('users.id', $user->id)->exists();
+        return $user->hasPermissionTo('course.update') && $course->tutors()->where('users.id', $user->id)->exists();
     }
     /**
      * Determina si el usuario puede eliminar un curso específico.
      */
     public function delete(User $user, Course $course): bool
     {
-        return $user->hasPermissionTo('courses.delete') && $course->tutors()->where('users.id', $user->id)->exists();
+        return $user->hasPermissionTo('course.delete') && $course->tutors()->where('users.id', $user->id)->exists();
     }
     /**
      * Determine whether the user can permanently delete the model.
