@@ -74,4 +74,9 @@ class UserPolicy
     {
         return false;
     }
+    public function viewPortfolio(User $viewer, User $target): bool
+{
+    return $target->hasAnyRole(['admin', 'tutor']);
+}
+
 }

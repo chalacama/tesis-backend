@@ -6,7 +6,7 @@ use App\Http\Controllers\{
     CourseController,StartController,RegistrationController,WatchingController,ModuleController,
     ChapterController,LearningContentController,TutorCourseController,AuthController,
     CourseInvitationController,UserInformationController, EducationalUserController, SedeController,
-    DifficultyController
+    DifficultyController,PortfolioController
 };
 // == RUTAS PÚBLICAS Y DE AUTENTICACIÓN ==
 Route::get('/user', function (Request $request) {
@@ -96,6 +96,9 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     Route::prefix('difficulty')->group(function () {    
         Route::get('/index', [DifficultyController::class, 'index'])->middleware('permission:course.setting.read'); 
+    });
+    Route::prefix('portfolio')->group(function () {    
+        Route::get('/@{username}', [PortfolioController::class, 'show'])->middleware('permission:user.read'); 
     });
 });
 

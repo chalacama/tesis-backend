@@ -188,105 +188,96 @@ class CourseController extends Controller
 
 
     public function show(Course $course): JsonResponse
-    {
-        $this->authorize('viewHidden', $course);
+{
+    $this->authorize('viewHidden', $course);
 
-        $user = Auth::user();
-        $cacheKey = 'course_show_' . $course->id . '_user_' . $user->id;
+    $course->load([
+        'miniature:id,course_id,url',
+        'categories:id,name',
+        'certified:id,course_id,is_certified',
+        'tutors:id,name,lastname',
+        'difficulty:id,name',
+        'modules' => fn($q) => $q->withTrashed()
+            ->select('id', 'course_id', 'name', 'order', 'deleted_at')
+            ->with([
+                'chapters' => fn($cq) => $cq->withTrashed()
+                    ->select('id', 'module_id', 'title', 'description', 'order', 'deleted_at')
+                    ->with([
+                        'learningContent' => fn($lcq) => $lcq->withTrashed()
+                            ->select('id', 'chapter_id', 'url', 'type_content_id')
+                            ->with('typeLearningContent:id,name'),
 
-        $courseInfo = Cache::remember($cacheKey, now()->addMinutes(0.10), function () use ($course) {
-            return Course::query()
-                ->with([
-                    'miniatures' => fn($q) => $q->select('miniature_courses.id', 'miniature_courses.course_id', 'miniature_courses.url'),
-                    'categories' => fn($q) => $q->select('categories.id', 'categories.name'),
-                    'certified' => fn($q) => $q->select('course_certifieds.id', 'course_certifieds.course_id', 'course_certifieds.is_certified'),
-                    'tutors' => fn($q) => $q->select('users.id', 'users.name', 'users.lastname'),
-                    'difficulty' => fn($q) => $q->select('difficulties.id', 'difficulties.name'),
-                    'modules' => fn($q) => $q->withTrashed()
-                        ->select('modules.id', 'modules.course_id', 'modules.name', 'modules.order', 'modules.deleted_at')
-                        ->with([
-                            'chapters' => fn($cq) => $cq->withTrashed()
-                                ->select('chapters.id', 'chapters.module_id', 'chapters.title', 'chapters.description', 'chapters.order', 'chapters.deleted_at')
-                                ->with([
-                                    'learningContent' => fn($lcq) => $lcq->withTrashed()
-                                        ->select('learning_contents.id', 'learning_contents.chapter_id', 'learning_contents.url', 'learning_contents.type_content_id')
-                                        ->with([
-                                            'typeLearningContent' => fn($tcq) => $tcq->select('type_learning_contents.id', 'type_learning_contents.name'),
-                                        ]),
-                                    'questions' => fn($qq) => $qq->withTrashed()
-                                        ->select('questions.id', 'questions.chapter_id', 'questions.statement', 'questions.spot', 'questions.type_questions_id', 'questions.deleted_at')
-                                        ->with([
-                                            'answers' => fn($aq) => $aq->select('answers.id', 'answers.question_id', 'answers.option', 'answers.is_correct'),
-                                            'typeQuestion' => fn($tqq) => $tqq->select('type_questions.id', 'type_questions.nombre'),
-                                        ]),
-                                ]),
-                        ]),
-                ])
-                ->withCount(['modules', 'allComments', 'savedCourses', 'registrations'])
-                ->withSum('ratingCourses as total_stars', 'stars')
-                ->findOrFail($course->id);
-        });
-
-        $response = [
-            'course' => [
-                'id' => $courseInfo->id,
-                'title' => $courseInfo->title,
-                'description' => $courseInfo->description,
-                'private' => $courseInfo->private,
-                'code' => $courseInfo->code,
-                'enabled' => $courseInfo->enabled,
-                'difficulty' => $courseInfo->difficulty ? [
-                    'id' => $courseInfo->difficulty->id,
-                    'name' => $courseInfo->difficulty->name,
-                ] : null,
-                'deleted_at' => $courseInfo->deleted_at,
-                'modules_count' => $courseInfo->modules_count,
-                'total_comments_count' => $courseInfo->all_comments_count,
-                'saved_courses_count' => $courseInfo->saved_courses_count,
-                'registrations_count' => $courseInfo->registrations_count,
-                'total_stars' => (int) $courseInfo->total_stars,
-                'is_certified' => $courseInfo->certified ? $courseInfo->certified->is_certified : false,
-                'categorias' => $courseInfo->categories->map(fn($cat) => [
-                    'id' => $cat->id,
-                    'name' => $cat->name,
-                ]),
-                'creador' => $this->getCreator($courseInfo),
-                'colaboradores' => $this->getCollaborators($courseInfo),
-                'modulos' => $courseInfo->modules->map(fn($module) => [
-                    'id' => $module->id,
-                    'name' => $module->name,
-                    'order' => $module->order,
-                    'deleted_at' => $module->deleted_at,
-                    'capitulos' => $module->chapters->map(fn($chapter) => [
-                        'id' => $chapter->id,
-                        'title' => $chapter->title,
-                        'description' => $chapter->description,
-                        'order' => $chapter->order,
-                        'deleted_at' => $chapter->deleted_at,
-                        'contenido' => $chapter->learningContent ? [
-                            'id' => $chapter->learningContent->id,
-                            'url' => $chapter->learningContent->url,
-                            'type' => $chapter->learningContent->typeLearningContent ? $chapter->learningContent->typeLearningContent->name : null,
-                        ] : null,
-                        'preguntas' => $chapter->questions->map(fn($question) => [
-                            'id' => $question->id,
-                            'statement' => $question->statement,
-                            'spot' => $question->spot,
-                            'type' => $question->typeQuestion ? $question->typeQuestion->nombre : null,
-                            'deleted_at' => $question->deleted_at,
-                            'respuestas' => $question->answers->map(fn($answer) => [
-                                'id' => $answer->id,
-                                'option' => $answer->option,
-                                'is_correct' => $answer->is_correct,
+                        'questions' => fn($qq) => $qq->withTrashed()
+                            ->select('id', 'chapter_id', 'statement', 'spot', 'type_questions_id', 'deleted_at')
+                            ->with([
+                                'answers:id,question_id,option,is_correct',
+                                'typeQuestion:id,nombre',
                             ]),
+                    ]),
+            ]),
+    ]);
+
+    $course->loadCount(['modules', 'allComments', 'savedCourses', 'registrations']);
+    $course->loadSum('ratingCourses as total_stars', 'stars');
+
+    return response()->json([
+        'course' => [
+            'id' => $course->id,
+            'title' => $course->title,
+            'description' => $course->description,
+            'private' => $course->private,
+            'code' => $course->code,
+            'enabled' => $course->enabled,
+            'difficulty' => $course->difficulty ? [
+                'id' => $course->difficulty->id,
+                'name' => $course->difficulty->name,
+            ] : null,
+            'deleted_at' => $course->deleted_at,
+            'modules_count' => $course->modules_count,
+            'total_comments_count' => $course->all_comments_count,
+            'saved_courses_count' => $course->saved_courses_count,
+            'registrations_count' => $course->registrations_count,
+            'total_stars' => (int) $course->total_stars,
+            'is_certified' => $course->certified ? $course->certified->is_certified : false,
+            'categorias' => $course->categories->map(fn($cat) => [
+                'id' => $cat->id,
+                'name' => $cat->name,
+            ]),
+            'creador' => $this->getCreator($course),
+            'colaboradores' => $this->getCollaborators($course),
+            'modulos' => $course->modules->map(fn($module) => [
+                'id' => $module->id,
+                'name' => $module->name,
+                'order' => $module->order,
+                'deleted_at' => $module->deleted_at,
+                'capitulos' => $module->chapters->map(fn($chapter) => [
+                    'id' => $chapter->id,
+                    'title' => $chapter->title,
+                    'description' => $chapter->description,
+                    'order' => $chapter->order,
+                    'deleted_at' => $chapter->deleted_at,
+                    'contenido' => $chapter->learningContent ? [
+                        'id' => $chapter->learningContent->id,
+                        'url' => $chapter->learningContent->url,
+                        'type' => $chapter->learningContent->typeLearningContent?->name,
+                    ] : null,
+                    'preguntas' => $chapter->questions->map(fn($question) => [
+                        'id' => $question->id,
+                        'statement' => $question->statement,
+                        'spot' => $question->spot,
+                        'type' => $question->typeQuestion?->nombre,
+                        'deleted_at' => $question->deleted_at,
+                        'respuestas' => $question->answers->map(fn($answer) => [
+                            'id' => $answer->id,
+                            'option' => $answer->option,
+                            'is_correct' => $answer->is_correct,
                         ]),
                     ]),
                 ]),
-            ],
-        ];
-
-        return response()->json($response);
-    }
+            ]),
+        ],
+    ]);
+}
 
     public function update(Request $request, Course $course): JsonResponse
     {
