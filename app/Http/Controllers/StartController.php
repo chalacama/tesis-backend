@@ -68,11 +68,15 @@ class StartController extends Controller
         $owner = $course->tutors->where('pivot.is_owner', true)->first();
         return $owner
         ? [
+            'id' => $owner->id,
             'name' => $owner->name . ' ' . $owner->lastname,
+            'username' => $owner->username,
             'profile_picture_url' => $owner->profile_picture_url ?? null
         ]
         : [
+            'id' => null,
             'name' => null,
+            'username' => null,
             'profile_picture_url' => null
         ];
 
@@ -82,7 +86,7 @@ class StartController extends Controller
     {
         return [
             'certified:id,course_id,is_certified',
-            'tutors:id,name,lastname,profile_picture_url',
+            'tutors:id,name,lastname,profile_picture_url,username',
             'categories:id,name,category_courses.order',
             'miniature:id,course_id,url,deleted_at',
             'careers:id,url_logo',

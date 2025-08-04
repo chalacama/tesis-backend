@@ -18,7 +18,9 @@ class PortfolioController extends Controller
             'educationalUser.career',
             'educationalUser.sede.educationalUnit',
             'tutoredCourses' => fn ($query) =>
-                $query->where('enabled', true)->with(['difficulty', 'categories'])
+                $query->where('enabled', true)
+                ->where('is_owner', true)
+                ->with(['difficulty', 'categories'])
         ])
         ->firstOrFail();
 
@@ -33,6 +35,7 @@ class PortfolioController extends Controller
                 'lastname' => $user->lastname,
                 'username' => $user->username,
                 'email' => $user->email,
+                'profile_picture_url' => $user->profile_picture_url,
                 'joined_at' => Carbon::parse($user->created_at)->locale('es')->translatedFormat('d M Y'),
                 'career' => $educationalUser?->career ?? null,
                 'sede' => $educationalUser?->sede ? [
@@ -42,6 +45,7 @@ class PortfolioController extends Controller
                     'educational_unit' => $educationalUser->sede->educationalUnit ?? null
                 ] : null,
                 'active_courses_count' => $user->tutoredCourses->count(),
+                'role' => $user->getRoleNames()[0]
             ]
         ]);
     }

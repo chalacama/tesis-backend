@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Str;
+use App\Models\User;
+use Carbon\Carbon;
 class CourseController extends Controller
 {
     use AuthorizesRequests;
@@ -28,8 +30,20 @@ class CourseController extends Controller
 
     // 🔐 Filtro para tutores: solo ver cursos donde colaboran
     if ($user->hasRole('tutor')) {
-        $query->whereHas('tutors', fn($q) => $q->where('users.id', $user->id));
-    }
+    $query->whereHas('tutors', function ($q) use ($user) {
+        $q->where('users.id', $user->id)
+          ->where('tutor_courses.is_owner', true); // aquí estaba el error
+    });
+    
+
+}
+if ($request->has('username') && $user->hasRole('admin')) {
+    $query->whereHas('tutors', function ($q) use ($request) {
+        $q->where('username', $request->query('username'))
+          ->where('tutor_courses.is_owner', true);
+    });
+}
+
 
     // 🔎 Búsqueda por título o descripción
     if ($search) {
@@ -389,6 +403,44 @@ class CourseController extends Controller
 
         return response()->json(['message' => 'Curso restaurado exitosamente']);
     } */
+/* $this->authorize('viewPortfolio', $user); */
+    public function showOwner(string $username): JsonResponse
+{
+    $targetUser = User::where('username', $username)
+        ->with([
+            'educationalUser.career',
+            'educationalUser.sede.educationalUnit',
+            'tutoredCourses' => fn ($query) =>
+                $query->where('enabled', true)->with(['difficulty', 'categories'])
+        ])
+        ->firstOrFail();
+
+    // 🔐 Verifica la autorización
+    $this->authorize('viewOwner', $targetUser);
+
+    $educationalUser = $targetUser->educationalUser;
+
+    return response()->json([
+        'message' => 'Portafolio cargado correctamente.',
+        'portfolio' => [
+            'name' => $targetUser->name,
+            'lastname' => $targetUser->lastname,
+            'username' => $targetUser->username,
+            'email' => $targetUser->email,
+            'profile_picture_url' => $targetUser->profile_picture_url,
+            'joined_at' => Carbon::parse($targetUser->created_at)->locale('es')->translatedFormat('d M Y'),
+            'career' => $educationalUser?->career ?? null,
+            'sede' => $educationalUser?->sede ? [
+                'id' => $educationalUser->sede->id,
+                'province' => $educationalUser->sede->province,
+                'canton' => $educationalUser->sede->canton,
+                'educational_unit' => $educationalUser->sede->educationalUnit ?? null
+            ] : null,
+            'active_courses_count' => $targetUser->tutoredCourses->count(),
+            'role' => $targetUser->getRoleNames()[0]
+        ]
+    ]);
+}
 
     
 }

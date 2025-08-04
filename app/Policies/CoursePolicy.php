@@ -35,6 +35,14 @@ class CoursePolicy
     // Tutor puede ver si está asignado
     return $user->hasRole('tutor') && $course->tutors()->where('users.id', $user->id)->exists();
     }
+    public function owns(User $user, Course $course): bool
+{
+    return $course->tutors()
+        ->where('users.id', $user->id)
+        ->wherePivot('is_owner', true)
+        ->exists();
+}
+
     public function viewAny(User $user): bool
     {
         return $user && $user->hasPermissionTo('course.read');
@@ -86,5 +94,6 @@ class CoursePolicy
     {
         return false;
     }
+    
     
 }

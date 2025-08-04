@@ -78,5 +78,10 @@ class UserPolicy
 {
     return $target->hasAnyRole(['admin', 'tutor']);
 }
+public function viewOwner(User $authUser, User $targetUser): bool
+    {
+        // Si el usuario autenticado es tutor, puede ver solo su propio portafolio
+        return $authUser->hasRole('admin');
+    }
 
 }

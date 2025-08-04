@@ -33,6 +33,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/index', [CourseController::class, 'index'])->middleware('permission:course.read.hidden');
         Route::put('/{course}/active', [CourseController::class, 'active'])->middleware('permission:course.update');
         Route::post('/{course}/reset-code', [CourseController::class, 'resetCode'])->middleware('permission:course.update');
+        Route::get('/@{username}', [CourseController::class, 'showOwner'])->middleware('permission:course.read.hidden');
     });
 
     Route::prefix('module')->group(function () {
@@ -100,6 +101,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('portfolio')->group(function () {    
         Route::get('/@{username}', [PortfolioController::class, 'show'])->middleware('permission:user.read'); 
     });
+
 });
 
 
