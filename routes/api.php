@@ -82,11 +82,11 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     Route::prefix('profile')->group(function () {
         Route::prefix('/info')->group(function () {    
-            Route::get('/show', [UserInformationController::class, 'show'])->middleware('permission:profile.read.hidden');
+            Route::get('/show', [UserInformationController::class, 'show'])->middleware('permission:profile.read');
             Route::put('/update', [UserInformationController::class, 'update'])->middleware('permission:profile.update');   
         });
         Route::prefix('/education')->group(function () {    
-            Route::get('/show', [EducationalUserController::class, 'show'])->middleware('permission:profile.read.hidden');
+            Route::get('/show', [EducationalUserController::class, 'show'])->middleware('permission:profile.read');
             Route::put('/update', [EducationalUserController::class, 'update'])->middleware('permission:profile.update');
         });     
     });

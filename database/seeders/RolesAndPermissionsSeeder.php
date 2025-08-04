@@ -72,7 +72,7 @@ class RolesAndPermissionsSeeder extends Seeder
         // ROL: Student (Solo puede ver contenido activo y público)
         $studentRole = Role::create(['name' => 'student']);
         $studentRole->givePermissionTo([
-            'user.read',
+            'user.read', 
             'education.read',
             'profile.create','profile.read', 'profile.update',
             'course.read',
