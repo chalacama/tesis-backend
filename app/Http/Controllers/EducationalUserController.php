@@ -20,6 +20,7 @@ class EducationalUserController extends Controller
         $user->load(
         'educationalUser.educationalLevel', 
         'educationalUser.sede',
+        'educationalUser.sede.educationalUnit',
         'educationalUser.career' 
         );
 
