@@ -12,29 +12,23 @@ class TypeLearningContentSeeder extends Seeder
      */
     public function run(): void
     {
-        TypeLearningContent::create([
-            'name' => 'cloudinary',
+/*         TypeLearningContent::create([
+            'name' => 'Video',
             'max_size_mb' => 500.00,
             'min_duration_seconds' => 120,
-            'max_duration_seconds' => 480,
-        ]);
+            'max_duration_seconds' => 120,
+        ]); */
         TypeLearningContent::create([
-            'name' => 'youtube-watch',
+            'name' => 'youtube',
             'max_size_mb' => null,
             'min_duration_seconds' => null,
             'max_duration_seconds' => null,
         ]);
         TypeLearningContent::create([
-            'name' => 'youtube-shorts',
-            'max_size_mb' => null,
-            'min_duration_seconds' => null,
-            'max_duration_seconds' => null,
-        ]);
-        TypeLearningContent::create([
-            'name' => 'pdf',
+            'name' => 'archivo',
             'max_size_mb' => 100.00,
-            'min_duration_seconds' => null,
-            'max_duration_seconds' => null,
+            'min_duration_seconds' => 120,
+            'max_duration_seconds' => 120,
         ]);
         /* TypeLearningContent::create([
             'name' => 'cloudinary',

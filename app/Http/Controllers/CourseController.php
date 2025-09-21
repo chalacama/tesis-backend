@@ -32,7 +32,7 @@ class CourseController extends Controller
     if ($user->hasRole('tutor')) {
     $query->whereHas('tutors', function ($q) use ($user) {
         $q->where('users.id', $user->id)
-          ->where('tutor_courses.is_owner', true); // aquí estaba el error
+        ->where('tutor_courses.is_owner', true); // comentar para que colaboren todos
     });
     
 
@@ -40,7 +40,7 @@ class CourseController extends Controller
 if ($request->has('username') && $user->hasRole('admin')) {
     $query->whereHas('tutors', function ($q) use ($request) {
         $q->where('username', $request->query('username'))
-          ->where('tutor_courses.is_owner', true);
+          ->where('tutor_courses.is_owner', true); // comentar para que colaboren todos
     });
 }
 
@@ -153,6 +153,8 @@ if ($request->has('username') && $user->hasRole('admin')) {
     // Asociar tutor creador como propietario
     if (Auth::user()->hasRole('tutor')) {
         $course->tutors()->attach(Auth::id(), ['is_owner' => true]);
+    } elseif (Auth::user()->hasRole('admin')) {
+        $course->tutors()->attach(Auth::id(), ['is_owner' => true]);
     }
 
     // Recargar relaciones necesarias para construir la misma estructura que index()
@@ -199,99 +201,24 @@ if ($request->has('username') && $user->hasRole('admin')) {
         ]
     ], 201);
 }
-
-
-    public function show(Course $course): JsonResponse
+public function show(Course $course): JsonResponse
 {
     $this->authorize('viewHidden', $course);
 
     $course->load([
         'miniature:id,course_id,url',
+        'careers:id,name',
         'categories:id,name',
-        'certified:id,course_id,is_certified',
-        'tutors:id,name,lastname',
         'difficulty:id,name',
-        'modules' => fn($q) => $q->withTrashed()
-            ->select('id', 'course_id', 'name', 'order', 'deleted_at')
-            ->with([
-                'chapters' => fn($cq) => $cq->withTrashed()
-                    ->select('id', 'module_id', 'title', 'description', 'order', 'deleted_at')
-                    ->with([
-                        'learningContent' => fn($lcq) => $lcq->withTrashed()
-                            ->select('id', 'chapter_id', 'url', 'type_content_id')
-                            ->with('typeLearningContent:id,name'),
-
-                        'questions' => fn($qq) => $qq->withTrashed()
-                            ->select('id', 'chapter_id', 'statement', 'spot', 'type_questions_id', 'deleted_at')
-                            ->with([
-                                'answers:id,question_id,option,is_correct',
-                                'typeQuestion:id,nombre',
-                            ]),
-                    ]),
-            ]),
     ]);
-
-    $course->loadCount(['modules', 'allComments', 'savedCourses', 'registrations']);
-    $course->loadSum('ratingCourses as total_stars', 'stars');
 
     return response()->json([
-        'course' => [
-            'id' => $course->id,
-            'title' => $course->title,
-            'description' => $course->description,
-            'private' => $course->private,
-            'code' => $course->code,
-            'enabled' => $course->enabled,
-            'difficulty' => $course->difficulty ? [
-                'id' => $course->difficulty->id,
-                'name' => $course->difficulty->name,
-            ] : null,
-            'deleted_at' => $course->deleted_at,
-            'modules_count' => $course->modules_count,
-            'total_comments_count' => $course->all_comments_count,
-            'saved_courses_count' => $course->saved_courses_count,
-            'registrations_count' => $course->registrations_count,
-            'total_stars' => (int) $course->total_stars,
-            'is_certified' => $course->certified ? $course->certified->is_certified : false,
-            'categorias' => $course->categories->map(fn($cat) => [
-                'id' => $cat->id,
-                'name' => $cat->name,
-            ]),
-            'creador' => $this->getCreator($course),
-            'colaboradores' => $this->getCollaborators($course),
-            'modulos' => $course->modules->map(fn($module) => [
-                'id' => $module->id,
-                'name' => $module->name,
-                'order' => $module->order,
-                'deleted_at' => $module->deleted_at,
-                'capitulos' => $module->chapters->map(fn($chapter) => [
-                    'id' => $chapter->id,
-                    'title' => $chapter->title,
-                    'description' => $chapter->description,
-                    'order' => $chapter->order,
-                    'deleted_at' => $chapter->deleted_at,
-                    'contenido' => $chapter->learningContent ? [
-                        'id' => $chapter->learningContent->id,
-                        'url' => $chapter->learningContent->url,
-                        'type' => $chapter->learningContent->typeLearningContent?->name,
-                    ] : null,
-                    'preguntas' => $chapter->questions->map(fn($question) => [
-                        'id' => $question->id,
-                        'statement' => $question->statement,
-                        'spot' => $question->spot,
-                        'type' => $question->typeQuestion?->nombre,
-                        'deleted_at' => $question->deleted_at,
-                        'respuestas' => $question->answers->map(fn($answer) => [
-                            'id' => $answer->id,
-                            'option' => $answer->option,
-                            'is_correct' => $answer->is_correct,
-                        ]),
-                    ]),
-                ]),
-            ]),
-        ],
+        'message' => 'Curso encontrado',
+        'course'  => $course
     ]);
 }
+
+
 
     public function update(Request $request, Course $course): JsonResponse
     {
@@ -379,7 +306,7 @@ if ($request->has('username') && $user->hasRole('admin')) {
         ]);
     }
 
-    public function destroy(Course $course): JsonResponse
+    public function archived(Course $course): JsonResponse
     {
         $this->authorize('delete', $course);
 

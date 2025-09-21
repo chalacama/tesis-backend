@@ -20,7 +20,7 @@ class UsersSeeder extends Seeder
                 'lastname' => 'digi',
                 'username' => 'admindigi',
                 'email' => 'admin.espam@espam.edu.ec',
-                'password' => bcrypt('S3cur3P@ssw0rd!2025'),
+                'password' => bcrypt('password123'),
                 'profile_picture_url' => 'https://i.pinimg.com/736x/70/aa/d2/70aad2738a5e301652843930582fffaa.jpg'
             ],
             // Puedes agregar más admins aquí

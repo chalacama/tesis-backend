@@ -6,7 +6,7 @@ use App\Http\Controllers\{
     CourseController,StartController,RegistrationController,WatchingController,ModuleController,
     ChapterController,LearningContentController,TutorCourseController,AuthController,
     CourseInvitationController,UserInformationController, EducationalUserController, SedeController,
-    DifficultyController,PortfolioController
+    DifficultyController,PortfolioController,MiniatureCourseController
 };
 // == RUTAS PÚBLICAS Y DE AUTENTICACIÓN ==
 Route::get('/user', function (Request $request) {
@@ -34,6 +34,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/{course}/active', [CourseController::class, 'active'])->middleware('permission:course.update');
         Route::post('/{course}/reset-code', [CourseController::class, 'resetCode'])->middleware('permission:course.update');
         Route::get('/@{username}', [CourseController::class, 'showOwner'])->middleware('permission:course.read.hidden');
+    });
+    Route::prefix('miniature')->group(function () {
+        Route::post('/store', [MiniatureCourseController::class, 'store'])->middleware('permission:course.create');
+        Route::get('/{course}/show', [MiniatureCourseController::class, 'show'])->middleware('permission:course.read.hidden');
+        
     });
 
     Route::prefix('module')->group(function () {

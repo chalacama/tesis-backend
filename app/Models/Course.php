@@ -10,11 +10,16 @@ use App\Models\RatingCourse;
 use App\Models\Category;
 use App\Models\Comment;
 use App\Models\Module;
+use App\Models\Chapter;
+use App\Models\LearningContent;
+use App\Models\TypeLearningContent;
+use App\Models\MiniatureCourse;
 use App\Models\Registration;
 use App\Models\SavedCourse;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Ramsey\Uuid\Uuid;
 use Illuminate\Support\Str;
+use Carbon\Carbon;
 class Course extends Model
 {
     use SoftDeletes,HasFactory; 
@@ -75,8 +80,8 @@ class Course extends Model
     public function tutors()
     {
         return $this->belongsToMany(User::class, 'tutor_courses')
-                    ->withPivot('is_owner') // Carga el campo 'is_owner' de la tabla pivote
-                    ->withTimestamps(); // Carga created_at y updated_at de la tabla pivote
+                    ->withPivot('is_owner')
+                    ->withTimestamps();
     }
 
     /**

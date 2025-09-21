@@ -17,31 +17,36 @@ class CoursePolicy
         if ($user->hasRole('admin')) {
             return true;
         }
-        return null; // Devuelve null para que se ejecute el método específico (update, delete, etc.)
+        return null;
     }
-
+    public function owns(User $user, Course $course): bool
+    {
+    return $course->tutors()
+        ->where('users.id', $user->id)
+        ->wherePivot('is_owner', true)
+        ->exists();
+    }
+    public function collaborator(User $user, Course $course): bool
+    {
+    return $course->tutors()
+        ->where('users.id', $user->id)
+        ->wherePivot('is_owner', false)
+        ->exists();
+    }
     /**
      * Determina si el usuario puede ver la lista de cursos en el panel de gestión.
      * (Reemplaza la lógica de tu método getAllCourses)
      */
     public function viewAnyHidden(User $user): bool
     {
-        // Solo administradores y tutores pueden ver la lista de cursos del backend.
-        return $user->hasRole('tutor'); // El admin ya fue aprobado por el método before()
+        
+        return $user->hasRole('tutor');
     }
     public function viewHidden(User $user, Course $course): bool
     {
-    // Admin ya tiene acceso por el método before
-    // Tutor puede ver si está asignado
-    return $user->hasRole('tutor') && $course->tutors()->where('users.id', $user->id)->exists();
+    return $this->owns($user, $course);
     }
-    public function owns(User $user, Course $course): bool
-{
-    return $course->tutors()
-        ->where('users.id', $user->id)
-        ->wherePivot('is_owner', true)
-        ->exists();
-}
+    
 
     public function viewAny(User $user): bool
     {
@@ -50,9 +55,7 @@ class CoursePolicy
     }
     public function view(User $user, Course $course): bool
     {
-    // Admin ya tiene acceso por el método before
-    // Tutor puede ver si está asignado
-    // return $user->hasRole('tutor') && $course->tutors()->where('users.id', $user->id)->exists();
+        return $user && $user->hasPermissionTo('course.read');
     }
     /**
      * Determina si el usuario puede crear cursos.
@@ -71,18 +74,16 @@ class CoursePolicy
      */
     public function update(User $user, Course $course): bool
     {
-        // Un usuario puede actualizar un curso si:
-        // 1. Tiene el permiso general 'courses.update' Y
-        // 2. Es uno de los tutores asignados a ESE curso.
-        return $user->hasPermissionTo('course.update') && $course->tutors()->where('users.id', $user->id)->exists();
+        return $this->owns($user, $course);
     }
     /**
      * Determina si el usuario puede eliminar un curso específico.
      */
     public function delete(User $user, Course $course): bool
     {
-        return $user->hasPermissionTo('course.delete') && $course->tutors()->where('users.id', $user->id)->exists();
-    }
+    // Solo el dueño puede eliminar
+    return $this->owns($user, $course);
+    }   
     /**
      * Determine whether the user can permanently delete the model.
      */
