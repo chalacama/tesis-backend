@@ -3,14 +3,16 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-
-class CategoryCourse extends Model
+use Spatie\EloquentSortable\SortableTrait;
+use Spatie\EloquentSortable\Sortable;
+class CategoryCourse extends Model implements Sortable
 {
-    protected $fillable = [
-        'name',
-        'description',
-        'order',
-        'category_id',
-        'course_id'
-];
+    use SortableTrait;
+
+    protected $fillable = ['course_id','category_id','order'];
+
+    public $sortable = [
+        'order_column_name' => 'order',
+        'sort_when_creating' => false,
+    ];
 }

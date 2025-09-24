@@ -127,9 +127,10 @@ class Course extends Model
      */
     public function categories()
     {
-        return $this->belongsToMany(Category::class, 'category_courses');
+        return $this->belongsToMany(Category::class, 'category_courses')
+            ->withPivot('order')
+            ->withTimestamps();
     }
-    
     /**
      * RELACIÓN DE COMENTARIOS ACTUALIZADA
      *
@@ -172,13 +173,7 @@ class Course extends Model
     {
         return $this->hasMany(SavedCourse::class);
     }
-    /**
-     * Relación uno a uno con CourseCertified.
-     */
-    public function certified()
-    {
-        return $this->hasOne(CourseCertified::class);
-    }
+    
     /**
      * Relación uno a muchos con MiniatureCourse.
      */

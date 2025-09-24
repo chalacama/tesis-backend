@@ -32,6 +32,7 @@ public function store(Request $request): JsonResponse
         'module'  => $module
     ], 201);
 }
+
 public function update(Request $request, Module $module)
 {
     $this->authorize('update', $module);
@@ -47,7 +48,6 @@ public function update(Request $request, Module $module)
         'module'  => $module
     ], 200);
 }
-
 
 public function archived(Module $module)
 {

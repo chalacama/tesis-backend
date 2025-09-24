@@ -45,7 +45,6 @@ public function storeCloud(CreateVideoCloudinaryRequest $request)
                 [
                     'resource_type' => 'video',
                     'folder' => 'learning_content/videos',
-                    /* 'type' => 'authenticated', */
                     'chunk_size' => 6000000 // 6MB chunks
                 ]
             );

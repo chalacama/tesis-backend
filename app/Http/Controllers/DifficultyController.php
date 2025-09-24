@@ -9,11 +9,12 @@ class DifficultyController extends Controller
 {
     public function index(): JsonResponse
     {
-        $difficulties = Difficulty::select('id', 'name')->orderBy('id')->get();
+        $difficulties = Difficulty::orderBy('id')->get();
 
         return response()->json([
+            'success' => true,
             'message' => 'Dificultades encontradas',
-            'difficulties' => $difficulties,
+            'data' => $difficulties,
         ]);
     }
 }

@@ -14,12 +14,12 @@ class LearningContentsSeeder extends Seeder
     {
         LearningContent::create([
             'url' => 'https://www.youtube.com/shorts/-qr9dUuOzJc',
-            'type_content_id' => 3,
+            'type_content_id' => 1,
             'chapter_id' => 1,
         ]);
         LearningContent::create([
             'url' => 'https://www.youtube.com/watch?v=-0Fr1blovx8',
-            'type_content_id' => 2,
+            'type_content_id' => 1,
             'chapter_id' => 2,
         ]);
     }

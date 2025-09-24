@@ -31,8 +31,6 @@ class DatabaseSeeder extends Seeder
         //Gestion learning
         $this->call(CoursesSeeder::class);
 
-        $this->call(CourseCertifiedSeeder::class);
-
         $this->call(RatingCourseSeeder::class);
 
         $this->call(TutorCourseSeeder::class);

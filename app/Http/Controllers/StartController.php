@@ -34,7 +34,6 @@ class StartController extends Controller
                 'created_at' => $course->created_at
                     ? \Carbon\Carbon::parse($course->created_at)->locale('es')->isoFormat('D MMM YYYY')
                     : null,
-                'is_certified' => $course->certified ? $course->certified->is_certified : false,
                 'thumbnail_url' => $course->miniature && !$course->miniature->trashed()
                     ? $course->miniature->url
                     : null,
@@ -85,7 +84,6 @@ class StartController extends Controller
     private function getCourseWithRelations()
     {
         return [
-            'certified:id,course_id,is_certified',
             'tutors:id,name,lastname,profile_picture_url,username',
             'categories:id,name,category_courses.order',
             'miniature:id,course_id,url,deleted_at',

@@ -14,11 +14,25 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Str;
 use App\Models\User;
 use Carbon\Carbon;
+use App\Models\MiniatureCourse;
+use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Storage;
+use Cloudinary\Cloudinary;
+use Cloudinary\Api\Upload\UploadApi;
+use Cloudinary\Api\Admin\AdminApi;
+use Exception;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Validator;
 class CourseController extends Controller
 {
+
     use AuthorizesRequests;
     public function index(Request $request): JsonResponse
-{
+    {
     $this->authorize('viewAnyHidden', Course::class);
 
     $perPage = $request->query('per_page', 10);
@@ -36,13 +50,13 @@ class CourseController extends Controller
     });
     
 
-}
-if ($request->has('username') && $user->hasRole('admin')) {
+    }
+    if ($request->has('username') && $user->hasRole('admin')) {
     $query->whereHas('tutors', function ($q) use ($request) {
         $q->where('username', $request->query('username'))
           ->where('tutor_courses.is_owner', true); // comentar para que colaboren todos
     });
-}
+    }
 
 
     // 🔎 Búsqueda por título o descripción
@@ -64,7 +78,6 @@ if ($request->has('username') && $user->hasRole('admin')) {
     $courses = $query->with([
         'miniature:id,course_id,url',
         'categories:id,name',
-        'certified:id,course_id,is_certified',
         'tutors:id,name,lastname',
         'difficulty:id,name'
     ])
@@ -86,7 +99,7 @@ if ($request->has('username') && $user->hasRole('admin')) {
             'saved_courses_count' => $course->saved_courses_count,
             'registrations_count' => $course->registrations_count,
             'total_stars' => (int) $course->total_stars,
-            'is_certified' => $course->certified?->is_certified ?? false,
+            
             'miniature' => $course->miniature ? [
                 'id' => $course->miniature->id,
                 'url' => $course->miniature->url,
@@ -113,8 +126,7 @@ if ($request->has('username') && $user->hasRole('admin')) {
             'last_page' => $courses->lastPage(),
         ],
     ]);
-}
-
+    }
 
     private function getCreator(Course $course): string
     {
@@ -133,7 +145,7 @@ if ($request->has('username') && $user->hasRole('admin')) {
     }
 
     public function store(Request $request): JsonResponse
-{
+    {
     $this->authorize('create', Course::class);
 
     $validated = $request->validate([
@@ -161,7 +173,6 @@ if ($request->has('username') && $user->hasRole('admin')) {
     $course->load([
         'miniature:id,course_id,url',
         'categories:id,name',
-        'certified:id,course_id,is_certified',
         'tutors:id,name,lastname',
         'difficulty:id,name'
     ])
@@ -183,7 +194,6 @@ if ($request->has('username') && $user->hasRole('admin')) {
             'saved_courses_count' => $course->saved_courses_count,
             'registrations_count' => $course->registrations_count,
             'total_stars' => (int) $course->total_stars,
-            'is_certified' => $course->certified?->is_certified ?? false,
             'miniature' => $course->miniature ? [
                 'id' => $course->miniature->id,
                 'url' => $course->miniature->url,
@@ -200,84 +210,204 @@ if ($request->has('username') && $user->hasRole('admin')) {
             'colaboradores' => $this->getCollaborators($course),
         ]
     ], 201);
-}
-public function show(Course $course): JsonResponse
-{
-    $this->authorize('viewHidden', $course);
+    }
+    public function show(Course $course): JsonResponse
+    {
+        $this->authorize('viewHidden', $course);
 
-    $course->load([
+        $course->load([
         'miniature:id,course_id,url',
         'careers:id,name',
         'categories:id,name',
         'difficulty:id,name',
-    ]);
+        ]);
 
-    return response()->json([
+        return response()->json([
         'message' => 'Curso encontrado',
         'course'  => $course
     ]);
-}
+    }
+/** Límites de relaciones */
+    public int $maxCategories = 4;
+    public int $maxCareers    = 2;
 
-
-
+    /** Config de imagen */
+    public array $allowedImageExtensions = ['jpg','png','gif'];
+    public int   $maxImageSizeMb = 10; // 10MB
     public function update(Request $request, Course $course): JsonResponse
     {
         $this->authorize('update', $course);
 
-        if ($course->enabled) {
-            return response()->json(['message' => 'El curso debe estar inactivo para editarlo'], 422);
-        }
-
         $validated = $request->validate([
-            'title' => 'sometimes|required|string|max:255',
-            'description' => 'sometimes|required|string',
-            'private' => 'sometimes|required|boolean',
+            // Campos base
+            'title'         => 'sometimes|required|string|max:255',
+            'description'   => 'sometimes|required|string',
+
+            // -> usar IN en vez de boolean por form-data
+            'private'       => 'sometimes|required|in:1,0,true,false,on,off,yes,no',
+            'enabled'       => 'sometimes|in:1,0,true,false,on,off,yes,no',
+
             'difficulty_id' => 'sometimes|required|exists:difficulties,id',
+            'code'          => ['sometimes','nullable','string', Rule::unique('courses','code')->ignore($course->id)],
+
+            // Relaciones
+            'categories'           => 'sometimes|array',
+            'categories.*'         => 'nullable',
+            'categories.*.id'      => 'required_without:categories.*|integer|exists:categories,id',
+            'categories.*.order'   => 'nullable|integer|min:1',
+
+            'careers'      => 'sometimes|array',
+            'careers.*'    => 'integer|exists:careers,id',
+
+            // Miniatura (archivo) -> multipart/form-data
+            'miniature'    => [
+                'sometimes',
+                'file',
+                'mimes:' . implode(',', $this->allowedImageExtensions),
+                'max:' . ($this->maxImageSizeMb * 1024), // en KB
+            ],
         ]);
 
-        if (isset($validated['private'])) {
-            if ($validated['private'] && !$course->code) {
-                $validated['code'] = Course::generateUniqueCode();
-            } elseif (!$validated['private']) {
-                $validated['code'] = null;
+        // ---- Normalización booleans para form-data ----
+        foreach (['private','enabled'] as $flag) {
+            if ($request->has($flag)) {
+                $validated[$flag] = filter_var(
+                    $request->input($flag),
+                    FILTER_VALIDATE_BOOLEAN,
+                    FILTER_NULL_ON_FAILURE
+                );
             }
         }
 
-        $course->update($validated);
+        // ---- Normalización + límites ----
+        $maxCategories = $this->maxCategories;
+        $maxCareers    = $this->maxCareers;
 
-        Cache::forget('course_show_' . $course->id . '_user_' . Auth::id());
-        for ($i = 1; $i <= 100; $i++) {
-            Cache::forget('courses_index_' . Auth::id() . '_page_' . $i . '_per_10');
-            Cache::forget('courses_index_' . Auth::id() . '_page_' . $i . '_per_' . $request->query('per_page', 10));
+        // categories -> ['id'=>X,'order'=>Y]
+        $rawCategories  = $request->has('categories') ? ($validated['categories'] ?? []) : null;
+        $normCategories = null;
+        if ($rawCategories !== null) {
+            $seen = [];
+            $normCategories = [];
+            $i = 1;
+            foreach ($rawCategories as $item) {
+                if (is_array($item)) {
+                    $id    = $item['id'] ?? null;
+                    $order = array_key_exists('order', $item) ? (int)$item['order'] : $i;
+                } else {
+                    $id    = $item;
+                    $order = $i;
+                }
+                if ($id && !in_array($id, $seen, true)) {
+                    $normCategories[] = ['id' => (int)$id, 'order' => $order > 0 ? $order : $i];
+                    $seen[] = (int)$id;
+                    $i++;
+                }
+            }
+            if (count($normCategories) > $maxCategories) {
+                throw ValidationException::withMessages([
+                    'categories' => ['Solo se permiten ' . $maxCategories . ' categorías por curso.']
+                ]);
+            }
         }
 
-        return response()->json(['message' => 'Curso actualizado', 'course' => $course]);
+        // careers: únicos + límite
+        $normCareers = null;
+        if ($request->has('careers')) {
+            $normCareers = array_values(array_unique(array_map('intval', $validated['careers'] ?? [])));
+            if (count($normCareers) > $maxCareers) {
+                throw ValidationException::withMessages([
+                    'careers' => ['Solo se permiten hasta ' . $maxCareers . ' carreras por curso.']
+                ]);
+            }
+        }
+
+        try {
+            DB::transaction(function () use ($request, $course, $validated, $normCategories, $normCareers) {
+
+                // 1) Actualizar campos base enviados
+                $toUpdate = collect($validated)->only([
+                    'title','description','private','enabled','difficulty_id','code'
+                ])->toArray();
+
+                $course->update($toUpdate);
+
+                // 2) Categorías
+                if ($normCategories !== null) {
+                    usort($normCategories, fn($a,$b) => $a['order'] <=> $b['order']);
+                    $payload = [];
+                    $seq = 1;
+                    foreach ($normCategories as $nc) {
+                        $payload[$nc['id']] = ['order' => $seq++];
+                    }
+                    $course->categories()->sync($payload);
+                }
+
+                // 3) Carreras
+                if ($normCareers !== null) {
+                    $course->careers()->sync($normCareers);
+                }
+
+                // 4) Miniatura (archivo -> Cloudinary)
+                if ($request->hasFile('miniature')) {
+                    $file = $request->file('miniature');
+
+                    $cloudinary = new Cloudinary(config('cloudinary.cloud_url'));
+                    $upload = $cloudinary->uploadApi()->upload(
+                        $file->getRealPath(),
+                        [
+                            'folder'        => "miniatures",
+                            'public_id'     => "curso/{$course->id}",
+                            'overwrite'     => true,
+                            'resource_type' => 'image',
+                            'transformation' => [
+                                ['quality' => 'auto:good'],
+                                ['fetch_format' => 'auto'],
+                            ],
+                        ]
+                    );
+
+                    $secureUrl = $upload['secure_url'] ?? null;
+                    if ($secureUrl) {
+                        $course->miniature()->updateOrCreate([], ['url' => $secureUrl]);
+                    } else {
+                        throw new \RuntimeException('No se pudo obtener la URL de Cloudinary.');
+                    }
+                }
+            });
+
+            $course->load([
+                'categories' => function ($q) {
+                    $q->withPivot('order')->orderBy('category_courses.order');
+                },
+                'careers',
+                'miniature',
+                'difficulty',
+            ]);
+
+            return response()->json([
+                'message' => 'Curso actualizado',
+                'course'  => $course
+            ], 200);
+
+        } catch (\Throwable $e) {
+            Log::error('Error actualizando curso: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return response()->json([
+                'message' => 'No se pudo actualizar el curso.',
+                'error'   => config('app.debug') ? $e->getMessage() : 'Error interno'
+            ], 500);
+        }
     }
 
-    public function resetCode(Course $course): JsonResponse
+    public function generateCode(): JsonResponse
     {
-        $this->authorize('update', $course);
-
-        if (!$course->private) {
-            return response()->json(['message' => 'El curso debe ser privado para restablecer el código'], 422);
-        }
 
         $newCode = Course::generateUniqueCode();
 
-        $course->update(['code' => $newCode]);
-
-        Cache::forget('course_show_' . $course->id . '_user_' . Auth::id());
-        for ($i = 1; $i <= 100; $i++) {
-            Cache::forget('courses_index_' . Auth::id() . '_page_' . $i . '_per_10');
-            Cache::forget('courses_index_' . Auth::id() . '_page_' . $i . '_per_10');
-        }
-
         return response()->json([
-            'message' => 'Código del curso restablecido',
-            'course' => [
-                'id' => $course->id,
-                'code' => $course->code,
-            ],
+            
+            'message' => 'Código del curso generado',
+            'code' => $newCode
         ]);
     }
 
@@ -332,7 +462,7 @@ public function show(Course $course): JsonResponse
     } */
 /* $this->authorize('viewPortfolio', $user); */
     public function showOwner(string $username): JsonResponse
-{
+    {
     $targetUser = User::where('username', $username)
         ->with([
             'educationalUser.career',
@@ -367,7 +497,7 @@ public function show(Course $course): JsonResponse
             'role' => $targetUser->getRoleNames()[0]
         ]
     ]);
-}
+    }
 
     
 }
