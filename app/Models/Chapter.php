@@ -8,9 +8,10 @@ use App\Models\LearningContent;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\EloquentSortable\Sortable;
 use Spatie\EloquentSortable\SortableTrait;
+use Illuminate\Database\Eloquent\Prunable;
 class Chapter extends Model implements Sortable
 {
-    use SoftDeletes,SortableTrait; 
+    use SoftDeletes,SortableTrait , Prunable; 
     
     public $sortable = [
         'order_column_name' => 'order',
@@ -22,6 +23,16 @@ class Chapter extends Model implements Sortable
         'order',
         'module_id',
     ];
+    public function prunable()
+    {
+        return static::onlyTrashed()
+            ->where('deleted_at', '<=', now()->subDays(30));
+    }
+    protected function pruning()
+    {
+        // Aquí puedes borrar archivos en Cloudinary, logs, etc.
+        // p.ej. Cloudinary::destroy("archives/chapter/{$this->id}", ['resource_type'=>'auto']);
+    }
     public function buildSortQuery()
     {
         return static::query()->where('module_id', $this->module_id);

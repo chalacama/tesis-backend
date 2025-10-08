@@ -4,75 +4,85 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Chapter;
+use App\Models\Module;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Http\JsonResponse;
+use App\Models\Course;
+//  $course = $chapter->module?->course;
 class ChapterController extends Controller
 {
-public function store(Request $request)
-{
-    $validated = $request->validate([
-        'title' => 'required|string|max:255',
-        'description' => 'nullable|string',
-        'module_id' => 'required|integer',
-    ]);
+    use AuthorizesRequests;
 
-    $chapter = Chapter::create($validated);
+    public function show(Chapter $chapter): JsonResponse
+    {
+        // Cargar solo lo necesario para autorizar
+        $chapter->load(['module:id,course_id']);
 
-    return response()->json([
-        'message' => 'Capítulo creado correctamente',
-        'chapter' => $chapter
-    ]);
-}
-public function update(Request $request, $id)
-{
-    $validated = $request->validate([
-        'title' => 'required|string',
-        'description' => 'nullable|string',
-        'module_id' => 'required|integer',
-    ]);
+        // Autorizar con la policy del curso (reglas únicas centralizadas)
+        $course = Course::findOrFail($chapter->module->course_id);
+        $this->authorize('viewHidden', $course);
 
-    $chapter = Chapter::find($id);
+        // Tomar únicamente los campos del capítulo (sin relaciones)
+        $payload = $chapter->only([
+            'id',
+            'title',
+            'description',
+            'order',
+            'module_id',
+            'created_at',
+            'updated_at',
+            'deleted_at',
+        ]);
 
-    if (!$chapter) {
-        return response()->json(['message' => 'Capítulo no encontrado'], 404);
+        return response()->json([
+            'ok'      => true,
+            'chapter' => $payload,
+        ]);
     }
 
-    $chapter->update($validated);
+    public function update(Request $request, Chapter $chapter): JsonResponse
+    {
+        // Cargar lo mínimo para autorizar
+        $chapter->load(['module:id,course_id']);
+        $course = Course::findOrFail($chapter->module->course_id);
 
-    return response()->json([
-        'message' => 'Capítulo actualizado correctamente',
-        'chapter' => $chapter
-    ]);
-}
+        // El usuario debe poder actualizar el curso
+        $this->authorize('update', $course);
 
-public function archived($id)
-{
-    $chapter = Chapter::find($id);
+        // Validación: solo campos de "detalles"
+        $data = $request->validate([
+            'title'       => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+        ]);
 
-    if (!$chapter) {
-        return response()->json(['message' => 'Capítulo no encontrado'], 404);
+        // Actualizar el capítulo
+        $chapter->update([
+            'title'       => trim($data['title']),
+            'description' => $data['description'] ?? null,
+        ]);
+
+        // Responder solo con los campos del capítulo (ligero)
+        $payload = $chapter->only([
+            'id',
+            'title',
+            'description',
+            'order',
+            'module_id',
+            'created_at',
+            'updated_at',
+            'deleted_at',
+        ]);
+
+        return response()->json([
+            'ok'      => true,
+            'chapter' => $payload,
+        ]);
     }
-
-    $chapter->delete();
-
-    return response()->json([
-        'message' => 'Capítulo eliminado correctamente'
-    ]);
-}
-public function reorder(Request $request)
-{
-    // 1. Validar que recibimos un array de IDs.
-    $validated = $request->validate([
-        'chapters'   => 'required|array',
-        'chapters.*' => 'integer|exists:chapters,id', // Valida que cada ID exista en la tabla modules
-    ]);
-
-    // 2. Llama al método estático del modelo para reordenar.
-    Chapter::setNewOrder($validated['chapters']);
-
-    // 3. Devuelve una respuesta de éxito.
-    return response()->json([
-        'message' => 'El orden de los capitulos ha sido actualizado.'
-    ]);
-}
 
 
 }

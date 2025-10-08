@@ -13,8 +13,8 @@ class LearningContentsSeeder extends Seeder
     public function run(): void
     {
         LearningContent::create([
-            'url' => 'https://www.youtube.com/shorts/-qr9dUuOzJc',
-            'type_content_id' => 1,
+            'url' => 'https://res.cloudinary.com/dvvqko1vv/video/upload/v1759810999/archives/chapter/1.mp4',
+            'type_content_id' => 2,
             'chapter_id' => 1,
         ]);
         LearningContent::create([

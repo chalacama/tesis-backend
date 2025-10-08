@@ -33,59 +33,59 @@ class CourseController extends Controller
     use AuthorizesRequests;
     public function index(Request $request): JsonResponse
     {
-    $this->authorize('viewAnyHidden', Course::class);
+        $this->authorize('viewAnyHidden', Course::class);
 
-    $perPage = $request->query('per_page', 10);
-    $search = $request->query('search');
-    $filters = $request->query('filters', []);
-    $user = Auth::user();
+        $perPage = $request->query('per_page', 10);
+        $search = $request->query('search');
+        $filters = $request->query('filters', []);
+        $user = Auth::user();
 
-    $query = Course::query()->withTrashed();
+        $query = Course::query()->withTrashed();
 
-    // 🔐 Filtro para tutores: solo ver cursos donde colaboran
-    if ($user->hasRole('tutor')) {
-    $query->whereHas('tutors', function ($q) use ($user) {
+        // 🔐 Filtro para tutores: solo ver cursos donde colaboran
+        if ($user->hasRole('tutor')) {
+        $query->whereHas('tutors', function ($q) use ($user) {
         $q->where('users.id', $user->id)
         ->where('tutor_courses.is_owner', true); // comentar para que colaboren todos
-    });
+        });
     
 
-    }
-    if ($request->has('username') && $user->hasRole('admin')) {
-    $query->whereHas('tutors', function ($q) use ($request) {
+        }
+        if ($request->has('username') && $user->hasRole('admin')) {
+        $query->whereHas('tutors', function ($q) use ($request) {
         $q->where('username', $request->query('username'))
           ->where('tutor_courses.is_owner', true); // comentar para que colaboren todos
-    });
-    }
+        });
+        }
 
 
-    // 🔎 Búsqueda por título o descripción
-    if ($search) {
+        // 🔎 Búsqueda por título o descripción
+        if ($search) {
         $query->where(function ($q) use ($search) {
             $q->where('title', 'like', "%{$search}%")
             ->orWhere('description', 'like', "%{$search}%");
         });
-    }
+        }
 
-    // 🎛️ Filtros opcionales
-    if (!empty($filters)) {
+        // 🎛️ Filtros opcionales
+        if (!empty($filters)) {
         $query->when(isset($filters['enabled']), fn($q) => $q->where('enabled', $filters['enabled']));
         $query->when(isset($filters['private']), fn($q) => $q->where('private', $filters['private']));
         $query->when(isset($filters['difficulty_id']), fn($q) => $q->where('difficulty_id', $filters['difficulty_id']));
-    }
+        }
 
-    // 🧠 Relaciones necesarias y métricas resumidas
-    $courses = $query->with([
+        // 🧠 Relaciones necesarias y métricas resumidas
+        $courses = $query->with([
         'miniature:id,course_id,url',
         'categories:id,name',
         'tutors:id,name,lastname',
         'difficulty:id,name'
-    ])
-    ->withCount(['modules', 'allComments', 'savedCourses', 'registrations'])
-    ->withSum('ratingCourses as total_stars', 'stars')
-    ->orderBy('created_at', 'desc')
-    ->paginate($perPage)
-    ->through(function ($course) {
+        ])
+        ->withCount(['modules', 'allComments', 'savedCourses', 'registrations'])
+        ->withSum('ratingCourses as total_stars', 'stars')
+        ->orderBy('created_at', 'desc')
+        ->paginate($perPage)
+        ->through(function ($course) {
         return [
             'id' => $course->id,
             'title' => $course->title,
@@ -115,9 +115,9 @@ class CourseController extends Controller
             'creador' => $this->getCreator($course),
             'colaboradores' => $this->getCollaborators($course),
         ];
-    });
+        });
 
-    return response()->json([
+        return response()->json([
         'courses' => $courses->items(),
         'pagination' => [
             'total' => $courses->total(),
@@ -125,7 +125,7 @@ class CourseController extends Controller
             'current_page' => $courses->currentPage(),
             'last_page' => $courses->lastPage(),
         ],
-    ]);
+        ]);
     }
 
     private function getCreator(Course $course): string
@@ -146,40 +146,40 @@ class CourseController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-    $this->authorize('create', Course::class);
+        $this->authorize('create', Course::class);
 
-    $validated = $request->validate([
+        $validated = $request->validate([
         'title' => 'required|string|max:255',
         'description' => 'required|string',
         'difficulty_id' => 'required|exists:difficulties,id',
         'private' => 'sometimes|boolean',
-    ]);
+        ]);
 
-    $data = array_merge($validated, [
+        $data = array_merge($validated, [
         'enabled' => false,
         'private' => $validated['private'] ?? false,
-    ]);
+        ]);
 
-    $course = Course::create($data);
+        $course = Course::create($data);
 
-    // Asociar tutor creador como propietario
-    if (Auth::user()->hasRole('tutor')) {
+        // Asociar tutor creador como propietario
+        if (Auth::user()->hasRole('tutor')) {
         $course->tutors()->attach(Auth::id(), ['is_owner' => true]);
-    } elseif (Auth::user()->hasRole('admin')) {
+        } elseif (Auth::user()->hasRole('admin')) {
         $course->tutors()->attach(Auth::id(), ['is_owner' => true]);
-    }
+        }
 
-    // Recargar relaciones necesarias para construir la misma estructura que index()
-    $course->load([
+        // Recargar relaciones necesarias para construir la misma estructura que index()
+        $course->load([
         'miniature:id,course_id,url',
         'categories:id,name',
         'tutors:id,name,lastname',
         'difficulty:id,name'
-    ])
-    ->loadCount(['modules', 'allComments', 'savedCourses', 'registrations'])
-    ->loadSum('ratingCourses as total_stars', 'stars');
+        ])
+        ->loadCount(['modules', 'allComments', 'savedCourses', 'registrations'])
+        ->loadSum('ratingCourses as total_stars', 'stars');
 
-    return response()->json([
+        return response()->json([
         'message' => 'Curso creado exitosamente',
         'course' => [
             'id' => $course->id,
@@ -209,7 +209,7 @@ class CourseController extends Controller
             'creador' => $this->getCreator($course),
             'colaboradores' => $this->getCollaborators($course),
         ]
-    ], 201);
+        ], 201);
     }
     public function show(Course $course): JsonResponse
     {
@@ -225,7 +225,7 @@ class CourseController extends Controller
         return response()->json([
         'message' => 'Curso encontrado',
         'course'  => $course
-    ]);
+        ]);
     }
 /** Límites de relaciones */
     public int $maxCategories = 4;
@@ -463,7 +463,7 @@ class CourseController extends Controller
 /* $this->authorize('viewPortfolio', $user); */
     public function showOwner(string $username): JsonResponse
     {
-    $targetUser = User::where('username', $username)
+        $targetUser = User::where('username', $username)
         ->with([
             'educationalUser.career',
             'educationalUser.sede.educationalUnit',
@@ -472,12 +472,12 @@ class CourseController extends Controller
         ])
         ->firstOrFail();
 
-    // 🔐 Verifica la autorización
-    $this->authorize('viewOwner', $targetUser);
+        // 🔐 Verifica la autorización
+        $this->authorize('viewOwner', $targetUser);
 
-    $educationalUser = $targetUser->educationalUser;
+        $educationalUser = $targetUser->educationalUser;
 
-    return response()->json([
+        return response()->json([
         'message' => 'Portafolio cargado correctamente.',
         'portfolio' => [
             'name' => $targetUser->name,
@@ -496,7 +496,7 @@ class CourseController extends Controller
             'active_courses_count' => $targetUser->tutoredCourses->count(),
             'role' => $targetUser->getRoleNames()[0]
         ]
-    ]);
+        ]);
     }
 
     

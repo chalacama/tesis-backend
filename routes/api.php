@@ -6,7 +6,8 @@ use App\Http\Controllers\{
     CourseController,StartController,RegistrationController,WatchingController,ModuleController,
     ChapterController,LearningContentController,TutorCourseController,AuthController,
     CourseInvitationController,UserInformationController, EducationalUserController, SedeController,
-    DifficultyController,PortfolioController,MiniatureCourseController, CategoryController, CareerController
+    DifficultyController,PortfolioController,MiniatureCourseController, CategoryController, CareerController,
+    QuestionController, TypeQuestionController,TypeLearningContentController
 };
 // == RUTAS PÚBLICAS Y DE AUTENTICACIÓN ==
 Route::get('/user', function (Request $request) {
@@ -33,34 +34,37 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/index', [CourseController::class, 'index'])->middleware('permission:course.read.hidden');
         Route::put('/{course}/active', [CourseController::class, 'active'])->middleware('permission:course.update');
         Route::get('/generate-code', [CourseController::class, 'generateCode'])->middleware('permission:course.update');
-        Route::get('/@{username}', [CourseController::class, 'showOwner'])->middleware('permission:course.read.hidden');
+        /* Route::get('/@{username}', [CourseController::class, 'showOwner'])->middleware('permission:course.read.hidden'); */
     });
-    Route::prefix('miniature')->group(function () {   
-        Route::get('/{course}/show', [MiniatureCourseController::class, 'show'])->middleware('permission:course.read.hidden');        
+    Route::prefix('studio')->group(function () {   
+        Route::get('/@{username}', [CourseController::class, 'showOwner'])->middleware('permission:course.read.hidden');
+        Route::get('/{course}/show/miniature', [MiniatureCourseController::class, 'show'])->middleware('permission:course.read.hidden');        
     });
     Route::prefix('module')->group(function () {
-        Route::post('/store', [ModuleController::class, 'store'])->middleware('permission:course.create');
-        Route::put('/{module}/update', [ModuleController::class, 'update'])->middleware('permission:course.update');
-        Route::delete('/{module}/archived', [ModuleController::class, 'archived'])->middleware('permission:course.archived');
-        Route::post('/reorder', [ModuleController::class, 'reorder'])->middleware('permission:course.update');
+        Route::get('/{course}/index', [ModuleController::class, 'index'])->middleware('permission:course.read.hidden');
+        Route::post('/update', [ModuleController::class, 'update'])->middleware('permission:course.update');
     });
 
     Route::prefix('chapter')->group(function () {
-        Route::post('/store', [ChapterController::class, 'store'])->middleware('permission:course.create');
+        Route::get('/{chapter}/show', [ChapterController::class, 'show'])->middleware('permission:course.read.hidden');
         Route::put('/{chapter}/update', [ChapterController::class, 'update'])->middleware('permission:course.update');
-        Route::delete('/{chapter}/archived', [ChapterController::class, 'archived'])->middleware('permission:course.archived');
-        Route::post('/reorder', [ChapterController::class, 'reorder'])->middleware('permission:course.update');
+        Route::prefix('learning-content')->group(function () {
+            Route::get('/{chapter}/show', [LearningContentController::class, 'show'])->middleware('permission:course.read.hidden');
+            Route::post('/{chapter}/update', [LearningContentController::class, 'update'])->middleware('permission:course.update');
+        });
+        Route::prefix('question')->group(function () {
+            Route::get('/{chapter}/show', [QuestionController::class, 'show'])->middleware('permission:course.read.hidden');
+            Route::put('/{chapter}/update', [QuestionController::class, 'update'])->middleware('permission:course.update');
+        }); 
     });
 
-    Route::prefix('learning-content')->group(function () {
-        Route::prefix('/cloud')->group(function () {
-            Route::post('/store', [LearningContentController::class, 'storeCloud'])->middleware('permission:course.create');            
-            Route::delete('/{id}/destroy', [LearningContentController::class, 'destroyCloud'])->middleware('permission:course.destroy');
-        });
-        Route::delete('/{id}/archived', [LearningContentController::class, 'archived'])->middleware('permission:course.archived');
-        Route::prefix('/youtube')->group(function () {            
-        });
-    });    
+
+    Route::prefix('type')->group(function () {    
+        Route::get('/index/question', [TypeQuestionController::class, 'index'])->middleware('permission:course.read'); 
+        Route::get('/index/learning-content', [TypeLearningContentController::class, 'index'])->middleware('permission:course.read'); 
+    });
+
+     
     Route::prefix('tutor-course')->group(function () {        
         // Route::post('/store', [TutorCourseController::class, 'store'])->middleware('permission:tutor-courses.create');
         // Route::post('/change', [TutorCourseController::class, 'change'])->middleware('permission:tutor-courses.update');
@@ -90,8 +94,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::prefix('/education')->group(function () {    
             Route::get('/show', [EducationalUserController::class, 'show'])->middleware('permission:profile.read');
             Route::put('/update', [EducationalUserController::class, 'update'])->middleware('permission:profile.update');
-        });     
+        });
+        Route::prefix('portfolio')->group(function () {    
+        Route::get('/@{username}', [PortfolioController::class, 'show'])->middleware('permission:user.read'); 
+    });     
     });
+
     Route::prefix('sede')->group(function () {    
             Route::get('/show', [SedeController::class, 'show'])->middleware('permission:education.read');
             Route::put('/update', [SedeController::class, 'update'])->middleware('permission:education.update');
@@ -106,6 +114,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('category')->group(function () {    
         Route::get('/index', [CategoryController::class, 'index'])->middleware('permission:course.read'); 
     });
+    
     Route::prefix('portfolio')->group(function () {    
         Route::get('/@{username}', [PortfolioController::class, 'show'])->middleware('permission:user.read'); 
     });
