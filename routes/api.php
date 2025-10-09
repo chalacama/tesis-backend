@@ -53,8 +53,8 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/{chapter}/update', [LearningContentController::class, 'update'])->middleware('permission:course.update');
         });
         Route::prefix('question')->group(function () {
-            Route::get('/{chapter}/show', [QuestionController::class, 'show'])->middleware('permission:course.read.hidden');
-            Route::put('/{chapter}/update', [QuestionController::class, 'update'])->middleware('permission:course.update');
+            Route::get('/{chapter}/index', [QuestionController::class, 'index'])->middleware('permission:course.read.hidden');
+            Route::post('/{chapter}/update', [QuestionController::class, 'update'])->middleware('permission:course.update');
         }); 
     });
 

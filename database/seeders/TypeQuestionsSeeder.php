@@ -16,7 +16,7 @@ class TypeQuestionsSeeder extends Seeder
             'nombre' => 'Opción múltiple',
         ]);
         TypeQuestion::create([
-            'nombre' => 'Varias opciones',
+            'nombre' => 'Casilla de verificación',
         ]);
     }
 }

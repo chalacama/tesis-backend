@@ -51,7 +51,8 @@ public function show(Chapter $chapter): JsonResponse
 
 public function update(Request $request, Chapter $chapter): JsonResponse
 {
-     set_time_limit(300);
+    set_time_limit(300);
+
     $course = $chapter->module?->course;
     $this->authorize('update', $course);
 
@@ -59,39 +60,40 @@ public function update(Request $request, Chapter $chapter): JsonResponse
     $data = $request->validate([
         'type_content_id' => ['required', 'integer', 'exists:type_learning_contents,id'],
         'url'             => ['nullable', 'string'],
-        'file'            => ['nullable', 'file'], // puedes añadir max:size según tu política
+        'file'            => ['nullable', 'file'], // añade max:size / mimes si lo necesitas
     ]);
 
     try {
         return DB::transaction(function () use ($request, $chapter, $data) {
 
+            // Tipo de contenido
             $type = TypeLearningContent::query()
-                ->select('id','name')
+                ->select('id', 'name')
                 ->findOrFail($data['type_content_id']);
 
             $typeName = strtolower(trim($type->name ?? ''));
 
-            $newUrl = $data['url'] ?? null;
+            // Normaliza URL ('' -> null)
+            $newUrl = isset($data['url']) && trim($data['url']) !== '' ? trim($data['url']) : null;
 
-            // Si es ARCHIVO y viene file -> sube a Cloudinary
+            // Si es ARCHIVO y viene file -> sube a Cloudinary y obtiene URL
             if ($typeName === 'archivo') {
                 if ($request->hasFile('file') && $request->file('file')->isValid()) {
                     $file = $request->file('file');
 
                     $cloudinary = new Cloudinary(config('cloudinary.cloud_url'));
-                    $publicId   = "chapter/{$chapter->id}";
 
-                    // Para soportar videos (mp4) y PDF, usa resource_type 'auto'
+                    // public_id final quedará como "archives/chapter/{id}"
                     $upload = $cloudinary->uploadApi()->upload(
                         $file->getRealPath(),
                         [
-                            'folder'         => 'archives',
-                            'public_id'      => $publicId,
-                            'overwrite'      => true,
-                            'resource_type'  => 'auto',
-                            'use_filename'   => true,
-                            'unique_filename'=> false,
-                            'transformation' => [
+                            'folder'          => 'archives',
+                            'public_id'       => "chapter/{$chapter->id}",
+                            'overwrite'       => true,
+                            'resource_type'   => 'auto', // soporta image/video/pdf
+                            'use_filename'    => true,
+                            'unique_filename' => false,
+                            'transformation'  => [
                                 ['quality' => 'auto:good'],
                                 ['fetch_format' => 'auto'],
                             ],
@@ -100,20 +102,55 @@ public function update(Request $request, Chapter $chapter): JsonResponse
 
                     $newUrl = $upload['secure_url'] ?? $upload['url'] ?? null;
                 }
-                // Si no hay file: usamos la url entrante (que puede ser null para limpiar)
+                // Si no hay file, se respetará $newUrl (puede ser null para archivar)
             }
 
-            // Si es YOUTUBE: no sube archivo, solo usa la URL (puede ser null para limpiar)
-            // if ($typeName === 'youtube') { $newUrl ya viene del request }
+            // Buscar contenido existente (incluyendo soft-deleted)
+            $existing = LearningContent::withTrashed()
+                ->where('chapter_id', $chapter->id)
+                ->first();
 
-            // UPSERT
-            $content = LearningContent::query()->updateOrCreate(
-                ['chapter_id' => $chapter->id],
-                [
+            // Reglas para archivar (soft delete) automáticamente:
+            // - YOUTUBE sin URL
+            // - ARCHIVO sin file y sin URL
+            $shouldArchive =
+                ($typeName === 'youtube' && is_null($newUrl)) ||
+                ($typeName === 'archivo'
+                    && (!($request->hasFile('file') && $request->file('file')->isValid()))
+                    && is_null($newUrl));
+
+            if ($shouldArchive) {
+                if ($existing && is_null($existing->deleted_at)) {
+                    // Marcar como borrado lógico; la purga física la hará Prunable (p. ej. a 30 días)
+                    $existing->delete();
+                }
+
+                return response()->json([
+                    'ok'               => true,
+                    'chapter_id'       => $chapter->id,
+                    'learning_content' => null,
+                ]);
+            }
+
+            // Si NO se archiva, crear/actualizar (restaurando si estaba en papelera)
+            if ($existing) {
+                if (!is_null($existing->deleted_at)) {
+                    $existing->restore();
+                }
+
+                $existing->fill([
                     'type_content_id' => $type->id,
-                    'url'             => $newUrl,  // puede ser null
-                ]
-            );
+                    'url'             => $newUrl,
+                ])->save();
+
+                $content = $existing;
+            } else {
+                $content = LearningContent::create([
+                    'chapter_id'      => $chapter->id,
+                    'type_content_id' => $type->id,
+                    'url'             => $newUrl,
+                ]);
+            }
 
             // Respuesta consistente con show()
             $content->load([
@@ -149,117 +186,7 @@ public function update(Request $request, Chapter $chapter): JsonResponse
     }
 }
 
-// Método para obtener URL firmada del video
-public function getSecureVideoUrl($publicId) 
-{
-    $cloudinary = new Cloudinary(config('cloudinary.cloud_url'));
-    
-    $url = $cloudinary->video($publicId)
-        ->delivery('authenticated')
-        ->signUrl(true) // ¡Clave para la firma!
-        ->toUrl();
-    
-    return $url;
-    // Al generar la URL de entrega
-    // $url = $cloudinary->tag('video')
-    //     ->publicId('learning_content/videos/tu_video')
-    //     ->delivery('authenticated')
-    //     ->signUrl(true) // ¡Esto es clave!
-    //     ->toUrl();
-}
 
-private function storeCloud(CreateVideoCloudinaryRequest $request)
-    {
-        set_time_limit(300);
-
-        try {
-            $cloudinary = new Cloudinary(config('cloudinary.cloud_url'));
-            $upload = $cloudinary->uploadApi()->upload(
-                $request->validated()['file']->getRealPath(),
-                [
-                    'resource_type' => 'video',
-                    'folder' => 'archives',
-                    'chunk_size' => 6000000 // 6MB chunks
-                ]
-            );
-            // Generar URL firmada después de la subida
-        /* $signedUrl = $cloudinary->video($upload['public_id'])
-            ->delivery('authenticated')
-            ->signUrl(true) // ¡Clave para la firma!
-            ->toUrl(); */
-        } catch (Exception $e) {
-            Log::error("Error al subir a Cloudinary: " . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Error al subir a Cloudinary. Intenta nuevamente.'
-            ], 500);
-        }
-
-        $content = LearningContent::create([
-            'url' => $upload['secure_url'],
-            'type_content_id' => $request->validated()['type_content_id'],
-            'chapter_id' => $request->validated()['chapter_id'],
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'data' => $content,//$signedUrl
-        ], 201);
-    }
-private function destroyCloud($id)
-    {
-        // 1. Encuentra el registro en la BD o falla con un error 404
-        $content = LearningContent::findOrFail($id);
-
-        try {
-            // 2. Extraer el 'public_id' de la URL del video.
-            // Esta es la parte más importante. Cloudinary necesita este ID.
-            // Asumimos que la carpeta de subida fue 'learning_content/videos'.
-            $filename = pathinfo($content->url, PATHINFO_FILENAME);
-            $publicId = 'archives/' . $filename;
-
-            // 3. Instanciar el cliente de Cloudinary
-            $cloudinary = new Cloudinary(config('cloudinary.cloud_url'));
-
-            // 4. Llamar a la API para destruir el video
-            // Es CRUCIAL especificar 'resource_type' => 'video'
-            $cloudinary->uploadApi()->destroy($publicId, [
-                'resource_type' => 'video',
-                'invalidate' => true //ELIMINAR PERMANTEMENTE
-            ]);
-
-            // 5. Si todo fue bien con Cloudinary, forzar el borrado en la BD
-            // forceDelete() ignora los SoftDeletes
-            $content->forceDelete();
-
-        } catch (Exception $e) {
-            // Si algo falla (ej: el video ya no existe en Cloudinary), devuelve un error.
-            return response()->json([
-                'success' => false,
-                'message' => 'Error al eliminar el contenido: ' . $e->getMessage()
-            ], 500);
-        }
-
-        // 6. Responder con éxito
-        return response()->json([
-            'success' => true,
-            'message' => 'Video y registro eliminados permanentemente.'
-        ]);
-    }
-private function archived($id)
-    {
-        $learningContent = LearningContent::find($id);
-
-        if (!$learningContent) {
-            return response()->json(['message' => 'Contenido no encontrado'], 404);
-        }
-
-        $learningContent->delete();
-
-        return response()->json([
-            'message' => 'Contenido enviado a papelería correctamente'
-        ]);
-    }
 
 
 }

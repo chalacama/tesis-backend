@@ -20,7 +20,7 @@ class QuestionsSeeder extends Seeder
         ]);
         Question::create([
             'statement' => 'Explica el ciclo de vida de una petición HTTP.',
-            'spot' => 1.5,
+            'spot' => 2,
             'type_questions_id' => 1,
             'chapter_id' => 2
         ]);
