@@ -262,6 +262,7 @@ class CourseController extends Controller
             // Miniatura (archivo) -> multipart/form-data
             'miniature'    => [
                 'sometimes',
+                'nullable',
                 'file',
                 'mimes:' . implode(',', $this->allowedImageExtensions),
                 'max:' . ($this->maxImageSizeMb * 1024), // en KB
@@ -373,6 +374,8 @@ class CourseController extends Controller
                     } else {
                         throw new \RuntimeException('No se pudo obtener la URL de Cloudinary.');
                     }
+                } elseif ($request->input('miniature') === null) {
+                    $course->miniature()->delete();
                 }
             });
 

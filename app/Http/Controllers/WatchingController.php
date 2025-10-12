@@ -7,6 +7,8 @@ use App\Http\Resources\CourseResource;
 use Illuminate\Support\Facades\Cache;
 use App\Models\Course;
 use App\Models\ContentView;
+use App\Models\Chapter;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Exception;
 use Google_Client;
 use DateInterval;
@@ -14,6 +16,58 @@ use Google_Service_YouTube;
 use Google_Service_YouTube_Video;
 class WatchingController extends Controller
 {
+     use AuthorizesRequests;
+    public function showCourse(Course $course)
+    {
+        $this->authorize('view', $course);
+
+        // Eager load de módulos y capítulos, ambos ordenados por 'order'
+        $course->load([
+            'modules' => function ($q) {
+                $q->orderBy('order')
+                  ->select('id', 'name', 'order', 'course_id')
+                  ->with([
+                      'chapters' => function ($cq) {
+                          $cq->orderBy('order')
+                             ->select('id', 'title', 'description', 'order', 'module_id');
+                      }
+                  ]);
+            },
+        ]);
+
+        // Respuesta limpia y lista para el frontend
+        return response()->json([
+            'ok'     => true,
+            'course' => [
+                'id'            => $course->id,
+                'title'         => $course->title,
+                'description'   => $course->description,
+                'difficulty_id' => $course->difficulty_id,
+                'modules'       => $course->modules->map(function ($m) {
+                    return [
+                        'id'       => $m->id,
+                        'name'     => $m->name,
+                        'order'    => $m->order,
+                        'chapters' => $m->chapters->map(function ($c) {
+                            return [
+                                'id'          => $c->id,
+                                'title'       => $c->title,
+                                'description' => $c->description,
+                                'order'       => $c->order,
+                            ];
+                        })->values(),
+                    ];
+                })->values(),
+            ],
+        ], 200);
+    }
+    public function showChapter(Chapter $chapter)
+    {
+        $course = Course::findOrFail($chapter->module->course_id);
+        $this->authorize('view', $course);
+        
+    }
+    
     
     private function getYouTubeDurationsInBulk(array $videoIds): array
     {
