@@ -4,12 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
-use App\Models\LearningContent;
-class LikeLearningContent extends Model
+use App\Models\Chapter;
+class LikeChapter extends Model
 {
     protected $fillable = [
         'user_id',
-        'learning_contents_id',
+        'chapter_id',
     ];
 
     /**
@@ -23,8 +23,8 @@ class LikeLearningContent extends Model
     /**
      * Relación: un like pertenece a un contenido de aprendizaje.
      */
-    public function learningContent()
+    public function chapter()
     {
-        return $this->belongsTo(LearningContent::class, 'learning_contents_id');
+        return $this->belongsTo(Chapter::class, 'chapter_id');
     }
 }

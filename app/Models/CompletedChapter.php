@@ -4,13 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
-use App\Models\LearningContent;
-class CompletedContent extends Model
+use App\Models\Chapter;
+class CompletedChapter extends Model
 {
     protected $fillable = [
         'user_id',
-        'learning_content_id',
-        'completed_at',
+        'chapter_id',
+        'content_at',
+        'test_at',
     ];
 
     /**
@@ -24,8 +25,8 @@ class CompletedContent extends Model
     /**
      * Relación: un registro pertenece a un contenido de aprendizaje.
      */
-    public function learningContent()
+    public function chapter()
     {
-        return $this->belongsTo(LearningContent::class);
+        return $this->belongsTo(Chapter::class);
     }
 }

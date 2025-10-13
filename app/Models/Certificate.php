@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Registration;
 
-class RegistrationCertificate extends Model
+class Certificate extends Model
 {
     protected $fillable = [
         'registration_id',
@@ -16,6 +16,6 @@ class RegistrationCertificate extends Model
      */
     public function registration()
     {
-        return $this->belongsTo(Registration::class);
+        return $this->belongsTo(Registration::class, 'registration_id');
     }
 }

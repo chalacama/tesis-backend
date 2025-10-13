@@ -9,17 +9,18 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
+    // un capitulo puede ser completado varias veces
     public function up(): void
     {
-        Schema::create('like_learning_contents', function (Blueprint $table) {
+        Schema::create('completed_chapters', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id');
-            $table->unsignedBigInteger('learning_contents_id');
+            $table->unsignedBigInteger('chapter_id');
+            $table->timestamp('content_at')->nullable();
+            $table->timestamp('test_at')->nullable();
             $table->timestamps();
-
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('learning_contents_id')->references('id')->on('learning_contents')->onDelete('cascade');
-            $table->unique(['user_id', 'learning_contents_id']); // Un usuario solo puede dar like una vez a un contenido
+            $table->foreign('chapter_id')->references('id')->on('chapters')->onDelete('cascade');
         });
     }
 
@@ -28,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('like_learning_contents');
+        Schema::dropIfExists('completed_chapters');
     }
 };

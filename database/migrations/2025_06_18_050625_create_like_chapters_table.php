@@ -11,18 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('module_attempts', function (Blueprint $table) {
+        Schema::create('like_chapters', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id');
-            $table->unsignedBigInteger('module_id');
-            $table->integer('attempts_count')->default(0);
-            $table->timestamp('last_attempt_at')->nullable();
-            $table->boolean('approved')->default(false);
+            $table->unsignedBigInteger('chapter_id');
             $table->timestamps();
 
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('module_id')->references('id')->on('modules')->onDelete('cascade');
-            $table->unique(['user_id', 'module_id']); // Un usuario solo puede tener un registro por módulo
+            $table->foreign('chapter_id')->references('id')->on('chapters')->onDelete('cascade');
+            $table->unique(['user_id', 'chapter_id']); // Un usuario solo puede dar like una vez a un contenido
         });
     }
 
@@ -31,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('module_attempts');
+        Schema::dropIfExists('like_chapters');
     }
 };

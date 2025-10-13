@@ -11,9 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('registration_certificates', function (Blueprint $table) {
+        Schema::create('certificates', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('registration_id')->unique(); // Relación uno a uno
+            $table->unsignedBigInteger('registration_id'); // Relación de muchos a uno
             $table->timestamps();
 
             $table->foreign('registration_id')->references('id')->on('registrations')->onDelete('cascade');
@@ -25,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('registration_certificates');
+        Schema::dropIfExists('certificates');
     }
 };

@@ -5,12 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
 use App\Models\Course;
-use App\Models\RegistrationCertificate;
+use App\Models\Certificate;
 class Registration extends Model
 {
-    protected $fillable = [
-        'approved',
-        'annulment',
+    protected $fillable = [       
+       
         'user_id',
         'course_id',
     ];
@@ -33,8 +32,8 @@ class Registration extends Model
     /**
      * Relación uno a uno con RegistrationCertificate.
      */
-    public function certificate()
+    public function certificates()
     {
-        return $this->hasOne(RegistrationCertificate::class);
+        return $this->hasMany(Certificate::class);
     }
 }
