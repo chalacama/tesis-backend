@@ -8,7 +8,7 @@ use App\Http\Controllers\{
     CourseInvitationController,UserInformationController, EducationalUserController, SedeController,
     DifficultyController,PortfolioController,MiniatureCourseController, CategoryController, CareerController,
     QuestionController, TypeQuestionController,TypeLearningContentController, LikeChapterController,
-    SavedCourseController
+    SavedCourseController, ContentViewController
 };
 // == RUTAS PÚBLICAS Y DE AUTENTICACIÓN ==
 Route::get('/user', function (Request $request) {
@@ -83,10 +83,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/content/{chapter}/show', [WatchingController::class, 'showContent'])->middleware('permission:course.read');
         Route::get('/detail/{course}/show', [WatchingController::class, 'showDetail'])->middleware('permission:course.read');
         
+        
     });  
     Route::prefix('feedback')->group(function () {        
         Route::post('/like/{chapter}/update', [LikeChapterController::class, 'update'])->middleware('permission:course.read');
         Route::post('/saved/{course}/update', [SavedCourseController::class, 'update'])->middleware('permission:course.read');
+        Route::post('/content/{learningContent}/update', [ContentViewController::class, 'update'])->middleware('permission:course.read');
         
     }); 
     Route::prefix('start')->group(function () {
