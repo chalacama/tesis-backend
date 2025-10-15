@@ -22,5 +22,10 @@ class LearningContentsSeeder extends Seeder
             'type_content_id' => 1,
             'chapter_id' => 2,
         ]);
+        LearningContent::create([
+            'url' => 'https://www.youtube.com/watch?v=jOfzPuYs1ew',
+            'type_content_id' => 1,
+            'chapter_id' => 3,
+        ]);
     }
 }

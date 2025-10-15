@@ -164,9 +164,9 @@ class User extends Authenticatable
     /**
      * Relación uno a muchos con CompletedContent.
      */
-    public function completedContents()
+    public function completedChapters()
     {
-        return $this->hasMany(CompletedContent::class);
+        return $this->hasMany(completedChapters::class);
     }
     /**
      * Relación uno a muchos con ContentView.
@@ -182,19 +182,13 @@ class User extends Authenticatable
     {
         return $this->hasMany(UserAnswer::class);
     }
-    /**
-     * Relación uno a muchos con ModuleAttempt.
-     */
-    public function moduleAttempts()
-    {
-        return $this->hasMany(ModuleAttempt::class);
-    }
+    
     /**
      * Relación uno a muchos con LikeLearningContent.
      */
-    public function likeLearningContents()
+    public function likeChapters()
     {
-        return $this->hasMany(LikeLearningContent::class);
+        return $this->hasMany(likeChapters::class);
     }
 
     /**

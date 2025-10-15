@@ -16,9 +16,29 @@ class LikeChaptersSeeder extends Seeder
             'user_id' => 1,
             'chapter_id' => 1,
         ]);
+                LikeChapter::create([
+            'user_id' => 1,
+            'chapter_id' => 2,
+        ]);
         LikeChapter::create([
             'user_id' => 2,
             'chapter_id' => 1,
+        ]);
+        LikeChapter::create([
+            'user_id' => 2,
+            'chapter_id' => 2,
+        ]);
+        LikeChapter::create([
+            'user_id' => 2,
+            'chapter_id' => 3,
+        ]);
+                LikeChapter::create([
+            'user_id' => 2,
+            'chapter_id' => 4,
+        ]);
+        LikeChapter::create([
+            'user_id' => 2,
+            'chapter_id' => 5,
         ]);
     }
 }

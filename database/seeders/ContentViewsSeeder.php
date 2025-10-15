@@ -16,12 +16,17 @@ class ContentViewsSeeder extends Seeder
         ContentView::create([
             'user_id' => 1,
             'learning_content_id' => 1,
-            'second_seen' => '130',
+            'second_seen' => '60',
         ]);
         ContentView::create([
             'user_id' => 1,
             'learning_content_id' => 2,
             'second_seen' => '120',
+        ]);
+        ContentView::create([
+            'user_id' => 1,
+            'learning_content_id' => 3,
+            'second_seen' => '10',
         ]);
     }
 }

@@ -9,6 +9,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\EloquentSortable\Sortable;
 use Spatie\EloquentSortable\SortableTrait;
 use Illuminate\Database\Eloquent\Prunable;
+use App\Models\Question;
+use App\Models\LikeChapter;
+use App\Models\CompletedChapter;
 class Chapter extends Model implements Sortable
 {
     use SoftDeletes,SortableTrait , Prunable; 
@@ -58,6 +61,14 @@ class Chapter extends Model implements Sortable
     public function questions()
     {
         return $this->hasMany(Question::class, 'chapter_id');
+    }
+    public function completedChapters()
+    {
+        return $this->hasMany(CompletedChapter::class, 'chapter_id');
+    }
+    public function likeChapters()
+    {
+        return $this->hasMany(LikeChapter::class, 'chapter_id');
     }
 
 }

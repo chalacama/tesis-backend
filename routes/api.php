@@ -7,7 +7,8 @@ use App\Http\Controllers\{
     ChapterController,LearningContentController,TutorCourseController,AuthController,
     CourseInvitationController,UserInformationController, EducationalUserController, SedeController,
     DifficultyController,PortfolioController,MiniatureCourseController, CategoryController, CareerController,
-    QuestionController, TypeQuestionController,TypeLearningContentController
+    QuestionController, TypeQuestionController,TypeLearningContentController, LikeChapterController,
+    SavedCourseController
 };
 // == RUTAS PÚBLICAS Y DE AUTENTICACIÓN ==
 Route::get('/user', function (Request $request) {
@@ -78,10 +79,16 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/cancel', [RegistrationController::class, 'cancel'])->middleware('permission:course.registration.cancel');
     });
     Route::prefix('watching')->group(function () {        
-        Route::get('/{courseId}/course-index/{userId}', [WatchingController::class, 'indexCourse'])->middleware('permission:course.read');        
-        Route::post('/content-show', [WatchingController::class, 'showContent'])->middleware('permission:course.read');
-        Route::post('/yt-show', [WatchingController::class, 'showYt'])->middleware('permission:course.read.hidden');        
+        Route::get('/course/{course}/show', [WatchingController::class, 'showCourse'])->middleware('permission:course.read');
+        Route::get('/content/{chapter}/show', [WatchingController::class, 'showContent'])->middleware('permission:course.read');
+        Route::get('/detail/{course}/show', [WatchingController::class, 'showDetail'])->middleware('permission:course.read');
+        
     });  
+    Route::prefix('feedback')->group(function () {        
+        Route::post('/like/{chapter}/update', [LikeChapterController::class, 'update'])->middleware('permission:course.read');
+        Route::post('/saved/{course}/update', [SavedCourseController::class, 'update'])->middleware('permission:course.read');
+        
+    }); 
     Route::prefix('start')->group(function () {
         Route::get('/courses-by-filter', [StartController::class, 'getCoursesByFilter'])->middleware('permission:course.read');
 
