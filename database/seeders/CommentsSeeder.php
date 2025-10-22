@@ -7,7 +7,7 @@ use Illuminate\Database\Seeder;
 use App\Models\Comment;
 use App\Models\User; // Importa el modelo User
 use App\Models\Course; // Importa el modelo Course
-
+use App\Models\LikeComment;
 class CommentsSeeder extends Seeder
 {
     /**
@@ -15,45 +15,68 @@ class CommentsSeeder extends Seeder
      */
     public function run(): void
     {
-        // --- Prerequisitos ---
-        // Asegurémonos de que existan usuarios y cursos para asociar los comentarios.
-        // Si tus seeders de User y Course no se ejecutan antes, puedes crearlos aquí.
-        if (User::count() == 0) {
-            User::factory(10)->create();
-        }
-        if (Course::count() == 0) {
-            Course::factory(5)->create();
-        }
+        $userA = User::find(1);
+        $userB = User::find(2);
+        $courseA = Course::find(1);
+        // Comentarios de curso A
+        // Comentario 1
+        $parentA1 = Comment::create([
+            'user_id'         => $userA->id,
+            'texto'           => 'Muy bueno el curso',
+            'parent_id'       => null,                   
+            'commentable_type'=> Course::class,
+            'commentable_id'  => 1,          
+        ]);
+        // Comentario 2
+        $parentA2 = Comment::create([
+            'user_id'         => $userA->id,
+            'texto'           => 'Espero que sea el ultimo curso',
+            'parent_id'       => null,                   
+            'commentable_type'=> Course::class,
+            'commentable_id'  => 1,          
+        ]);
+        // Respuesta 1 de comentario 1
+        $reply_valid = Comment::create([
+            'user_id'         => $userB->id, 
+            'texto'           => 'Gracias por el comentario',
+            'parent_id'       => $parentA1->id,
+            'commentable_type'=> Course::class,
+            'commentable_id'  => $courseA->id,          
+        ]);
 
-        // Obtenemos todos los cursos para agregarles comentarios.
-        $courses = Course::all();
+        // === Respuesta 2 que Responde a una respusta de comentario 1
+        $reply_validB = Comment::create([
+            'user_id'         => $userA->id,
+            'texto'           => 'De nada bro usted es el mejor profesor de la plataforma',
+            'parent_id'       => $reply_valid->id,
+            'commentable_type'=> Course::class,
+            'commentable_id'  => $courseA->id,          
+        ]);
+        // === Respuesta 3 que Responde a una respusta 2 de comentario 1
+        $reply_validC = Comment::create([
+            'user_id'         => $userB->id,
+            'texto'           => 'no tu eres mejor profesor de la plataforma',
+            'parent_id'       => $reply_validB->id,
+            'commentable_type'=> Course::class,
+            'commentable_id'  => $courseA->id,          
+        ]);
+        
+        
 
-        // --- Creación de Comentarios ---
-        foreach ($courses as $course) {
-            // Para cada curso, creamos entre 3 y 5 comentarios principales.
-            $numberOfComments = rand(3, 5);
-
-            for ($i = 0; $i < $numberOfComments; $i++) {
-                // Creamos un comentario principal y lo asociamos al curso actual.
-                // El método `for()` es la forma elegante de manejar relaciones polimórficas en factories.
-                $parentComment = Comment::factory()
-                    ->for($course, 'commentable') // Asocia este comentario con el curso.
-                    ->create();
-
-                // Aleatoriamente, decidimos si este comentario tendrá respuestas.
-                if (rand(0, 1)) {
-                    // Creamos entre 1 y 3 respuestas para el comentario principal.
-                    $numberOfReplies = rand(1, 3);
-                    for ($j = 0; $j < $numberOfReplies; $j++) {
-                        
-                        Comment::factory()
-                            ->for($course, 'commentable') // La respuesta también pertenece al mismo curso.
-                            ->create([
-                                'parent_id' => $parentComment->id, // Indicamos que es una respuesta al comentario padre.
-                            ]);
-                    }
-                }
-            }
-        }
+        $reply_validD = Comment::create([
+            'user_id'         => $userB->id, 
+            'texto'           => 'Calla bot de la plataforma',
+            'parent_id'       => $parentA2->id,
+            'commentable_type'=> Course::class,
+            'commentable_id'  => $courseA->id,          
+        ]);
+        $reply_validE = Comment::create([
+            'user_id'         => $userA->id, 
+            'texto'           => 'Ni un brillo pelao',
+            'parent_id'       => $reply_validD->id,
+            'commentable_type'=> Course::class,
+            'commentable_id'  => $courseA->id,          
+        ]);
+        
     }
 }

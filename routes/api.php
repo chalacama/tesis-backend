@@ -8,7 +8,7 @@ use App\Http\Controllers\{
     CourseInvitationController,UserInformationController, EducationalUserController, SedeController,
     DifficultyController,PortfolioController,MiniatureCourseController, CategoryController, CareerController,
     QuestionController, TypeQuestionController,TypeLearningContentController, LikeChapterController,
-    SavedCourseController, ContentViewController
+    SavedCourseController, ContentViewController, CommentController, LikeCommentController
 };
 // == RUTAS PÚBLICAS Y DE AUTENTICACIÓN ==
 Route::get('/user', function (Request $request) {
@@ -82,6 +82,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/course/{course}/show', [WatchingController::class, 'showCourse'])->middleware('permission:course.read');
         Route::get('/content/{chapter}/show', [WatchingController::class, 'showContent'])->middleware('permission:course.read');
         Route::get('/detail/{course}/show', [WatchingController::class, 'showDetail'])->middleware('permission:course.read');
+        Route::get('/comment/{course}/index', [CommentController::class, 'index'])->middleware('permission:course.read');
+        Route::post('/comment/{course}/store', [CommentController::class, 'store'])->middleware('permission:course.read');
+        Route::get('/course/{course}/comment/{comment}/replies', [CommentController::class, 'replies'])->middleware('permission:course.read');
         
         
     });  
@@ -89,6 +92,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/like/{chapter}/update', [LikeChapterController::class, 'update'])->middleware('permission:course.read');
         Route::post('/saved/{course}/update', [SavedCourseController::class, 'update'])->middleware('permission:course.read');
         Route::post('/content/{learningContent}/update', [ContentViewController::class, 'update'])->middleware('permission:course.read');
+        Route::post('/comment/{comment}/update', [LikeCommentController::class, 'update'])->middleware('permission:course.read');
         
     }); 
     Route::prefix('start')->group(function () {

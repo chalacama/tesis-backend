@@ -388,6 +388,7 @@ class WatchingController extends Controller
             'course' => [
                 'id'          => $course->id,
                 'description' => $course->description,
+                'created_at'  => $course->created_at,
                 'difficulty'  => $course->difficulty
                     ? ['id' => $course->difficulty->id, 'name' => $course->difficulty->name]
                     : null,
@@ -494,7 +495,7 @@ class WatchingController extends Controller
             'ok'          => true,
             'user_state'  => [
                 'is_saved'      => (bool) $isSaved,
-                'is_registered' => (bool) $isRegistered,
+                // 'is_registered' => (bool) $isRegistered,
                 'liked_chapter' => (bool) $userLiked,
                 'has_questions' => (bool) $hasQuestions,
             ],
