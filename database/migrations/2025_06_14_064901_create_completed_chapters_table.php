@@ -16,11 +16,13 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('chapter_id');
+            $table->decimal('content_progress', 5, 2)->default(0);
             $table->timestamp('content_at')->nullable();
             $table->timestamp('test_at')->nullable();
             $table->timestamps();
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('chapter_id')->references('id')->on('chapters')->onDelete('cascade');
+            $table->unique(['user_id', 'chapter_id']);
         });
     }
 

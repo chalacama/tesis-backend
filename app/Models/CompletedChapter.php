@@ -10,6 +10,7 @@ class CompletedChapter extends Model
     protected $fillable = [
         'user_id',
         'chapter_id',
+        'content_progress',
         'content_at',
         'test_at',
     ];

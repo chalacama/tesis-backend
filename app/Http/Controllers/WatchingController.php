@@ -508,6 +508,7 @@ class WatchingController extends Controller
             ],
             'course'      => [
                 'title' => $course->title, // SOLO título
+                'private' => $course->private,
             ],
             'owner'       => $owner ? [
                 'name'                 => $owner->name,

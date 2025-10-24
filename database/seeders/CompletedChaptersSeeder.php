@@ -16,38 +16,31 @@ class CompletedChaptersSeeder extends Seeder
         CompletedChapter::create([
             'user_id' => 1,
             'chapter_id' => 1,
+            'content_progress' => 100,
             'content_at' => Carbon::now(),
             'test_at' => Carbon::now(),
         ]);
         CompletedChapter::create([
             'user_id' => 2,
             'chapter_id' => 1,
+            'content_progress' => 0,
             'content_at' => null,
             'test_at' => null,
         ]);
         CompletedChapter::create([
             'user_id' => 2,
             'chapter_id' => 2,
+            'content_progress' => 10,
             'content_at' => null,
             'test_at' => null,
         ]);
         CompletedChapter::create([
             'user_id' => 2,
             'chapter_id' => 3,
-            'content_at' => null,
-            'test_at' => Carbon::now(),
-        ]);
-        CompletedChapter::create([
-            'user_id' => 2,
-            'chapter_id' => 3,
+            'content_progress' => 75,
             'content_at' => Carbon::now(),
             'test_at' => Carbon::now(),
         ]);
-        CompletedChapter::create([
-            'user_id' => 2,
-            'chapter_id' => 4,
-            'content_at' => Carbon::now(),
-            'test_at' => Carbon::now(),
-        ]);
+        
     }
 }

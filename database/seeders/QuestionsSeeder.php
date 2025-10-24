@@ -18,11 +18,18 @@ class QuestionsSeeder extends Seeder
             'type_questions_id' => 1,
             'chapter_id' => 1
         ]);
+         Question::create([
+            'statement' => 'Cual es la capital de Italia?',
+            'spot' => 2,
+            'type_questions_id' => 2,
+            'chapter_id' => 1
+        ]);
         Question::create([
             'statement' => 'Explica el ciclo de vida de una petición HTTP.',
             'spot' => 2,
             'type_questions_id' => 1,
             'chapter_id' => 2
         ]);
+        
     }
 }

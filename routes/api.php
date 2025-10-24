@@ -8,8 +8,12 @@ use App\Http\Controllers\{
     CourseInvitationController,UserInformationController, EducationalUserController, SedeController,
     DifficultyController,PortfolioController,MiniatureCourseController, CategoryController, CareerController,
     QuestionController, TypeQuestionController,TypeLearningContentController, LikeChapterController,
-    SavedCourseController, ContentViewController, CommentController, LikeCommentController
+    SavedCourseController, ContentViewController, CommentController, LikeCommentController, 
+    CompletedChapterController,
 };
+
+
+
 // == RUTAS PÚBLICAS Y DE AUTENTICACIÓN ==
 Route::get('/user', function (Request $request) {
     return $request->user()?->load('roles'); // Carga los roles si el usuario existe
@@ -74,10 +78,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('invitation')->group(function () {
         Route::post('{course}/store', [CourseInvitationController::class, 'store'])->middleware('permission:tutor-course.collaborator.invite');    
     });
-    Route::prefix('registration')->group(function () {
-        Route::post('/store', [RegistrationController::class, 'store'])->middleware('permission:course.registration.create');
-        Route::post('/cancel', [RegistrationController::class, 'cancel'])->middleware('permission:course.registration.cancel');
-    });
+
     Route::prefix('watching')->group(function () {        
         Route::get('/course/{course}/show', [WatchingController::class, 'showCourse'])->middleware('permission:course.read');
         Route::get('/content/{chapter}/show', [WatchingController::class, 'showContent'])->middleware('permission:course.read');
@@ -93,7 +94,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/saved/{course}/update', [SavedCourseController::class, 'update'])->middleware('permission:course.read');
         Route::post('/content/{learningContent}/update', [ContentViewController::class, 'update'])->middleware('permission:course.read');
         Route::post('/comment/{comment}/update', [LikeCommentController::class, 'update'])->middleware('permission:course.read');
-        
+        Route::post('/completed/content/{chapter}/update', [CompletedChapterController::class, 'updateContent'])->middleware('permission:course.read');
+        Route::post('/completed/test/{chapter}/update', [CompletedChapterController::class, 'updateTest'])->middleware('permission:course.read');
+        Route::post('/register/{course}/store', [RegistrationController::class, 'store'])->middleware('permission:course.registration.create');
+        Route::post('/code/store', [RegistrationController::class, 'code'])->middleware('permission:course.registration.create');
     }); 
     Route::prefix('start')->group(function () {
         Route::get('/courses-by-filter', [StartController::class, 'getCoursesByFilter'])->middleware('permission:course.read');
