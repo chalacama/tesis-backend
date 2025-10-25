@@ -86,9 +86,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/comment/{course}/index', [CommentController::class, 'index'])->middleware('permission:course.read');
         Route::post('/comment/{course}/store', [CommentController::class, 'store'])->middleware('permission:course.read');
         Route::get('/course/{course}/comment/{comment}/replies', [CommentController::class, 'replies'])->middleware('permission:course.read');
+
+        Route::get('/test/{course}/show', [WatchingController::class, 'showCourse'])->middleware('permission:course.read');
         
         
-    });  
+    });
+    
     Route::prefix('feedback')->group(function () {        
         Route::post('/like/{chapter}/update', [LikeChapterController::class, 'update'])->middleware('permission:course.read');
         Route::post('/saved/{course}/update', [SavedCourseController::class, 'update'])->middleware('permission:course.read');

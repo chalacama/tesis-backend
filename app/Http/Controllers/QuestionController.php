@@ -234,4 +234,17 @@ public function update(Request $request, Chapter $chapter): JsonResponse
         ], 200);
     }
 
+public function show(Chapter $chapter): JsonResponse
+{
+        $course = $question->chapter->course;
+        $this->authorize('view', $course);
+
+        if (!$course->enabled) {
+            return response()->json([
+                'ok'      => false,
+                'message' => 'El curso no está activo.',
+            ], 403);
+        }
+}
+
 }
