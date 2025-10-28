@@ -16,17 +16,27 @@ class ContentViewsSeeder extends Seeder
         ContentView::create([
             'user_id' => 1,
             'learning_content_id' => 1,
+            'progress' => '100',
             'second_seen' => '60',
         ]);
         ContentView::create([
-            'user_id' => 1,
-            'learning_content_id' => 2,
-            'second_seen' => '120',
-        ]);
-        ContentView::create([
-            'user_id' => 1,
-            'learning_content_id' => 3,
+            'user_id' => 2,
+            'learning_content_id' => 1,
+            'progress' => '20',
             'second_seen' => '10',
         ]);
+        ContentView::create([
+            'user_id' => 2,
+            'learning_content_id' => 2,
+            'progress' => '75',
+            'second_seen' => '25',
+        ]);
+        ContentView::create([
+            'user_id' => 2,
+            'learning_content_id' => 3,
+            'progress' => '10',
+            'second_seen' => '10',
+        ]);
+        
     }
 }

@@ -9,6 +9,8 @@ class Certificate extends Model
 {
     protected $fillable = [
         'registration_id',
+        'code',
+        'total_score',
     ];
 
     /**

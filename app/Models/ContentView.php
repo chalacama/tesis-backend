@@ -11,6 +11,9 @@ class ContentView extends Model
         'user_id',
         'learning_content_id',
         'second_seen',
+        
+        'progress',
+        'completed_at',
     ];
 
     /**

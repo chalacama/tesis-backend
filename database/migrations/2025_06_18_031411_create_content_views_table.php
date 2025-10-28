@@ -15,7 +15,9 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('learning_content_id');
-            $table->string('second_seen');
+            $table->string('second_seen')->nullable()->default(0);
+            $table->decimal('progress', 5, 2)->default(0);
+            $table->timestamp('completed_at')->nullable();
             $table->timestamps();
 
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');

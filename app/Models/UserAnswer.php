@@ -13,7 +13,7 @@ class UserAnswer extends Model
         'user_id',
         'question_id',
         'is_correct',
-        'answered_at',
+       
     ];
 
     /**
@@ -39,4 +39,10 @@ class UserAnswer extends Model
     {
         return $this->belongsTo(Question::class);
     }
+
+    public function TestView()
+    {
+        return $this->belongsTo(TestView::class);
+    }
+
 }

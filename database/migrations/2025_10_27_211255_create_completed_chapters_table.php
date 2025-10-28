@@ -11,14 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('certificates', function (Blueprint $table) {
+        Schema::create('completed_chapters', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('registration_id'); // Relación de muchos a uno
-            $table->string('code')->unique();
-            $table->decimal('total_score', 5, 2)->default(0);
+            $table->unsignedBigInteger('chapter_id');
+            $table->unsignedBigInteger('user_id');
             $table->timestamps();
-
-            $table->foreign('registration_id')->references('id')->on('registrations')->onDelete('cascade');
         });
     }
 
@@ -27,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('certificates');
+        Schema::dropIfExists('completed_chapters');
     }
 };

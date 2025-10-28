@@ -20,6 +20,7 @@ use App\Models\ContentView;
 class ContentViewController extends Controller
 {
     use AuthorizesRequests;
+    
     public function update(Request $request,LearningContent $learningContent)
     {
         $data = $request->validate([
@@ -124,4 +125,5 @@ class ContentViewController extends Controller
         return $ext ?: null;
         // Nota: si usas una CDN sin extensión visible, considera persistir el formato al subir.
     }
+
 }

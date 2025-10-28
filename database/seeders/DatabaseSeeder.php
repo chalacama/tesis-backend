@@ -60,7 +60,6 @@ class DatabaseSeeder extends Seeder
         // Llamar al seeder de certificados de registro
         $this->call(CertificatesSeeder::class);
         // Llamar al seeder de contenidos completados
-        $this->call(CompletedChaptersSeeder::class);
         // Llamar al seeder de vistas de contenido
         $this->call(ContentViewsSeeder::class);
         // Llamar al seeder de respuestas de usuario

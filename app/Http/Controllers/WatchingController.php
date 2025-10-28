@@ -89,15 +89,14 @@ class WatchingController extends Controller
                                         ->with(['typeLearningContent:id,name']);
                                  },
                                  'completedChapters' => function ($ccq) use ($userId) {
-                                     if ($userId) {
-                                         $ccq->select('id', 'chapter_id', 'user_id', 'content_at', 'test_at')
-                                             ->where('user_id', $userId)
-                                             ->whereNotNull('content_at')
-                                             ->whereNotNull('test_at');
-                                     } else {
-                                         $ccq->whereRaw('1=0');
-                                     }
-                                 },
+                                    if ($userId) {
+                                    $ccq->select('id', 'chapter_id', 'user_id', 'created_at')
+                                    ->where('user_id', $userId)
+                                    ->orderByDesc('created_at'); // el más reciente primero
+                                    } else {
+                                    $ccq->whereRaw('1=0');
+                                    }
+                                },
                              ]);
                       }
                   ]);
@@ -234,82 +233,38 @@ class WatchingController extends Controller
         return null;
     }
     private function evaluateChapterCompletion($chapter): array
-    {
-        // baseline: último cambio del contenido o de alguna pregunta
-        $learningUpdated = null;
-        if ($chapter->relationLoaded('learningContent') && $chapter->learningContent) {
-            $learningUpdated = $chapter->learningContent->updated_at
-                ? Carbon::parse($chapter->learningContent->updated_at)
-                : null;
-        }
-
-        $questionsMaxUpdated = null;
-        // Eloquent agrega el alias: questions_max_updated_at
-        if (!empty($chapter->questions_max_updated_at)) {
-            $questionsMaxUpdated = Carbon::parse($chapter->questions_max_updated_at);
-        }
-
-        /** @var Carbon|null $baseline */
-        $baseline = collect([$learningUpdated, $questionsMaxUpdated])
-            ->filter()
-            ->max(); // Carbon o null
-
-        // Buscar el registro de completado más "reciente" (cuando ya tiene ambos marcados)
-        if (!$chapter->relationLoaded('completedChapters')) {
-            return [
-                'is_completed' => false,
-                'content_at'   => null,
-                'test_at'      => null,
-                'completed_at' => null,
-            ];
-        }
-
-        $candidate = $chapter->completedChapters
-            ->sortByDesc(function ($r) {
-                $c = $r->content_at ? Carbon::parse($r->content_at) : null;
-                $t = $r->test_at ? Carbon::parse($r->test_at) : null;
-                $max = collect([$c, $t])->filter()->max();
-                return $max ? $max->timestamp : 0;
-            })
-            ->first();
-
-        if (!$candidate) {
-            return [
-                'is_completed' => false,
-                'content_at'   => null,
-                'test_at'      => null,
-                'completed_at' => null,
-            ];
-        }
-
-        $contentAt = $candidate->content_at ? Carbon::parse($candidate->content_at) : null;
-        $testAt    = $candidate->test_at ? Carbon::parse($candidate->test_at) : null;
-
-        // Regla: si cualquiera es null → no completado
-        if (!$contentAt || !$testAt) {
-            return [
-                'is_completed' => false,
-                'content_at'   => $candidate->content_at,
-                'test_at'      => $candidate->test_at,
-                'completed_at' => null,
-            ];
-        }
-
-        // Regla: ambas fechas deben ser > baseline (si baseline existe)
-        $passesBaseline = true;
-        if ($baseline instanceof Carbon) {
-            $passesBaseline = $contentAt->gt($baseline) && $testAt->gt($baseline);
-        }
-
-        $isCompleted = $passesBaseline;
-
+{
+    // Si no está cargada la relación, no podemos evaluar
+    if (!$chapter->relationLoaded('completedChapters')) {
         return [
-            'is_completed' => $isCompleted,
-            'content_at'   => $candidate->content_at,
-            'test_at'      => $candidate->test_at,
-            'completed_at' => $isCompleted ? $contentAt->max($testAt) : null,
+            'is_completed'  => false,
+            'completed_at'  => null,
+            'completion_id' => null,
         ];
     }
+
+    // Tomar el registro MÁS RECIENTE de completed_chapters para este usuario
+    $latest = $chapter->completedChapters
+        ->sortByDesc(function ($r) {
+            return $r->created_at ? \Carbon\Carbon::parse($r->created_at)->timestamp : 0;
+        })
+        ->first();
+
+    if (!$latest) {
+        return [
+            'is_completed'  => false,
+            'completed_at'  => null,
+            'completion_id' => null,
+        ];
+    }
+
+    return [
+        'is_completed'  => true,
+        'completed_at'  => \Carbon\Carbon::parse($latest->created_at)->toIso8601String(),
+        'completion_id' => $latest->id,
+    ];
+}
+
     /**
      * Devuelve metadatos del contenido de aprendizaje sin exponer la URL.
      * - type: 'youtube' | 'archivo'

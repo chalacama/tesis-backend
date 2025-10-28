@@ -213,4 +213,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(LikeComment::class);
     }
+
+    public function testView()
+    {
+        return $this->hasMany(testView::class, 'user_id');
+    }
 }

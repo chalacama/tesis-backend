@@ -8,8 +8,10 @@ use App\Http\Controllers\{
     CourseInvitationController,UserInformationController, EducationalUserController, SedeController,
     DifficultyController,PortfolioController,MiniatureCourseController, CategoryController, CareerController,
     QuestionController, TypeQuestionController,TypeLearningContentController, LikeChapterController,
-    SavedCourseController, ContentViewController, CommentController, LikeCommentController, 
-    CompletedChapterController,
+    SavedCourseController, ContentViewController, CommentController, LikeCommentController,
+    CompletedChapterController
+    
+    
 };
 
 
@@ -87,7 +89,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/comment/{course}/store', [CommentController::class, 'store'])->middleware('permission:course.read');
         Route::get('/course/{course}/comment/{comment}/replies', [CommentController::class, 'replies'])->middleware('permission:course.read');
 
-        Route::get('/test/{course}/show', [WatchingController::class, 'showCourse'])->middleware('permission:course.read');
+        
         
         
     });
@@ -96,9 +98,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/like/{chapter}/update', [LikeChapterController::class, 'update'])->middleware('permission:course.read');
         Route::post('/saved/{course}/update', [SavedCourseController::class, 'update'])->middleware('permission:course.read');
         Route::post('/content/{learningContent}/update', [ContentViewController::class, 'update'])->middleware('permission:course.read');
+        Route::post('/progress/{learningContent}/update', [CompletedChapterController::class, 'updateProgress'])->middleware('permission:course.read');
+
         Route::post('/comment/{comment}/update', [LikeCommentController::class, 'update'])->middleware('permission:course.read');
-        Route::post('/completed/content/{chapter}/update', [CompletedChapterController::class, 'updateContent'])->middleware('permission:course.read');
-        Route::post('/completed/test/{chapter}/update', [CompletedChapterController::class, 'updateTest'])->middleware('permission:course.read');
+        
+        
         Route::post('/register/{course}/store', [RegistrationController::class, 'store'])->middleware('permission:course.registration.create');
         Route::post('/code/store', [RegistrationController::class, 'code'])->middleware('permission:course.registration.create');
     }); 

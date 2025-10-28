@@ -1,171 +1,306 @@
 <?php
 
-
 namespace App\Http\Controllers;
 
-
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-use Illuminate\Support\Facades\Auth;
 use App\Models\CompletedChapter;
-use App\Models\Chapter;
-use App\Models\Registration;
-use App\Models\User;
-use App\Models\Course;
 use App\Models\LearningContent;
-use App\Models\TypeLearningContent;
+use App\Models\ContentView;
+use App\Models\TestView;
+use App\Models\Chapter;
+use App\Models\Course;
+use App\Models\Registration;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
-use Exception;
 
 class CompletedChapterController extends Controller
 {
-     use AuthorizesRequests;
-    public function updateContent(Request $request, Chapter $chapter)
+    use AuthorizesRequests;
+
+    /**
+     * POST /progress/{learningContent}/update
+     * Body:
+     * - progress: number [0..100] incremento que se suma al progreso actual (tope 100)
+     */
+    public function updateProgress(Request $request, LearningContent $learningContent)
     {
-        $course = $chapter->module->course;
+        // 1) Curso y autorización
+        $chapter = $learningContent->chapter;
+        $module  = $chapter->module;
+        $course  = $module->course;
 
-        if (!$course->enabled) {
-            return response()->json([
-                'ok'      => false,
-                'message' => 'El curso no está activo.',
-            ], 403);
-        }
-
-        // Política de acceso al curso
         $this->authorize('view', $course);
 
-        $user = $request->user();
-        if (!$user) {
-            return response()->json([
-                'ok'      => false,
-                'message' => 'No autenticado.',
-            ], 401);
+        if (!$course->enabled) {
+            return response()->json(['ok' => false, 'message' => 'El curso no está activo.'], 403);
         }
 
-        // Debe estar registrado al curso
-        $isRegistered = Registration::where('user_id', $user->id)
+        // 2) Verificar registro del usuario en el curso
+        $userId = Auth::id();
+        $isRegistered = Registration::query()
             ->where('course_id', $course->id)
+            ->where('user_id', $userId)
             ->exists();
 
         if (!$isRegistered) {
-            return response()->json([
-                'ok'      => false,
-                'message' => 'Solo los usuarios registrados al curso pueden completar capítulos.',
-            ], 403);
+            return response()->json(['ok' => false, 'message' => 'Debe estar registrado en el curso para actualizar progreso.'], 403);
         }
 
-        // El capítulo debe tener LearningContent para registrar progreso de contenido
-        $hasLearningContent = $chapter->learningContent()->exists();
-        if (!$hasLearningContent) {
-            return response()->json([
-                'ok'      => false,
-                'message' => 'Este capítulo no tiene contenido de aprendizaje (learning content).',
-            ], 422);
-        }
-
-        // Validación de entrada: incremento (delta) de progreso
-        $validator = Validator::make($request->all(), [
-            'delta' => ['required', 'numeric', 'min:0', 'max:100'],
-        ], [
-            'delta.required' => 'El campo delta es requerido.',
-            'delta.numeric'  => 'El campo delta debe ser numérico.',
-            'delta.min'      => 'El incremento mínimo es 0.',
-            'delta.max'      => 'El incremento máximo es 100.',
+        // 3) Validación del payload (sin second_seen)
+        $data = $request->validate([
+            'progress' => ['required','numeric','min:0','max:100'],
         ]);
+        $deltaProgress = (float) $data['progress'];
 
-        if ($validator->fails()) {
-            return response()->json([
-                'ok'      => false,
-                'message' => 'Datos inválidos.',
-                'errors'  => $validator->errors(),
-            ], 422);
-        }
+        // 4) Transacción principal
+        $resultPayload = DB::transaction(function () use (
+            $learningContent, $chapter, $course, $userId, $deltaProgress
+        ) {
+            // 4.1) Obtener/crear ContentView (sin tocar second_seen)
+            /** @var ContentView $view */
+            $view = ContentView::query()
+                ->where('user_id', $userId)
+                ->where('learning_content_id', $learningContent->id)
+                ->lockForUpdate()
+                ->first();
 
-        $delta = (float)$validator->validated()['delta'];
-        $threshold = 70.0;
-
-        $result = DB::transaction(function () use ($user, $chapter, $delta, $threshold) {
-            // Asegura un registro único por (user_id, chapter_id)
-            $cc = CompletedChapter::firstOrCreate(
-                ['user_id' => $user->id, 'chapter_id' => $chapter->id],
-                ['content_progress' => 0, 'content_at' => null, 'test_at' => null]
-            );
-
-            $before  = (float)$cc->content_progress;
-            $after   = round(min(100.0, $before + $delta), 2);
-            $now     = Carbon::now();
-            $touched = false;
-            $crossed = false;
-
-            // Si cruza el umbral (de <70 a >=70) y aún no se había marcado content_at
-            if ($before < $threshold && $after >= $threshold && is_null($cc->content_at)) {
-                $cc->content_at = $now;
-                $crossed = true;
-
-                // Si NO hay test (no hay preguntas), marcamos también test_at
-                $hasTest = $chapter->questions()->exists();
-                if (!$hasTest && is_null($cc->test_at)) {
-                    $cc->test_at = $now;
-                }
+            if (!$view) {
+                $view = new ContentView([
+                    'user_id' => $userId,
+                    'learning_content_id' => $learningContent->id,
+                    'progress' => 0,
+                ]);
             }
 
-            if ($after !== $before) {
-                $cc->content_progress = $after;
-                $touched = true;
+            $before = (float) ($view->progress ?? 0);
+            $after  = min(100.0, round($before + $deltaProgress, 2));
+            $crossed70 = $before < 70.0 && $after >= 70.0;
+
+            $view->progress = $after;
+
+            if ($crossed70 && is_null($view->completed_at)) {
+                $view->completed_at = now();
             }
 
-            if ($touched || $crossed) {
-                $cc->save();
+            $view->save();
+
+            $contentAt = $view->completed_at ? Carbon::parse($view->completed_at) : null;
+
+            // 4.2) Si no hay preguntas, crear TestView automático al completar contenido
+            $autoCompletedTest = false;
+            $hasQuestions = $chapter->questions()->exists();
+            if (!$hasQuestions && $contentAt && !TestView::query()
+                    ->where('user_id', $userId)
+                    ->where('chapter_id', $chapter->id)
+                    ->exists()) {
+                $tv = new TestView([
+                    'user_id'   => $userId,
+                    'chapter_id'=> $chapter->id,
+                ]);
+                $tv->save();
+                $autoCompletedTest = true;
             }
+
+            // 4.3) test_at (último intento)
+            $testAt = TestView::query()
+                ->where('user_id', $userId)
+                ->where('chapter_id', $chapter->id)
+                ->latest('created_at')
+                ->value('created_at');
+            $testAt = $testAt ? Carbon::parse($testAt) : null;
+
+            // 4.4) Intentar completar el capítulo y emitir certificado si aplica
+            $chapterCompleted   = $this->ensureChapterCompletion($chapter, $userId);
+            $certificateIssued  = $this->issueCertificateIfEligible($course, $userId);
 
             return [
-                'record'          => $cc->fresh(),
-                'before'          => $before,
-                'after'           => $after,
-                'crossed70'       => $crossed,
-                'autoCompletedTest' => $crossed && !$chapter->questions()->exists(),
+                'ok' => true,
+                'message' => 'Progreso actualizado correctamente.',
+                'data' => [
+                    'chapter_id'         => $chapter->id,
+                    'before'             => $before,
+                    'after'              => $after,
+                    'content_at'         => $contentAt ? $contentAt->toIso8601String() : null,
+                    'test_at'            => $testAt ? $testAt->toIso8601String() : null,
+                    'crossed70'          => $crossed70,
+                    'autoCompletedTest'  => $autoCompletedTest,
+                    'chapter_completed'  => $chapterCompleted,
+                    'certificate_issued' => $certificateIssued,
+                ],
             ];
         });
 
-        return response()->json([
-            'ok'      => true,
-            'message' => 'Progreso actualizado correctamente.',
-            'data'    => [
-                'chapter_id'        => $chapter->id,
-                'before'            => $result['before'],
-                'after'             => $result['after'],
-                'content_at'        => optional($result['record']->content_at)->toISOString(),
-                'test_at'           => optional($result['record']->test_at)->toISOString(),
-                'crossed70'         => $result['crossed70'],
-                'autoCompletedTest' => $result['autoCompletedTest'],
-            ],
-        ], 200);
+        return response()->json($resultPayload);
     }
 
     /**
-     * (Para más adelante) Lógica de completar TEST.
-     * Aquí solo verificamos curso/permiso; implementaremos luego tu regla para test_at.
+     * Marca un capítulo como completado si hay evidencia válida (content y test)
+     * posterior a la "versión" vigente del capítulo.
      */
-    public function updateTest(Request $request, Chapter $chapter)
+    private function ensureChapterCompletion(Chapter $chapter, int $userId): bool
     {
-        $course = $chapter->module->course;
+        $versionAt = $this->chapterVersionAt($chapter); // Carbon|null
 
-        if (!$course->enabled) {
-            return response()->json([
-                'ok'      => false,
-                'message' => 'El curso no está activo.',
-            ], 403);
+        // content_at
+        $contentAt = null;
+        if ($chapter->learningContent) {
+            $contentAt = ContentView::query()
+                ->where('user_id', $userId)
+                ->where('learning_content_id', $chapter->learningContent->id)
+                ->value('completed_at');
+            $contentAt = $contentAt ? Carbon::parse($contentAt) : null;
+        } else {
+            $contentAt = TestView::query()
+                ->where('user_id', $userId)
+                ->where('chapter_id', $chapter->id)
+                ->min('created_at');
+            $contentAt = $contentAt ? Carbon::parse($contentAt) : null;
         }
 
-        $this->authorize('view', $course);
+        // test_at
+        $testAt = null;
+        if ($chapter->questions()->exists()) {
+            $testAt = TestView::query()
+                ->where('user_id', $userId)
+                ->where('chapter_id', $chapter->id)
+                ->latest('created_at')
+                ->value('created_at');
+            $testAt = $testAt ? Carbon::parse($testAt) : null;
+        } else {
+            $testAt = ContentView::query()
+                ->where('user_id', $userId)
+                ->whereHas('learningContent', fn($q) => $q->where('chapter_id', $chapter->id))
+                ->value('completed_at');
+            $testAt = $testAt ? Carbon::parse($testAt) : null;
+        }
 
-        return response()->json([
-            'ok'      => false,
-            'message' => 'Implementación pendiente para completar test.',
-        ], 501);
+        if (!$contentAt || !$testAt) {
+            return false;
+        }
+
+        if ($versionAt) {
+            if ($contentAt->lt($versionAt) || $testAt->lt($versionAt)) {
+                return false;
+            }
+        }
+
+        $already = CompletedChapter::query()
+            ->where('user_id', $userId)
+            ->where('chapter_id', $chapter->id)
+            ->when($versionAt, fn($q) => $q->where('created_at', '>=', $versionAt))
+            ->exists();
+
+        if ($already) {
+            return true;
+        }
+
+        $doneAt = $contentAt->greaterThan($testAt) ? $contentAt : $testAt;
+
+        $cc = new CompletedChapter([
+            'user_id'    => $userId,
+            'chapter_id' => $chapter->id,
+        ]);
+        $cc->created_at = $doneAt;
+        $cc->updated_at = $doneAt;
+        $cc->save();
+
+        return true;
+    }
+
+    /**
+     * Versión del capítulo = max(created_at del LearningContent, created_at de última pregunta)
+     */
+    private function chapterVersionAt(Chapter $chapter): ?Carbon
+    {
+        $lcCreated = $chapter->learningContent?->created_at
+            ? Carbon::parse($chapter->learningContent->created_at)
+            : null;
+
+        $lastQ = $chapter->questions()->max('created_at');
+        $qCreated = $lastQ ? Carbon::parse($lastQ) : null;
+
+        if ($lcCreated && $qCreated) {
+            return $lcCreated->greaterThan($qCreated) ? $lcCreated : $qCreated;
+        }
+        return $lcCreated ?: $qCreated;
+    }
+
+    /**
+     * Emite certificado si todos los capítulos están válidamente completados
+     * para la versión vigente del curso. No falla si no existe el modelo.
+     */
+    private function issueCertificateIfEligible(Course $course, int $userId): bool
+    {
+        $certificateModel = 'App\\Models\\CourseCertificate';
+        if (!class_exists($certificateModel)) {
+            return false;
+        }
+
+        $isRegistered = Registration::query()
+            ->where('course_id', $course->id)
+            ->where('user_id', $userId)
+            ->exists();
+
+        if (!$isRegistered) {
+            return false;
+        }
+
+        $chapters = Chapter::query()
+            ->whereIn('module_id', $course->modules()->pluck('id'))
+            ->get();
+
+        if ($chapters->isEmpty()) {
+            return false;
+        }
+
+        $globalVersion = null;
+        foreach ($chapters as $ch) {
+            $versionAt = $this->chapterVersionAt($ch);
+            if ($versionAt) {
+                $globalVersion = $globalVersion
+                    ? ($versionAt->greaterThan($globalVersion) ? $versionAt : $globalVersion)
+                    : $versionAt;
+            }
+
+            $hasValid = CompletedChapter::query()
+                ->where('user_id', $userId)
+                ->where('chapter_id', $ch->id)
+                ->when($versionAt, fn($q) => $q->where('created_at', '>=', $versionAt))
+                ->exists();
+
+            if (!$hasValid) {
+                return false;
+            }
+        }
+
+        $globalVersion = $globalVersion ?: now()->subSecond();
+
+        $certClass = new $certificateModel;
+        $existsValid = $certClass->newQuery()
+            ->where('course_id', $course->id)
+            ->where('user_id', $userId)
+            ->where('created_at', '>=', $globalVersion)
+            ->exists();
+
+        if ($existsValid) {
+            return false;
+        }
+
+        $cert = new $certificateModel([
+            'course_id' => $course->id,
+            'user_id'   => $userId,
+        ]);
+        $cert->created_at = now();
+        $cert->updated_at = now();
+        $cert->save();
+
+        return true;
+    }
+
+    public function CompletedTest( Request $request, Chapter $chapter)
+    {
+        
     }
 }

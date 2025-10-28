@@ -71,4 +71,11 @@ class Chapter extends Model implements Sortable
         return $this->hasMany(LikeChapter::class, 'chapter_id');
     }
 
+    public function testView()
+    {
+        return $this->hasMany(testView::class, 'chapter_id');
+    }
+
+    
+
 }
