@@ -31,11 +31,7 @@ class CompletedChapterController extends Controller
         $module  = $chapter->module;
         $course  = $module->course;
 
-        $this->authorize('view', $course);
-
-        if (!$course->enabled) {
-            return response()->json(['ok' => false, 'message' => 'El curso no está activo.'], 403);
-        }
+        $this->authorize('viewChapter', $chapter);
 
         // 2) Verificar registro del usuario en el curso
         $userId = Auth::id();
@@ -43,10 +39,6 @@ class CompletedChapterController extends Controller
             ->where('course_id', $course->id)
             ->where('user_id', $userId)
             ->exists();
-
-        if (!$isRegistered) {
-            return response()->json(['ok' => false, 'message' => 'Debe estar registrado en el curso para actualizar progreso.'], 403);
-        }
 
         // 3) Validación del payload (sin second_seen)
         $data = $request->validate([

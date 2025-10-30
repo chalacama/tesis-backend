@@ -26,11 +26,7 @@ class CommentController extends Controller
      use AuthorizesRequests;
     public function index(Request $request, Course $course)
 {
-    $this->authorize('view', $course);
-
-    if (! $course->enabled) {
-        abort(404, 'El curso no está activo.');
-    }
+    $this->authorize('viewRegistered', $course);
 
     $userId  = optional($request->user())->id;
     $perPage = (int) $request->integer('per_page', 20);
@@ -139,11 +135,7 @@ class CommentController extends Controller
 
 public function replies(Request $request, Course $course, Comment $comment)
 {
-    $this->authorize('view', $course);
-
-    if (! $course->enabled) {
-        abort(404, 'El curso no está activo.');
-    }
+    $this->authorize('viewRegistered', $course);
 
     // Asegura que el comentario pertenece al curso
     if ($comment->commentable_type !== Course::class || (int)$comment->commentable_id !== (int)$course->id) {
@@ -253,11 +245,7 @@ public function replies(Request $request, Course $course, Comment $comment)
     public function store(Request $request, Course $course)
 {
     // Autorización de acceso al curso (tu política actual)
-    $this->authorize('view', $course);
-
-    if (! $course->enabled) {
-        abort(404, 'El curso no está activo.');
-    }
+    $this->authorize('viewRegistered', $course);
 
     // Debe estar autenticado
     $user = $request->user();
@@ -336,5 +324,5 @@ public function replies(Request $request, Course $course, Comment $comment)
             'message' => 'Comentario creado correctamente.',
         ]);
 }
-    
+
 }

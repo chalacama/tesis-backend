@@ -15,7 +15,7 @@ class LikeCommentController extends Controller
         $course = $comment->commentable;
         
         // Si comentaste también en capítulos, ajusta este check si quieres limitar a Course
-        $this->authorize('view', $course);
+        $this->authorize('viewRegistered', $course);
 
         // Evita likes sobre comentarios eliminados lógicamente
         if ($comment->trashed()) {

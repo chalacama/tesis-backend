@@ -100,7 +100,7 @@ class StartController extends Controller
 
     public function getCoursesByFilter(Request $request)
     {
-    $this->authorize('viewAny', Course::class);
+    
     $user = Auth::user();
     $filter = $request->query('filter', 'all');
     $perPage = $request->query('per_page', 6);

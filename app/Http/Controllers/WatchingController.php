@@ -61,18 +61,10 @@ class WatchingController extends Controller
      use AuthorizesRequests;
     public function showCourse(Course $course)
     {
+        
         $this->authorize('view', $course);
-
-        // 1) Mostrar SOLO si el curso está activo
-        if (!$course->enabled) {
-            return response()->json([
-                'ok'      => false,
-                'message' => 'El curso no está activo.',
-            ], 403);
-        }
-
         $userId = auth()->id();
-
+        
         // 2) Eager load para navegación (módulos → capítulos) + métricas
         $course->load([
             'modules' => function ($q) use ($userId) {
@@ -320,12 +312,7 @@ class WatchingController extends Controller
     {
         // Autorización y estado del curso
         $this->authorize('view', $course);
-        if (!$course->enabled) {
-            return response()->json([
-                'ok' => false,
-                'message' => 'El curso no está activo.',
-            ], 403);
-        }
+        
 
         // Cargar relaciones necesarias
         $course->loadMissing([
@@ -395,28 +382,14 @@ class WatchingController extends Controller
         $course = Course::query()->findOrFail($chapter->module->course_id);
 
         // Autorización y estado del curso
-        $this->authorize('view', $course);
-        if (!$course->enabled) {
-            return response()->json([
-                'ok'      => false,
-                'message' => 'El curso no está activo.',
-            ], 403);
-        }
+        
+        
 
         $userId = auth()->id();
+        $this->authorize('viewChapter', $chapter);
+        
 
-        // ¿El usuario está registrado?
-        $isRegistered = $userId
-            ? Registration::where('course_id', $course->id)->where('user_id', $userId)->exists()
-            : false;
-
-        // Regla: solo registrados, excepto si es el primer capítulo (order = 1)
-        if ((int)($chapter->order ?? 0) !== 1 && !$isRegistered) {
-            return response()->json([
-                'ok'      => false,
-                'message' => 'Debes estar registrado en el curso para ver este capítulo.',
-            ], 403);
-        }
+        
 
         // ¿El usuario guardó el curso?
         $isSaved = $userId
@@ -460,7 +433,7 @@ class WatchingController extends Controller
             'ok'          => true,
             'user_state'  => [
                 'is_saved'      => (bool) $isSaved,
-                // 'is_registered' => (bool) $isRegistered,
+                
                 'liked_chapter' => (bool) $userLiked,
                 'has_questions' => (bool) $hasQuestions,
             ],

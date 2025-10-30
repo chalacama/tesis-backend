@@ -9,7 +9,7 @@ use App\Http\Controllers\{
     DifficultyController,PortfolioController,MiniatureCourseController, CategoryController, CareerController,
     QuestionController, TypeQuestionController,TypeLearningContentController, LikeChapterController,
     SavedCourseController, ContentViewController, CommentController, LikeCommentController,
-    CompletedChapterController
+    CompletedChapterController, TestController
     
     
 };
@@ -88,6 +88,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/comment/{course}/index', [CommentController::class, 'index'])->middleware('permission:course.read');
         Route::post('/comment/{course}/store', [CommentController::class, 'store'])->middleware('permission:course.read');
         Route::get('/course/{course}/comment/{comment}/replies', [CommentController::class, 'replies'])->middleware('permission:course.read');
+        Route::get('/test/{chapter}/index/', [TestController::class, 'index'])->middleware('permission:course.read');
 
         
         

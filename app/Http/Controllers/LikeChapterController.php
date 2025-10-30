@@ -26,23 +26,8 @@ class LikeChapterController extends Controller
         $chapter->loadMissing('module:id,course_id');
         $course = Course::findOrFail($chapter->module->course_id);
 
-        $this->authorize('view', $course);
+        $this->authorize('viewChapter', $chapter);
 
-        if (!$course->enabled) {
-            return response()->json(['ok' => false, 'message' => 'El curso no está activo.'], 403);
-        }
-
-        // Solo registrados pueden dar like, excepto si es el capítulo 1 (introducción)
-        $isRegistered = Registration::where('course_id', $course->id)
-            ->where('user_id', $userId)
-            ->exists();
-
-        if ((int)($chapter->order ?? 0) !== 1 && !$isRegistered) {
-            return response()->json([
-                'ok' => false,
-                'message' => 'Debes estar registrado para dar like a este capítulo.'
-            ], 403);
-        }
 
         if ($data['liked'] === true) {
             // Crea si no existe

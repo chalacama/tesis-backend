@@ -44,25 +44,8 @@ class ContentViewController extends Controller
         $chapter = $learningContent->chapter;
 
         // Política y curso activo
-        $this->authorize('view', $course);
-        if (!$course->enabled) {
-            return response()->json(['ok' => false, 'message' => 'El curso no está activo.'], 403);
-        }
-
-        // Registro requerido salvo capítulo de introducción (order = 1)
-        $isIntro = ((int) ($chapter->order ?? 0)) === 1;
-        if (!$isIntro) {
-            $isRegistered = Registration::where('course_id', $course->id)
-                ->where('user_id', $userId)
-                ->exists();
-
-            if (!$isRegistered) {
-                return response()->json([
-                    'ok' => false,
-                    'message' => 'Debes estar registrado para guardar tu progreso en este capítulo.',
-                ], 403);
-            }
-        }
+        $this->authorize('viewChapter', $chapter);
+        
 
         // Solo permitimos progreso para Youtube o archivo de video
         $typeName = strtolower($learningContent->typeLearningContent->name ?? '');

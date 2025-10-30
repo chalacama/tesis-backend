@@ -5,7 +5,8 @@ namespace App\Policies;
 use App\Models\Course;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
-
+use App\Models\Registration;
+use Illuminate\Auth\Access\HandlesAuthorization;
 class CoursePolicy
 {
     /**
@@ -55,7 +56,17 @@ class CoursePolicy
     }
     public function view(User $user, Course $course): bool
     {
-        return $user && $user->hasPermissionTo('course.read');
+        if (!$user->hasPermissionTo('course.read')) return false;
+        return (bool) $course->enabled;
+    }
+    public function viewRegistered(User $user, Course $course): bool
+    {
+        if (!$user->hasPermissionTo('course.read')) return false;
+        if (!$course->enabled) return false;
+
+        return Registration::where('course_id', $course->id)
+            ->where('user_id', $user->id)
+            ->exists();
     }
     /**
      * Determina si el usuario puede crear cursos.
