@@ -46,6 +46,7 @@ use App\Models\TypeQuestion;
 use App\Models\Answer;
 
 use App\Models\Chapter;
+use App\Models\Test;
 use App\Models\ContentChapter;
 use App\Models\LikeChapter;
 use App\Models\CompletedChapter;
@@ -84,6 +85,7 @@ class WatchingController extends Controller
                              ->withCount('questions')
                              ->withMax('questions', 'updated_at') // alias: questions_max_updated_at
                              ->with([
+                                'test:id,chapter_id,split',
                                  'learningContent' => function ($lq) {
                                      $lq->select('id', 'chapter_id', 'url', 'type_content_id', 'updated_at')
                                         ->with(['typeLearningContent:id,name']);
@@ -136,6 +138,14 @@ class WatchingController extends Controller
                         'updated_at' => $m->updated_at,
                         'created_at' => $m->created_at,
                         'chapters'   => $m->chapters->map(function ($c) use ($userId) {
+                            $questionsCount = (int) ($c->questions_count ?? 0);
+
+                            // split >= 1; si viene null/0/false => 1
+                            $splitFactor = max(1, (int) optional($c->test)->split);
+
+                            // entero por división (piso)
+                            $questionsPerSplit = intdiv($questionsCount, $splitFactor);
+
                             return [
                                 'id'              => $c->id,
                                 'title'           => $c->title,
@@ -143,7 +153,7 @@ class WatchingController extends Controller
                                 'order'           => $c->order,
                                 'updated_at'      => $c->updated_at,
                                 'created_at'      => $c->created_at,
-                                'questions_count' => $c->questions_count,
+                                'questions_count' => $questionsPerSplit,
 
                                 // tipos/format del learning (sin exponer URL)
                                 'learning'        => $this->formatLearningMeta(optional($c->learningContent)),

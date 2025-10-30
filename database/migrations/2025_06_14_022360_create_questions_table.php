@@ -15,12 +15,15 @@ return new class extends Migration
             $table->id();
             $table->string('statement');
             $table->integer('spot')->default(1);
+            $table->integer('order')->default(1);
             $table->unsignedBigInteger('type_questions_id');
-            $table->unsignedBigInteger('chapter_id');
+            $table->unsignedBigInteger('test_id');
+            //order
+            
             $table->timestamps();
             $table->softDeletes();
             $table->foreign('type_questions_id')->references('id')->on('type_questions')->onDelete('cascade');
-            $table->foreign('chapter_id')->references('id')->on('chapters')->onDelete('cascade');
+            $table->foreign('test_id')->references('id')->on('tests')->onDelete('cascade');
         });
     }
 

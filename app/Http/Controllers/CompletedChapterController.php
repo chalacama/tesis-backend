@@ -155,7 +155,7 @@ class CompletedChapterController extends Controller
             $contentAt = TestView::query()
                 ->where('user_id', $userId)
                 ->where('chapter_id', $chapter->id)
-                ->min('created_at');
+                ->value('completed_at');
             $contentAt = $contentAt ? Carbon::parse($contentAt) : null;
         }
 
@@ -165,8 +165,7 @@ class CompletedChapterController extends Controller
             $testAt = TestView::query()
                 ->where('user_id', $userId)
                 ->where('chapter_id', $chapter->id)
-                ->latest('created_at')
-                ->value('created_at');
+                ->value('completed_at');
             $testAt = $testAt ? Carbon::parse($testAt) : null;
         } else {
             $testAt = ContentView::query()

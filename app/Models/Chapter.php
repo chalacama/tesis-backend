@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Prunable;
 use App\Models\Question;
 use App\Models\LikeChapter;
 use App\Models\CompletedChapter;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 class Chapter extends Model implements Sortable
 {
     use SoftDeletes,SortableTrait , Prunable; 
@@ -55,13 +56,7 @@ class Chapter extends Model implements Sortable
         return $this->hasOne(LearningContent::class, 'chapter_id');
     }
 
-    /**
-     * Relación: un capítulo tiene muchas preguntas.
-     */
-    public function questions()
-    {
-        return $this->hasMany(Question::class, 'chapter_id');
-    }
+    
     public function completedChapters()
     {
         return $this->hasMany(CompletedChapter::class, 'chapter_id');
@@ -71,10 +66,27 @@ class Chapter extends Model implements Sortable
         return $this->hasMany(LikeChapter::class, 'chapter_id');
     }
 
+    public function test()
+    {
+        return $this->hasOne(Test::class, 'chapter_id');
+    }
+
     public function testView()
     {
         return $this->hasMany(testView::class, 'chapter_id');
     }
+    public function questions(): HasManyThrough
+{
+    // Chapter (id) -> Test (chapter_id) -> Question (test_id)
+    return $this->hasManyThrough(
+        Question::class,  // Modelo final
+        Test::class,      // Modelo intermedio
+        'chapter_id',     // FK en tests que apunta a chapters.id
+        'test_id',        // FK en questions que apunta a tests.id
+        'id',             // Local key en chapters
+        'id'              // Local key en tests
+    );
+}
 
     
 

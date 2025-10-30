@@ -8,7 +8,8 @@ class TestView extends Model
 {
     protected $fillable = [
         'user_id',
-        'chapter_id',
+        'test_id',
+        'completed_at',
         
     ];
 
@@ -17,9 +18,11 @@ class TestView extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function chapter()
+    public function test()
     {
-        return $this->belongsTo(Chapter::class);
+        return $this->belongsTo(Test::class);
     }
+
+    
     
 }

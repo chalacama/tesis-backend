@@ -11,14 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('answers', function (Blueprint $table) {
+        Schema::create('test_view_questions', function (Blueprint $table) {
             $table->id();
-            $table->string('option');
-            $table->boolean('is_correct')->default(false);
-            $table->integer('order')->default(1);
+            $table->unsignedBigInteger('test_view_id');
             $table->unsignedBigInteger('question_id');
+            $table->integer('order'); // El orden para este test_view (1, 2, 3...)
             $table->timestamps();
 
+            $table->foreign('test_view_id')->references('id')->on('test_views')->onDelete('cascade');
             $table->foreign('question_id')->references('id')->on('questions')->onDelete('cascade');
         });
     }
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('answers');
+        Schema::dropIfExists('test_view_questions');
     }
 };

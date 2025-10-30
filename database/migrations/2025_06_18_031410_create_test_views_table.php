@@ -14,11 +14,12 @@ return new class extends Migration
         Schema::create('test_views', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id');
-            $table->unsignedBigInteger('chapter_id');
+            $table->unsignedBigInteger('test_id');
+            $table->timestamp('completed_at')->nullable()->default(null);
             $table->timestamps();
 
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('chapter_id')->references('id')->on('chapters')->onDelete('cascade');
+            $table->foreign('test_id')->references('id')->on('tests')->onDelete('cascade');
             
         });
     }

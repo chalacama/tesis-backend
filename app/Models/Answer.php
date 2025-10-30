@@ -5,11 +5,21 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Question;
 use App\Models\UserAnswer;
-class Answer extends Model
+use Spatie\EloquentSortable\Sortable;
+use Spatie\EloquentSortable\SortableTrait;
+// use Spatie\EloquentSortable\Sortable;
+class Answer extends Model implements Sortable
 {
+    use SortableTrait;
+    
+    public $sortable = [
+        'order_column_name' => 'order',
+        'sort_when_creating' => true,
+    ];
     protected $fillable = [
         'option',
         'is_correct',
+        'order',
         'question_id',
     ];
 

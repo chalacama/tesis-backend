@@ -11,15 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('answers', function (Blueprint $table) {
+        Schema::create('tests', function (Blueprint $table) {
             $table->id();
-            $table->string('option');
-            $table->boolean('is_correct')->default(false);
-            $table->integer('order')->default(1);
-            $table->unsignedBigInteger('question_id');
+            $table->unsignedBigInteger('chapter_id');
+            $table->boolean('random')->default(true);
+            $table->boolean('incorrect')->default(true);
+            $table->boolean('score')->default(false);
+            $table->integer('split')->default(1);
+            $table->integer('limited')->default(0);
             $table->timestamps();
-
-            $table->foreign('question_id')->references('id')->on('questions')->onDelete('cascade');
         });
     }
 
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('answers');
+        Schema::dropIfExists('tests');
     }
 };

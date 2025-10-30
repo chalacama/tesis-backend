@@ -7,15 +7,25 @@ use App\Models\TypeQuestion;
 use App\Models\Answer;
 use App\Models\UserAnswer;
 use App\Models\Chapter;
+use App\Models\Test;
+use Spatie\EloquentSortable\Sortable;
+use Spatie\EloquentSortable\SortableTrait;
+
 use Illuminate\Database\Eloquent\SoftDeletes;
-class Question extends Model
+class Question extends Model implements Sortable
 {
-    use SoftDeletes;
+    use SoftDeletes , SortableTrait;
+    public $sortable = [
+        'order_column_name' => 'order',
+        'sort_when_creating' => true,
+    ];
     protected $fillable = [
         'statement',
         'spot',
+        'order',
         'type_questions_id',
-        'chapter_id',
+        'test_id',
+        
     ];
 
     /**
@@ -25,12 +35,13 @@ class Question extends Model
     {
         return $this->belongsTo(TypeQuestion::class, 'type_questions_id');
     }
+    
     /**
-     * Relación: una pregunta pertenece a un capítulo.
+     * Relación: una pregunta pertenece a un test.
      */
-    public function chapter()
+    public function test()
     {
-        return $this->belongsTo(Chapter::class, 'chapter_id');
+        return $this->belongsTo(Test::class);
     }
 
     /**
