@@ -18,7 +18,7 @@ return new class extends Migration
             $table->integer('order')->default(1);
             $table->unsignedBigInteger('question_id');
             $table->timestamps();
-
+            $table->softDeletes();
             $table->foreign('question_id')->references('id')->on('questions')->onDelete('cascade');
         });
     }

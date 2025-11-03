@@ -1,14 +1,15 @@
 <?php
 
-namespace App;
+namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\EloquentSortable\Sortable;
-class TestViewQuestion extends Model
+use Spatie\EloquentSortable\SortableTrait;
+class TestViewQuestion extends Model implements Sortable 
 {
-    use Sortable;
+    use SortableTrait;
     public $sortable = [
         'order_column_name' => 'order',
         'sort_when_creating' => true,

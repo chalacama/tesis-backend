@@ -1,18 +1,20 @@
 <?php
 
-namespace App;
+namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\EloquentSortable\Sortable;
-class TestViewAnswer extends Model
+use Spatie\EloquentSortable\SortableTrait;
+class TestViewAnswer extends Model implements Sortable
 {
     /**
      * The attributes that are mass assignable.
      *
      * @var array<int, string>
      */
-    use Sortable;
+    use SortableTrait;
     public $sortable = [
         'order_column_name' => 'order',
         'sort_when_creating' => true,

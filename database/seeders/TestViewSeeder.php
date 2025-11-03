@@ -13,7 +13,7 @@ class TestViewSeeder extends Seeder
      */
     public function run(): void
     {
-        TestView::create([
+        /* TestView::create([
             'user_id' => 1,
             'test_id' => 1,
             'completed_at' => Carbon::createFromDate(2025, 11, 2)->toDateTimeString(), // Set the date to January 1, 2022
@@ -31,7 +31,7 @@ class TestViewSeeder extends Seeder
             'test_id' => 2,
             'completed_at' => Carbon::createFromDate(2025, 11, 2)->toDateTimeString(),
             
-        ]);
+        ]); */
 
 
     }

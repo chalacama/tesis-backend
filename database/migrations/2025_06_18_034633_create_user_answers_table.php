@@ -17,8 +17,8 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('test_view_id')->nullable()->default(null);
             $table->unsignedBigInteger('question_id');
-            $table->boolean('is_correct')->default(false);
-            
+            $table->boolean('is_correct')->nullable()->default(null);
+            $table->integer('spot')->nullable()->default(null);
             $table->timestamps();
 
             $table->foreign('answer_id')->references('id')->on('answers')->onDelete('cascade');
