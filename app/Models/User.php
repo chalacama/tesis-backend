@@ -28,6 +28,8 @@ use App\Models\UserCategoryInterest;
 use App\Models\LikeComment;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+
+
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */

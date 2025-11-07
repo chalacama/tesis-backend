@@ -27,7 +27,7 @@ class TestSeeder extends Seeder
             'chapter_id' => 1,
             'random' => true,
             'incorrect' => true,
-            'score' => false,
+            'score' => true,
             'split' => 2,
             'limited' => 0
         ]);

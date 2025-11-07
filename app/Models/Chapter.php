@@ -71,10 +71,10 @@ class Chapter extends Model implements Sortable
         return $this->hasOne(Test::class, 'chapter_id');
     }
 
-    public function testView()
+    /* public function testView()
     {
-        return $this->hasMany(testView::class, 'chapter_id');
-    }
+        return $this->hasMany(TestView::class, 'chapter_id');
+    } */
     public function questions(): HasManyThrough
 {
     // Chapter (id) -> Test (chapter_id) -> Question (test_id)

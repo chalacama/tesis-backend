@@ -89,8 +89,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/comment/{course}/store', [CommentController::class, 'store'])->middleware('permission:course.read');
         Route::get('/course/{course}/comment/{comment}/replies', [CommentController::class, 'replies'])->middleware('permission:course.read');
         Route::get('/test/{chapter}/index', [TestController::class, 'index'])->middleware('permission:course.read');
+        Route::get('/test/{chapter}/show', [TestController::class, 'show'])->middleware('permission:course.read');
         Route::post('/test/{testView}/update', [TestController::class, 'update'])->middleware('permission:course.read');
-
+        
         
         
         
@@ -101,6 +102,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/saved/{course}/update', [SavedCourseController::class, 'update'])->middleware('permission:course.read');
         Route::post('/content/{learningContent}/update', [ContentViewController::class, 'update'])->middleware('permission:course.read');
         Route::post('/progress/{learningContent}/update', [CompletedChapterController::class, 'updateProgress'])->middleware('permission:course.read');
+        Route::post('/completed/{testView}/test', [CompletedChapterController::class, 'completedTest'])->middleware('permission:course.read');
 
         Route::post('/comment/{comment}/update', [LikeCommentController::class, 'update'])->middleware('permission:course.read');
         

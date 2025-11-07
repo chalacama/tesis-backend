@@ -18,6 +18,8 @@ return new class extends Migration
             $table->unsignedBigInteger('test_view_id')->nullable()->default(null);
             $table->unsignedBigInteger('question_id');
             $table->boolean('is_correct')->nullable()->default(null);
+            
+            $table->decimal('correct_spot', 5, 2)->nullable()->default(null);
             $table->integer('spot')->nullable()->default(null);
             $table->timestamps();
 

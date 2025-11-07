@@ -125,7 +125,7 @@ public function update(Request $request, Chapter $chapter): JsonResponse
         'questions.*.id'               => ['nullable', 'integer', 'exists:questions,id'],
         'questions.*.statement'        => ['required', 'string'],
         'questions.*.type_questions_id'=> ['required', 'integer', 'exists:type_questions,id'],
-        'questions.*.spot'             => ['nullable', 'integer', 'min:1'],
+        'questions.*.spot'             => ['nullable', 'integer', 'min:0'],
         'questions.*.order'            => ['nullable', 'integer', 'min:1'],
 
         'questions.*.answers'                  => ['required', 'array', 'min:2'],

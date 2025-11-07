@@ -10,6 +10,7 @@ class TestView extends Model
         'user_id',
         'test_id',
         'completed_at',
+        'score',
         
     ];
 
@@ -22,6 +23,8 @@ class TestView extends Model
     {
         return $this->belongsTo(Test::class);
     }
+
+    
 
     
     

@@ -14,8 +14,8 @@ class UserAnswer extends Model
         'test_view_id',
         'question_id',
         'is_correct',
-        'spot'
-       
+        'correct_spot',
+        'spot',
     ];
 
     /**

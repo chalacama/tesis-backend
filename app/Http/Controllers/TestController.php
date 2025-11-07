@@ -14,7 +14,10 @@ use App\Models\UserAnswer;
 use App\Models\TestViewQuestion;
 use App\Models\TestViewAnswer;
 use App\Models\User;
+use App\Models\LikeChapter;
+use App\Models\SavedCourse;
 
+use Carbon\Carbon;
 
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
@@ -27,20 +30,133 @@ class TestController extends Controller
      * - Genera (o reusa) un TestView por intento.
      * - Persiste orden de preguntas y respuestas según config del Test.
      */
+    
+public function show(Request $request, Chapter $chapter)
+{
+    $this->authorize('viewChapter', $chapter);
+
+    $user = $request->user();
+
+    // Cargar relaciones necesarias
+    $chapter->load(['module.course', 'test']);
+    $course = optional($chapter->module)->course;
+    $test   = $chapter->test;
+
+    if (!$test) {
+        return response()->json([
+            'ok' => false,
+            'message' => 'Este capítulo no tiene test configurado.',
+        ], 404);
+    }
+
+    // ===== Preguntas: total y por intento (como en index) =====
+    $questionsTotal = (int) $test->questions()->count();
+
+    $random = (bool) ($test->random ?? false);
+    $split  = (int)  ($test->split  ?? 1);
+    $split  = max(1, min(2, $split)); // normaliza a 1 o 2
+
+    $questionsPerAttempt = ($random && $split > 1)
+        ? (int) ceil($questionsTotal / $split)
+        : $questionsTotal;
+
+    // ===== Intentos =====
+    // Intento en progreso (no completado)
+    $inProgress = TestView::where('test_id', $test->id)
+        ->where('user_id', $user->id)
+        ->whereNull('completed_at')
+        ->latest('created_at')
+        ->first();
+
+    // Intentos completados
+    $attemptsCompleted = (int) TestView::where('test_id', $test->id)
+        ->where('user_id', $user->id)
+        ->whereNotNull('completed_at')
+        ->count();
+
+    $limited = (int) ($test->limited ?? 0);
+
+    // can_retry: si hay intento en progreso -> false; sino evalúa el límite
+    $canRetry = $inProgress
+        ? false
+        : ($limited === 0 ? true : ($attemptsCompleted < $limited));
+
+    // Último intento completado (solo si NO hay en progreso)
+    $lastCompleted = $inProgress ? null : TestView::where('test_id', $test->id)
+        ->where('user_id', $user->id)
+        ->whereNotNull('completed_at')
+        ->latest('completed_at')
+        ->first();
+
+    // Puede ver respuestas del último intento completado (si existe y test.incorrect==true)
+    $canViewLastAnswers = !$inProgress && (bool)$test->incorrect && (bool)$lastCompleted;
+
+    // ===== Score y completed_at del último TestView =====
+    $lastCompletedAtIso = $lastCompleted
+        ? Carbon::parse($lastCompleted->completed_at)->toIso8601String()
+        : null;
+
+    // Respetar configuración de visibilidad de score
+    $lastCompletedScore = $lastCompleted
+        ? ((bool)$test->score ? (float) $lastCompleted->score : null)
+        : null;
+
+    // ===== UserState y likes =====
+    $userState = [
+        'is_saved'      => $course
+            ? SavedCourse::where('course_id', $course->id)->where('user_id', $user->id)->exists()
+            : false,
+        'liked_chapter' => LikeChapter::where('chapter_id', $chapter->id)->where('user_id', $user->id)->exists(),
+    ];
+
+    $likesTotal = (int) LikeChapter::where('chapter_id', $chapter->id)->count();
+
+    return response()->json([
+        'ok'   => true,
+        'data' => [
+            'course_title'  => $course?->title,
+            'chapter_title' => $chapter->title,
+
+            'test' => [
+                'id'               => $test->id,
+                'limited'          => $limited,
+                'questions_count'  => $questionsPerAttempt, // ya aplicado split si corresponde
+            ],
+
+            'attempts' => [
+                'can_retry'                 => $canRetry,
+                'in_progress_test_view_id'  => $inProgress?->id ?? null,
+                'completed'                 => $attemptsCompleted,
+            ],
+
+            // Metadata del último intento COMPLETADO (si no hay intento en progreso)
+            'last_completed_test_view_id'   => $lastCompleted?->id,
+            'last_completed_completed_at'   => $lastCompletedAtIso,   // ISO 8601 o null
+            'last_completed_score'          => $lastCompletedScore,   // null si test->score == false
+
+            'can_view_last_answers'         => (bool) $canViewLastAnswers,
+
+            'user_state' => $userState,
+            'likes_total'=> $likesTotal,
+        ],
+    ]);
+}
+
     public function index(Request $request, Chapter $chapter)
 {
     $this->authorize('viewChapter', $chapter);
 
     $request->validate([
-        'page'     => ['nullable', 'integer', 'min:1'],
-        'per_page' => ['nullable', 'integer', 'min:1', 'max:50'],
+        'page'         => ['nullable', 'integer', 'min:1'],
+        'per_page'     => ['nullable', 'integer', 'min:1', 'max:50'],
+        'review_last'  => ['nullable', 'boolean'], // ⬅️ modo revisión del último intento
     ]);
 
-    $user   = $request->user();
+    $user    = $request->user();
     $perPage = (int) $request->input('per_page', 5);
     $page    = (int) $request->input('page', 1);
+    $review  = (bool) $request->boolean('review_last', false);
 
-    // Cargar contexto
     $chapter->load(['module.course', 'test']);
     $test = $chapter->test;
 
@@ -51,69 +167,138 @@ class TestController extends Controller
         ], 404);
     }
 
-    // Intentos usados y límite
-    $attemptsUsed = TestView::where('test_id', $test->id)
+    // ===== Resolver intento a mostrar según modo =====
+    $inProgress = TestView::where('test_id', $test->id)
         ->where('user_id', $user->id)
-        ->count();
-
-    $limited = (int) ($test->limited ?? 0);
-    $attemptsLeft = $limited === 0 ? null : max(0, $limited - $attemptsUsed);
-
-    // Buscar el último TestView del usuario para este test
-    $latestView = TestView::where('test_id', $test->id)
-        ->where('user_id', $user->id)
-        ->latest() // por created_at desc
+        ->whereNull('completed_at')
+        ->latest('created_at')
         ->first();
 
-    if ($latestView && is_null($latestView->completed_at)) {
-        // Reutilizar intento en curso
-        $testView = $latestView;
-    } else {
-        // Necesita crear uno nuevo (si el límite lo permite)
-        if ($limited > 0 && $attemptsLeft <= 0) {
+    if ($review) {
+        // No se puede revisar si hay intento en progreso
+        if ($inProgress) {
             return response()->json([
                 'ok' => false,
-                'message' => 'Has alcanzado el límite de intentos para este test.',
+                'message' => 'Tienes un intento en progreso. No puedes revisar respuestas todavía.',
                 'meta' => [
-                    'limited'       => $limited,
-                    'attempts_used' => $attemptsUsed,
-                    'attempts_left' => 0,
+                    'in_progress_test_view_id' => $inProgress->id,
                 ],
             ], 403);
         }
-        $testView = $this->createTestViewWithOrder($user->id, $test);
-        // Recalcular intentos (opcional)
-        $attemptsUsed += 1;
-        $attemptsLeft = $limited === 0 ? null : max(0, $limited - $attemptsUsed);
+
+        // Debe permitir revisar y existir un intento completado
+        if (!(bool)$test->incorrect) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'Este test no permite revisar respuestas.',
+            ], 403);
+        }
+
+        $testView = TestView::where('test_id', $test->id)
+            ->where('user_id', $user->id)
+            ->whereNotNull('completed_at')
+            ->latest('completed_at')
+            ->first();
+
+        if (!$testView) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'No tienes intentos completados para revisar.',
+            ], 404);
+        }
+    } else {
+        // Modo “resolver”: usa en progreso o crea uno nuevo (respetando limited)
+        if ($inProgress) {
+            $testView = $inProgress;
+        } else {
+            $limited = (int) ($test->limited ?? 0);
+            $attemptsUsed = TestView::where('test_id', $test->id)
+                ->where('user_id', $user->id)
+                ->count();
+            $attemptsLeft = $limited === 0 ? null : max(0, $limited - $attemptsUsed);
+
+            if ($limited > 0 && $attemptsLeft <= 0) {
+                return response()->json([
+                    'ok' => false,
+                    'message' => 'Has alcanzado el límite de intentos para este test.',
+                    'meta' => [
+                        'limited'       => $limited,
+                        'attempts_used' => $attemptsUsed,
+                        'attempts_left' => 0,
+                    ],
+                ], 403);
+            }
+            $testView = $this->createTestViewWithOrder($user->id, $test);
+        }
     }
 
-    // Preguntas en el orden guardado
+    // ===== Paginación de preguntas del TestView =====
     $paginator = TestViewQuestion::with([
             'question' => function ($q) {
                 $q->with([
                     'typeQuestion:id,nombre',
                     'answers' => function ($qa) {
-                        // Usa 'option' y NO expongas is_correct
+                        // No exponemos is_correct aquí
                         $qa->select('id', 'question_id', 'option', 'order');
                     },
                 ]);
             },
             'testViewAnswers.answer' => function ($qa) {
-                $qa->select('id', 'option'); // sin is_correct
+                $qa->select('id', 'option');
             }
         ])
         ->where('test_view_id', $testView->id)
         ->orderBy('order')
         ->paginate($perPage, ['*'], 'page', $page);
 
-    // Armar payload sin revelar correctas
-    $questionsPayload = $paginator->getCollection()->map(function (TestViewQuestion $tvq) {
+    // Preguntas de esta página
+    $questionIdsOnPage = $paginator->getCollection()->pluck('question_id')->all();
+
+    // Selecciones del usuario para estas preguntas.
+    // ⬇️ En review incluimos spot/correct_spot para construir el score por pregunta.
+    $selectedRows = UserAnswer::where('user_id', $user->id)
+        ->where('test_view_id', $testView->id)
+        ->whereIn('question_id', $questionIdsOnPage)
+        ->when($review, fn($q) => $q->addSelect(['question_id','answer_id','spot','correct_spot']))
+        ->when(!$review, fn($q) => $q->addSelect(['question_id','answer_id']))
+        ->get();
+
+    // [question_id => [answer_id, ...]]
+    $selectedByQuestion = [];
+    // Scoring por pregunta (primer row sirve, ya que guardamos mismo spot/correct_spot por pregunta)
+    $qSpot         = [];
+    $qCorrectSpot  = [];
+
+    foreach ($selectedRows as $row) {
+        $selectedByQuestion[$row->question_id][] = $row->answer_id;
+
+        if ($review && !array_key_exists($row->question_id, $qSpot)) {
+            // Si existen, tomar los del primer row de esa pregunta
+            $qSpot[$row->question_id]        = $row->spot ?? null;
+            $qCorrectSpot[$row->question_id] = $row->correct_spot ?? null;
+        }
+    }
+
+    // Para calcular aciertos SOLO en modo revisión
+    $answersMetaByQuestion = [];
+    if ($review) {
+        $answersMeta = Answer::whereIn('question_id', $questionIdsOnPage)
+            ->get(['id','question_id','is_correct']);
+        foreach ($answersMeta as $a) {
+            $answersMetaByQuestion[$a->question_id]['correct'][]   = $a->is_correct ? $a->id : null;
+            $answersMetaByQuestion[$a->question_id]['incorrect'][] = !$a->is_correct ? $a->id : null;
+        }
+        foreach ($answersMetaByQuestion as $qid => $sets) {
+            $answersMetaByQuestion[$qid]['correct']   = array_values(array_filter($sets['correct']   ?? []));
+            $answersMetaByQuestion[$qid]['incorrect'] = array_values(array_filter($sets['incorrect'] ?? []));
+        }
+    }
+
+    // Construcción del payload de preguntas
+    $questionsPayload = $paginator->getCollection()->map(function (TestViewQuestion $tvq) use ($selectedByQuestion, $answersMetaByQuestion, $review, $qSpot, $qCorrectSpot, $test) {
         $q = $tvq->question;
 
-        $prompt = $q->statement
-            ?? $q->title
-            ?? $q->text
-            ?? null;
+        $prompt = $q->statement ?? $q->title ?? $q->text ?? null;
 
         $typeId   = $q->typeQuestion->id     ?? null;
         $typeName = $q->typeQuestion->nombre ?? null;
@@ -127,44 +312,68 @@ class TestController extends Controller
             }
         }
 
-        $answers = $tvq->testViewAnswers->map(function (TestViewAnswer $tva) {
+        $selectedForThisQ = collect($selectedByQuestion[$q->id] ?? []);
+
+        // is_correct_question (solo en review)
+        $isCorrectQuestion = null;
+        $selected_is_correct_map = [];
+
+        if ($review) {
+            $correctIds   = collect($answersMetaByQuestion[$q->id]['correct']   ?? []);
+            $incorrectIds = collect($answersMetaByQuestion[$q->id]['incorrect'] ?? []);
+
+            $selCorrect = $selectedForThisQ->intersect($correctIds)->values();
+            $selWrong   = $selectedForThisQ->intersect($incorrectIds)->values();
+
+            $isCorrectQuestion =
+                ($selWrong->count() === 0) &&
+                ($correctIds->count() > 0) &&
+                ($selectedForThisQ->count() === $correctIds->count()) &&
+                ($selCorrect->count() === $correctIds->count());
+
+            // Mapa para selected_is_correct por respuesta seleccionada
+            foreach ($selectedForThisQ as $aid) {
+                $selected_is_correct_map[$aid] = $correctIds->contains($aid);
+            }
+        }
+
+        $answers = $tvq->testViewAnswers->map(function (TestViewAnswer $tva) use ($selectedForThisQ, $selected_is_correct_map, $review) {
             $a = $tva->answer;
+            $selected = $selectedForThisQ->contains($a->id);
             return [
-                'id'    => $a->id,
-                'label' => $a->option ?? null,
+                'id'                   => $a->id,
+                'label'                => $a->option ?? null,
+                'selected'             => $selected,
+                // Solo revelar corrección si está en modo revisión y fue seleccionada
+                'selected_is_correct'  => ($review && $selected)
+                    ? (bool) ($selected_is_correct_map[$a->id] ?? false)
+                    : null,
             ];
         })->values();
 
+        // Spot/correct_spot por pregunta (solo si test permite score e incorrect)
+        $showScorePerQuestion = $review && (bool)$test->incorrect && (bool)$test->score;
+
         return [
-            'question_id' => $q->id,
-            'order'       => $tvq->order,
-            'prompt'      => $prompt,
-            'type'        => [
+            'question_id'         => $q->id,
+            'order'               => $tvq->order,
+            'prompt'              => $prompt,
+            'type'                => [
                 'id'   => $typeId,
                 'name' => $typeName,
-                'key'  => $typeKey, // 'single' | 'multiple' | null
+                'key'  => $typeKey,
             ],
-            'answers'     => $answers,
+            'is_correct_question' => $isCorrectQuestion, // null si no es review
+            'spot'                => $showScorePerQuestion ? ($qSpot[$q->id]        ?? 0.0) : null,
+            'correct_spot'        => $showScorePerQuestion ? ($qCorrectSpot[$q->id] ?? 0.0) : null,
+            'answers'             => $answers,
         ];
     })->values();
-
-    $course = optional($chapter->module)->course;
 
     return response()->json([
         'ok' => true,
         'context' => [
-            'course_title'  => $course?->title,
-            'chapter_title' => $chapter->title,
-            'test' => [
-                'id'             => $test->id,
-                'random'         => (bool) $test->random,
-                'split'          => (int) ($test->split ?? 1),
-                'limited'        => $limited,
-                'attempts_used'  => $attemptsUsed,
-                'attempts_left'  => $attemptsLeft,
-            ],
-            'test_view_id' => $testView->id,
-            'test_title'   => 'Evaluación — ' . $chapter->title,
+            'test_view_id' => $testView->id, // mantenemos solo esto
         ],
         'data' => [
             'questions' => $questionsPayload,
@@ -179,6 +388,11 @@ class TestController extends Controller
         ],
     ]);
 }
+
+
+
+
+
 
 /**
  * Crea un TestView y persiste el orden de preguntas y respuestas según la configuración.
@@ -342,7 +556,7 @@ private function createTestViewWithOrder(int $userId, Test $test): TestView
                 'test_view_id' => $testView->id,
                 'question_id'  => $questionId,
                 'is_correct'   => null,     // nunca evaluar aquí
-                'spot'         => $spot++,  // conserva el orden de selección enviado
+                'spot'         => null,  // conserva el orden de selección enviado
             ]);
         }
     });
@@ -352,7 +566,7 @@ private function createTestViewWithOrder(int $userId, Test $test): TestView
     $current = UserAnswer::where('user_id', $user->id)
         ->where('test_view_id', $testView->id)
         ->where('question_id', $questionId)
-        ->orderBy('spot')
+        // ->orderBy('spot')
         ->pluck('answer_id')
         ->values();
 
