@@ -80,6 +80,7 @@ class DatabaseSeeder extends Seeder
 
         $this->call(CareerCourseSeeder::class);
         $this->call(LikeCommentSeeder::class);
+        $this->call(SuggestionSeeder::class);
         
     }
 }

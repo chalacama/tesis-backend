@@ -112,7 +112,8 @@ Route::middleware('auth:sanctum')->group(function () {
     }); 
     Route::prefix('start')->group(function () {
         Route::get('/courses-by-filter', [StartController::class, 'getCoursesByFilter'])->middleware('permission:course.read');
-
+        Route::get('/suggestion-by-filter', [StartController::class, 'getSuggestionByFilter'])->middleware('permission:course.read');
+        Route::post('/suggestion', [StartController::class, 'updateSuggestion']); // <- para guardar historial
     });
     Route::prefix('profile')->group(function () {
         Route::prefix('/info')->group(function () {    

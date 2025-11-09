@@ -220,4 +220,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(testView::class, 'user_id');
     }
+
+    // sugerencias
+    public function suggestions()
+    {
+        return $this->hasMany(Suggestion::class);
+    }
+
+
 }
