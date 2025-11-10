@@ -16,13 +16,13 @@ class EducationalUnitSeeder extends Seeder
         EducationalUnit::create([
             'name' => 'ESPAM MFL',
             'organization_domain' => 'espam.edu.ec',
-            'url_logo' => 'https://www.ces.gob.ec/LOGOS_IES/1003.png',
+            'url_logo' => 'https://www.espam.edu.ec/recursos/plantilla/img/logo.png',
         ]);
 
-        EducationalUnit::create([
+/*         EducationalUnit::create([
             'name' => 'Universidad Central del Ecuador',
             // 'organization_domain' => 'uce.edu.ec',
             'url_logo' => 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT4Xf3xKSvFqJttgbQAADuoDTdsJFoHhfGgTw&s',
-        ]);
+        ]); */
     }
 }
