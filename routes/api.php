@@ -129,10 +129,7 @@ Route::middleware('auth:sanctum')->group(function () {
         });     
     });
     Route::prefix('history')->group(function () {    
-        Route::get('/show', [HistoryController::class, 'show'])->middleware('permission:user.read');
         Route::get('/index', [HistoryController::class, 'index'])->middleware('permission:user.read');
-        
-        
     });
     Route::prefix('certificate')->group(function () {     
         Route::get('/show/{certificate}', [CertificateController::class, 'show'])->middleware('permission:course.read');
