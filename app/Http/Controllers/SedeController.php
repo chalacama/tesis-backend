@@ -7,6 +7,7 @@ use Illuminate\Http\JsonResponse;
 use App\Models\Sede;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use App\Models\EducationalUnit;
 class SedeController extends Controller
 {
     use AuthorizesRequests;

@@ -34,7 +34,7 @@ class EducationalUserController extends Controller
         $this->authorize('update', $user);
 
         $validated = $request->validate([
-            'sede_id'              => ['required', 'exists:sedes,id'],
+            'sede_id'              => ['nullable', 'exists:sedes,id'],
             'career_id'           => ['nullable', 'exists:careers,id'],
             'educational_level_id'=> ['nullable', 'exists:educational_levels,id'],
             'level'               => ['nullable', 'integer', 'min:1'],

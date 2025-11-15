@@ -13,6 +13,7 @@ class EducationalUnitSeeder extends Seeder
      */
     public function run(): void
     {
+        // espam.edu.ec
         EducationalUnit::create([
             'name' => 'ESPAM MFL',
             'organization_domain' => 'espam.edu.ec',

@@ -78,7 +78,7 @@ class UsersSeeder extends Seeder
                 'name' => 'Juan', // id : 6
                 'lastname' => 'Loor',
                 'username' => 'juanp',
-                'email' => 'juan@esapam.edu.ec',
+                'email' => 'juan@espam.edu.ec',
                 'password' => bcrypt('password123'),
                 'profile_picture_url' => 'https://i.pinimg.com/736x/83/30/7d/83307da0f2648ecb70a70d585f1f3486.jpg'
             ],
