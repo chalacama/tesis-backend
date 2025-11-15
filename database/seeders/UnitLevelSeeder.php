@@ -17,12 +17,12 @@ class UnitLevelSeeder extends Seeder
             'educational_level_id' => 1,
         ]);
         UnitLevel::create([
-            'educational_unit_id' => 1,
+            'educational_unit_id' => 2,
             'educational_level_id' => 2,
         ]);
         UnitLevel::create([
-            'educational_unit_id' => 1,
-            'educational_level_id' => 2,
+            'educational_unit_id' => 2,
+            'educational_level_id' => 3,
         ]);
     }
 }

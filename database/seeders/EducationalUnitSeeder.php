@@ -19,10 +19,10 @@ class EducationalUnitSeeder extends Seeder
             'url_logo' => 'https://www.espam.edu.ec/recursos/plantilla/img/logo.png',
         ]);
 
-/*         EducationalUnit::create([
-            'name' => 'Universidad Central del Ecuador',
+        EducationalUnit::create([
+            'name' => 'Colegio Raymundo Aveiga',
             // 'organization_domain' => 'uce.edu.ec',
-            'url_logo' => 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT4Xf3xKSvFqJttgbQAADuoDTdsJFoHhfGgTw&s',
-        ]); */
+            'url_logo' => 'https://www.designevo.com/res/templates/thumb_small/branch-encircled-book-and-torch-shield.webp',
+        ]);
     }
 }

@@ -16,17 +16,15 @@ class EducationalUserSeeder extends Seeder
         EducationalUser::create([
             'sede_id' => 1,
             'user_id' => 1,
-            // 'career_id' => null,
-            // 'level' => 1,
-            // 'period' => 'Semestre',            
+            
+            
         ]);
         //ingenieri@
         EducationalUser::create([
             'sede_id' => 2,
             'user_id' => 2,
             'career_id' => 1,
-            // 'educational_level_id' => 1,
-            // 'level' => 2,
+            
             
         ]); 
         //estudiante de la Espam Mfl

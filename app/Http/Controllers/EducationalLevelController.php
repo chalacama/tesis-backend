@@ -6,5 +6,8 @@ use Illuminate\Http\Request;
 
 class EducationalLevelController extends Controller
 {
-    //
+    public function index()
+    {
+        
+    }
 }

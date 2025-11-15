@@ -20,8 +20,10 @@ class Sede extends Model
     {
         return $this->belongsTo(EducationalUnit::class);
     }
-    public function careerSedes()
+
+    // Carreras asociadas a la sede (tabla pivote career_sedes)
+    public function careers()
     {
-    return $this->hasMany(CareerSede::class);
+        return $this->belongsToMany(Career::class, 'career_sedes', 'sede_id', 'career_id');
     }
 }

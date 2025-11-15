@@ -15,7 +15,14 @@ class EducationalUnit extends Model
         'url_logo',
     ];
     public function unitLevels()
-{
-    return $this->hasMany(UnitLevel::class, 'educational_unit_id');
-}
+    {
+        return $this->hasMany(UnitLevel::class, 'educational_unit_id');
+    }
+
+    // ➕ NUEVO: para obtener directamente los niveles educativos
+    public function educationalLevels()
+    {
+        return $this->belongsToMany(EducationalLevel::class, 'unit_levels', 'educational_unit_id', 'educational_level_id');
+    }
+
 }

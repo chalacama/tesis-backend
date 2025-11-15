@@ -9,7 +9,7 @@ use App\Http\Controllers\{
     DifficultyController,PortfolioController,MiniatureCourseController, CategoryController, CareerController,
     QuestionController, TypeQuestionController,TypeLearningContentController, LikeChapterController,
     SavedCourseController, ContentViewController, CommentController, LikeCommentController,
-    CompletedChapterController, TestController, HistoryController, CertificateController
+    CompletedChapterController, TestController, HistoryController, CertificateController, EducationalLevelController
     
     
 };
@@ -112,6 +112,7 @@ Route::middleware('auth:sanctum')->group(function () {
     }); 
     Route::prefix('start')->group(function () {
         Route::get('/courses-by-filter', [StartController::class, 'getCoursesByFilter'])->middleware('permission:course.read');
+        Route::get('/portfolio-by-filter', [StartController::class, 'getPortfolioByFilter'])->middleware('permission:course.read');
         Route::get('/suggestion-by-filter', [StartController::class, 'getSuggestionByFilter'])->middleware('permission:course.read');
         Route::post('/suggestion', [StartController::class, 'updateSuggestion']); // <- para guardar historial
     });
@@ -125,21 +126,23 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::put('/update', [EducationalUserController::class, 'update'])->middleware('permission:profile.update');
         });
         Route::prefix('portfolio')->group(function () {    
-            Route::get('/@{username}', [PortfolioController::class, 'show'])->middleware('permission:user.read');  
-        });     
+            Route::get('/@{username}', [PortfolioController::class, 'show'])->middleware('permission:user.read'); 
+        });
+        Route::prefix('history')->group(function () {    
+            Route::get('/index', [HistoryController::class, 'index'])->middleware('permission:user.read');
+        });  
     });
-    Route::prefix('history')->group(function () {    
-        Route::get('/index', [HistoryController::class, 'index'])->middleware('permission:user.read');
-    });
+    
     Route::prefix('certificate')->group(function () {     
-        Route::get('/show/{certificate}', [CertificateController::class, 'show'])->middleware('permission:course.read');
-        Route::get('/index/{certificate}', [CertificateController::class, 'index'])->middleware('permission:course.read');
+        Route::get('/show', [CertificateController::class, 'show'])->middleware('permission:course.read');
+        Route::get('/download', [CertificateController::class, 'download'])->middleware('permission:course.read');
     });
 
     Route::prefix('sede')->group(function () {    
-            Route::get('/show', [SedeController::class, 'show'])->middleware('permission:education.read');
-            Route::put('/update', [SedeController::class, 'update'])->middleware('permission:education.update');
-            Route::get('/index', [SedeController::class, 'index'])->middleware('permission:education.read'); 
+        Route::get('/index', [SedeController::class, 'index'])->middleware('permission:education.read');
+    });
+    Route::prefix('education-level')->group(function () {    
+        Route::get('/index', [EducationalLevelController::class, 'index'])->middleware('permission:education.read');
     });
     Route::prefix('career')->group(function () {    
         Route::get('/index', [CareerController::class, 'index'])->middleware('permission:course.read'); 
@@ -151,9 +154,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/index', [CategoryController::class, 'index'])->middleware('permission:course.read'); 
     });
     
-    Route::prefix('portfolio')->group(function () {    
-        Route::get('/@{username}', [PortfolioController::class, 'show'])->middleware('permission:user.read'); 
-    });
+    
     
 });
 

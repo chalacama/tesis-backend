@@ -448,22 +448,7 @@ class CourseController extends Controller
         return response()->json(['message' => 'Curso enviado a papelería']);
     }
 
-    /* public function restore(string $id): JsonResponse
-    {
-        $this->authorize('restore', $course);
-        $course = Course::onlyTrashed()->findOrFail($id);
-
-        $course->restore();
-
-        Cache::forget('course_show_' . $course->id . '_user_' . Auth::id());
-        for ($i = 1; $i <= 100; $i++) {
-            Cache::forget('courses_index_' . Auth::id() . '_page_' . $i . '_per_10');
-            Cache::forget('courses_index_' . Auth::id() . '_page_' . $i . '_per_10');
-        }
-
-        return response()->json(['message' => 'Curso restaurado exitosamente']);
-    } */
-/* $this->authorize('viewPortfolio', $user); */
+    
     public function showOwner(string $username): JsonResponse
     {
         $targetUser = User::where('username', $username)
