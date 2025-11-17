@@ -93,10 +93,10 @@ public function update(Request $request, Chapter $chapter): JsonResponse
                             'resource_type'   => 'auto', // soporta image/video/pdf
                             'use_filename'    => true,
                             'unique_filename' => false,
-                            'transformation'  => [
+                            /* 'transformation'  => [
                                 ['quality' => 'auto:good'],
-                                ['fetch_format' => 'auto'],
-                            ],
+                                ['fetch_format' => 'pdf'],
+                            ], */
                         ]
                     );
 
