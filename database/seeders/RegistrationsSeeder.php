@@ -39,11 +39,11 @@ class RegistrationsSeeder extends Seeder
     ]);
 
     // 4. User 3 in Laravel Básico (popular course)
-    Registration::create([
+    // Registration::create([
         
-        'user_id' => 3,
-        'course_id' => 1, // Laravel Básico
-    ]);
+    //     'user_id' => 3,
+    //     'course_id' => 1, // Laravel Básico
+    // ]);
 
     // 5. User 3 in Análisis de Datos con Python
     Registration::create([

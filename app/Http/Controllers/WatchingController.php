@@ -273,25 +273,31 @@ class WatchingController extends Controller
      * - format: extensión (solo si type == 'archivo', p.ej. 'mp4', 'pdf'); en otros casos null
      */
     private function formatLearningMeta($learningContent): ?array
-    {
-        if (!$learningContent || !$learningContent->relationLoaded('typeLearningContent')) {
-            return null;
-        }
-
-        $typeName = strtolower($learningContent->typeLearningContent->name ?? '');
-
-        // Solo inferimos formato para 'archivo' usando la URL (sin devolver la URL)
-        $format = null;
-        if ($typeName === 'archivo') {
-            $format = $this->detectArchiveFormat($learningContent->url);
-        }
-
-        // Para youtube, devolvemos type 'youtube' y format null
-        return [
-            'type'   => in_array($typeName, ['youtube', 'archivo']) ? $typeName : $typeName,
-            'format' => $format, // null para youtube; extensión para archivo
-        ];
+{
+    if (
+        !$learningContent ||
+        !$learningContent->relationLoaded('typeLearningContent')
+    ) {
+        return null;
     }
+
+    $typeName = strtolower($learningContent->typeLearningContent->name ?? '');
+
+    $format = null;
+
+    if ($typeName === 'archivo') {
+        // Para archivos, intentamos detectar la extensión real desde la URL
+        $format = $this->detectArchiveFormat($learningContent->url);
+    } elseif ($typeName === 'youtube') {
+        // Para youtube, forzamos 'mp4' por defecto
+        $format = 'mp4';
+    }
+
+    return [
+        'type'   => $typeName,
+        'format' => $format,
+    ];
+}
 
     /**
      * Detecta la extensión del recurso (mp4, pdf, etc.) a partir de la URL.

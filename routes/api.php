@@ -135,6 +135,7 @@ Route::middleware('auth:sanctum')->group(function () {
     
     Route::prefix('certificate')->group(function () {     
         Route::get('/show', [CertificateController::class, 'show'])->middleware('permission:course.read');
+        Route::get('/index', [CertificateController::class, 'index'])->middleware('permission:course.read');
         Route::get('/download', [CertificateController::class, 'download'])->middleware('permission:course.read');
     });
 
