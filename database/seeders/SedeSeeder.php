@@ -24,7 +24,7 @@ class SedeSeeder extends Seeder
         ]);
         Sede::create([
             'province' => 'Manabí',
-            'canton' => 'Bolívar',
+            'canton' => 'Chone',
             'educational_unit_id' => 2,
         ]);
     }

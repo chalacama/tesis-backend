@@ -18,7 +18,7 @@ class EducationalUser extends Model
         'level',
         
     ];
-public static function boot()
+/* public static function boot()
 {
     parent::boot();
 
@@ -48,7 +48,7 @@ public static function boot()
             }
         }
     });
-}
+} */
     public function sede()
     {
         return $this->belongsTo(Sede::class);

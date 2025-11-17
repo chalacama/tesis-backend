@@ -40,7 +40,7 @@ class EducationalUserSeeder extends Seeder
         EducationalUser::create([
             'sede_id' => 3,
             'user_id' => 4,
-            // 'career_id' => 5,
+            
             'educational_level_id' => 2,
             'level' => 3,
         ]);
