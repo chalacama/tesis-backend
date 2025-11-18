@@ -12,7 +12,7 @@ class CertificateController extends Controller
 {
     /**
      * SHOW
-     *  - Público (según el middleware que pongas en la ruta).
+     *  - Público.
      *  - Permite validar/ver un certificado a partir de su código.
      *  - Devuelve todos los datos que pediste:
      *      curso, dueño del curso, dueño del certificado, info académica, etc.
@@ -25,12 +25,12 @@ class CertificateController extends Controller
 
         $code = $request->input('code');
 
+        // No necesitamos $request->user() porque la ruta es pública
         $certificate = $this->findCertificateByCode($code);
-        $user        = $request->user(); // puede ser null si la ruta es pública
 
         return response()->json([
             'success' => true,
-            'data'    => $this->transformCertificate($certificate, $user),
+            'data'    => $this->transformCertificate($certificate),
         ]);
     }
 
@@ -90,8 +90,8 @@ class CertificateController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => $paginator->getCollection()->map(function (Certificate $certificate) use ($user) {
-                return $this->transformCertificate($certificate, $user);
+            'data'    => $paginator->getCollection()->map(function (Certificate $certificate) {
+                return $this->transformCertificate($certificate);
             }),
             'meta'    => [
                 'current_page'  => $paginator->currentPage(),
@@ -106,7 +106,7 @@ class CertificateController extends Controller
 
     /**
      * DOWNLOAD
-     *  - El dueño del certificado o el admin pueden descargarlo.
+     *  - CUALQUIERA con el código puede descargarlo (público).
      *  - Devuelve el archivo (PDF) del certificado.
      *  - Pensado para usarlo en Angular 19 con responseType: 'blob'.
      *
@@ -115,40 +115,34 @@ class CertificateController extends Controller
      *      responseType: 'blob'
      *    })
      */
-    // public function download(Request $request)
-    // {
-    //     $request->validate([
-    //         'code' => ['required', 'string'],
-    //     ]);
+    public function download(Request $request)
+    {
+        $request->validate([
+            'code' => ['required', 'string'],
+        ]);
 
-    //     $code = $request->input('code');
+        $code = $request->input('code');
 
-    //     // Cargamos solo lo necesario para autorización
-    //     $certificate = Certificate::with('registration')
-    //         ->where('code', $code)
-    //         ->firstOrFail();
+        // Cargamos el certificado sólo para validar que existe
+        $certificate = Certificate::where('code', $code)->firstOrFail();
 
-    //     $user = $request->user();
+        // Ruta donde guardas el PDF del certificado
+        // Ajusta esto según tu implementación real.
+        $fileName = 'certificate-' . $certificate->code . '.pdf';
+        $path     = 'certificates/' . $fileName; // storage/app/public/certificates/...
 
-    //     // Dueño del certificado o admin
-    //     if (!$this->canUserDownload($user, $certificate)) {
-    //         abort(403, 'Solo el dueño del certificado o un administrador pueden descargarlo.');
-    //     }
+        if (!Storage::disk('public')->exists($path)) {
+            // Si NO guardas un PDF real en el servidor,
+            // aquí deberías:
+            //  - o bien generar el PDF al vuelo (DOMPDF, Snappy, etc.),
+            //  - o devolver 404 y manejar la descarga sólo desde el front.
+            abort(404, 'El archivo del certificado no existe en el servidor.');
+        }
 
-    //     // Ruta donde guardas el PDF del certificado
-    //     // Ajusta esto según tu implementación real.
-    //     $fileName = 'certificate-' . $certificate->code . '.pdf';
-    //     $path     = 'certificates/' . $fileName; // storage/app/public/certificates/...
-
-    //     if (!Storage::disk('public')->exists($path)) {
-    //         // Puedes cambiar el mensaje o incluso aquí disparar la generación del PDF si lo deseas.
-    //         abort(404, 'El archivo del certificado no existe en el servidor.');
-    //     }
-
-    //     return Storage::disk('public')->download($path, $fileName, [
-    //         'Content-Type' => 'application/pdf',
-    //     ]);
-    // }
+        return Storage::disk('public')->download($path, $fileName, [
+            'Content-Type' => 'application/pdf',
+        ]);
+    }
 
     // =========================================================
     // ================ MÉTODOS PRIVADOS ========================
@@ -171,9 +165,6 @@ class CertificateController extends Controller
             'registration.user.educationalUser.sede',
             'registration.user.educationalUser.sede.educationalUnit',
             'registration.user.educationalUser.career',
-            // aunque ya no devolvemos educational_level en el JSON, puedes dejar esta relación
-            // si la usas en otro lado; si no, la puedes quitar:
-            // 'registration.user.educationalUser.educationalLevel',
         ];
     }
 
@@ -209,27 +200,12 @@ class CertificateController extends Controller
     }
 
     /**
-     * Verifica si un usuario puede descargar un certificado:
-     *  - dueño del certificado
-     *  - o admin
-     */
-    private function canUserDownload(?User $user, Certificate $certificate): bool
-    {
-        if (!$user) {
-            return false;
-        }
-
-        $isOwner = $certificate->registration
-            && $certificate->registration->user_id === $user->id;
-
-        return $isOwner || $user->hasRole('admin');
-    }
-
-    /**
      * Armar la estructura de datos de salida del certificado
      * (se usa tanto en show como en index).
+     * Ahora el certificado es público: cualquiera puede descargar,
+     * así que can_download siempre es true mientras exista el certificado.
      */
-    private function transformCertificate(Certificate $certificate, ?User $user = null): array
+    private function transformCertificate(Certificate $certificate): array
     {
         $registration = $certificate->registration;
         $course       = $registration->course;
@@ -301,8 +277,8 @@ class CertificateController extends Controller
                 ] : null,
             ],
 
-            // NUEVO: indica si el usuario actual puede descargar este certificado
-            'can_download' => $this->canUserDownload($user, $certificate),
+            // Ahora cualquier persona con el código puede descargarlo
+            'can_download' => true,
         ];
     }
 }

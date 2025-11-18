@@ -30,11 +30,10 @@ Route::prefix('auth')->group(function () {
     ->middleware('signed')
     ->name('verification.verify');
 });
-    Route::prefix('certificate')->group(function () {     
-        // Route::get('/show', [CertificateController::class, 'show'])->middleware('permission:course.read');
-       
+Route::prefix('certificate')->group(function () {     
+        Route::get('/show', [CertificateController::class, 'show']);
         Route::get('/image-proxy', [ImageProxyController::class, 'show']);
-    });
+});
 // == RUTAS DE GESTIÓN (Protegidas por autenticación y permisos) ==
 Route::middleware('auth:sanctum')->group(function () {
 
@@ -139,9 +138,9 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     
     Route::prefix('certificate')->group(function () {     
-        Route::get('/show', [CertificateController::class, 'show'])->middleware('permission:course.read');
+        
         Route::get('/index', [CertificateController::class, 'index'])->middleware('permission:course.read');
-        // Route::get('/image-proxy', [ImageProxyController::class, 'show'])->middleware('permission:course.read');
+        
     });
     
     Route::prefix('sede')->group(function () {    
