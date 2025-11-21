@@ -511,53 +511,6 @@ class WatchingController extends Controller
             }
         });
     }
-    public function indexCourse($courseId, $userId)
-    {
-        // 1. OPTIMIZACIÓN DE CONSULTA: Selecciona solo las columnas necesarias.
-        // Asegúrate de incluir las claves foráneas (user_id, course_id, module_id, etc.)
-        $course = Course::with([
-            'categories:id,name',
-            'registrations' => fn($q) => $q->where('user_id', $userId)->select('id', 'course_id', 'user_id', 'annulment'),
-            'tutors:id,name,lastname,email',
-            'modules' => fn($q) => $q->orderBy('order')->select('id', 'name', 'order', 'course_id'),
-            'modules.chapters' => fn($q) => $q->orderBy('order')->select('id', 'title', 'order', 'module_id'),
-            'modules.chapters.learningContent' => fn($q) => $q->select('id', 'url', 'chapter_id', 'type_content_id'),
-            'modules.chapters.learningContent.contentViews' => fn($q) => $q->where('user_id', $userId)->select('id', 'learning_content_id', 'user_id', 'updated_at'),
-            'modules.chapters.learningContent.typeLearningContent:id,name',
-        ])
-        ->where('enabled', true)
-        ->select('id', 'title', 'description', 'enabled') // Selecciona solo campos necesarios del curso
-        ->find($courseId);
-
-        if (!$course) {
-            return response()->json(['message' => 'Curso no encontrado'], 404);
-        }
-
-        // 2. OBTENCIÓN MASIVA DE DURACIONES (SIN BUCLES DE API)
-        $videoContents = $course->modules->flatMap(fn($module) => $module->chapters)
-            ->pluck('learningContent')
-            ->filter(function ($content) {
-                return $content && in_array($content->typeLearningContent->name, ['youtube-watch', 'youtube-shorts']);
-            });
-
-        $videoIds = $videoContents->map(fn($content) => $this->extractYtVideoId($content->url))->filter()->all();
-        
-        // Hacemos una única llamada para todas las duraciones
-        $durations = $this->getYouTubeDurationsInBulk($videoIds);
-
-        // Asignamos las duraciones a cada contenido
-        $videoContents->each(function ($content) use ($durations) {
-            $videoId = $this->extractYtVideoId($content->url);
-            if (isset($durations[$videoId])) {
-                $content->duration_seconds = $durations[$videoId]['duration_seconds'];
-                $content->duration_formatted = $durations[$videoId]['duration_formatted'];
-            }
-        });
-
-        // 3. PASAR LA LÓGICA DE TRANSFORMACIÓN A UN API RESOURCE
-        // La lógica de 'registered', 'last_view_id', y 'makeHidden' se moverá al Resource.
-        return new CourseResource($course);
-    }
     private function getApiYt($url){
         
         $videoId = $this->extractYtVideoId($url);
@@ -640,31 +593,6 @@ class WatchingController extends Controller
         return ($interval->d * 86400) + ($interval->h * 3600) + ($interval->i * 60) + $interval->s;
     }
 
-
-/* public function showContent(Request $request)
-{
-    $contentViewId = $request->input('content_view_id');
-    // Obtener el contenido de aprendizaje asociado al ContentView
-    $contentView = ContentView::with([
-        'learningContent',
-        'learningContent.typeLearningContent' ,
-        'learningContent.chapter'
-       
-    ])
-    ->where('id', $contentViewId)
-    ->first();
-
-    if (!$contentView) {
-        return response()->json(['message' => 'ContentView no encontrado'], 404);
-    } 
-
-    return response()->json([
-        'content_view' => $contentView->only(['id', 'user_id', 'learning_content_id', 'second_seen']),
-        'learning_content' => $contentView->learningContent->only(['id', 'url', 'type_content_id']),
-        'type_learning_content' => $contentView->learningContent->typeLearningContent->only(['id', 'name', 'max_size', 'min_duration_seconds', 'max_duration_seconds']),
-        'chapter' => $contentView->learningContent->chapter->only(['id', 'name', 'description', 'order']),
-    ]);
-} */
 
 
 }

@@ -13,14 +13,14 @@ class CompletedChapterSeeder extends Seeder
      */
     public function run(): void
     {
-        CompletedChapter::create([
+        /* CompletedChapter::create([
             'user_id' => 1,
             'chapter_id' => 1,
         ]);
         CompletedChapter::create([
             'user_id' => 2,
             'chapter_id' => 2,
-        ]);
+        ]); */
 
     }
 }

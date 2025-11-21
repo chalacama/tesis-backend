@@ -10,7 +10,7 @@ use App\Http\Controllers\{
     QuestionController, TypeQuestionController,TypeLearningContentController, LikeChapterController,
     SavedCourseController, ContentViewController, CommentController, LikeCommentController,
     CompletedChapterController, TestController, HistoryController, CertificateController, EducationalLevelController,
-    ImageProxyController
+    ImageProxyController, NotificationController
     
 };
 
@@ -88,6 +88,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('watching')->group(function () {        
         Route::get('/course/{course}/show', [WatchingController::class, 'showCourse'])->middleware('permission:course.read');
         Route::get('/content/{chapter}/show', [WatchingController::class, 'showContent'])->middleware('permission:course.read');
+        
         Route::get('/detail/{course}/show', [WatchingController::class, 'showDetail'])->middleware('permission:course.read');
         Route::get('/comment/{course}/index', [CommentController::class, 'index'])->middleware('permission:course.read');
         Route::post('/comment/{course}/store', [CommentController::class, 'store'])->middleware('permission:course.read');
@@ -107,7 +108,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/content/{learningContent}/update', [ContentViewController::class, 'update'])->middleware('permission:course.read');
         Route::post('/progress/{learningContent}/update', [CompletedChapterController::class, 'updateProgress'])->middleware('permission:course.read');
         Route::post('/completed/{testView}/test', [CompletedChapterController::class, 'completedTest'])->middleware('permission:course.read');
-
+        
         Route::post('/comment/{comment}/update', [LikeCommentController::class, 'update'])->middleware('permission:course.read');
         
         
@@ -159,7 +160,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/index', [CategoryController::class, 'index'])->middleware('permission:course.read'); 
     });
     
-    
+    Route::prefix('notifications')->group(function () {
+        Route::get('/',            [NotificationController::class, 'index']);        // listar
+        Route::get('/unread-count',[NotificationController::class, 'unreadCount']); // solo contador
+        Route::post('/{id}/read',  [NotificationController::class, 'markAsRead']);   // marcar una
+        Route::post('/read-all',   [NotificationController::class, 'markAllAsRead']); // marcar todas
+    });
     
 });
 

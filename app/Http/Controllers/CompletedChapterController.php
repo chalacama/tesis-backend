@@ -26,6 +26,7 @@ use Illuminate\Support\Str;
 
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use App\Notifications\CertificateObtainedNotification;
 
 class CompletedChapterController extends Controller
 {
@@ -348,6 +349,13 @@ private function chapterVersionAt(Chapter $chapter): ?Carbon
         'total_score'     => $totalScore,
     ]);
     $newCert->save();
+
+    // 🔔 Notificar al usuario que obtuvo el certificado
+    $user = User::find($userId);
+
+    if ($user) {
+        $user->notify(new CertificateObtainedNotification($newCert, $course));
+    }
 
     return true;
 }

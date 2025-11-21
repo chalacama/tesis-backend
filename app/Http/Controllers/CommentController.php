@@ -20,6 +20,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use App\Notifications\CourseCommentedNotification;
+use App\Notifications\CommentRepliedNotification;
 
 class CommentController extends Controller
 {
@@ -318,11 +320,45 @@ public function replies(Request $request, Course $course, Comment $comment)
     // puedes setearlo explícitamente para mantener consistencia con index():
     $comment->setAttribute('all_replies_count', 0);
 
+    // 🔔 Notificaciones
+    try {
+        // Caso 1: comentario raíz sobre el curso (sin parent_id)
+        if (is_null($comment->parent_id)) {
+
+            // Dueño del curso (si existe)
+            $courseOwner = $course->owner()->first(); // asumiendo relación owner() -> User
+
+            if ($courseOwner && $courseOwner->id !== $user->id) {
+                $courseOwner->notify(
+                    new CourseCommentedNotification($course, $comment, $user)
+                );
+            }
+
+        // Caso 2: respuesta a un comentario existente
+        } else {
+            $parentAuthor = optional($comment->parent)->user;
+
+            if ($parentAuthor && $parentAuthor->id !== $user->id) {
+                $parentAuthor->notify(
+                    new CommentRepliedNotification($course, $comment->parent, $comment, $user)
+                );
+            }
+        }
+    } catch (\Throwable $e) {
+        // No rompas la creación del comentario si falla una notificación
+        Log::warning('Error enviando notificación de comentario', [
+            'error'       => $e->getMessage(),
+            'comment_id'  => $comment->id ?? null,
+            'course_id'   => $course->id ?? null,
+        ]);
+    }
+
     return CommentResource::make($comment)
         ->additional([
             'ok' => true,
             'message' => 'Comentario creado correctamente.',
         ]);
 }
+
 
 }

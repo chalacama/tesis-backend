@@ -13,13 +13,13 @@ class ContentViewsSeeder extends Seeder
      */
     public function run(): void
     {
-        ContentView::create([
+        /* ContentView::create([
             'user_id' => 1,
             'learning_content_id' => 1,
             'progress' => '100',
             'second_seen' => '60',
-        ]);
-        ContentView::create([
+        ]); */
+        /* ContentView::create([
             'user_id' => 2,
             'learning_content_id' => 1,
             'progress' => '20',
@@ -36,7 +36,7 @@ class ContentViewsSeeder extends Seeder
             'learning_content_id' => 3,
             'progress' => '10',
             'second_seen' => '10',
-        ]);
+        ]); */
         
     }
 }

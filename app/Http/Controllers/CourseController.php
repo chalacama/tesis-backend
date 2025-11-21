@@ -27,6 +27,9 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Validator;
+use App\Models\Registration;
+use App\Notifications\CourseUpdatedNotification;
+
 class CourseController extends Controller
 {
 
@@ -233,174 +236,224 @@ class CourseController extends Controller
 
     /** Config de imagen */
     public array $allowedImageExtensions = ['jpg','png','gif'];
-    public int   $maxImageSizeMb = 10; // 10MB
+    public int   $maxImageSizeMb = 20;
     public function update(Request $request, Course $course): JsonResponse
-    {
-        $this->authorize('update', $course);
+{
+    $this->authorize('update', $course);
 
-        $validated = $request->validate([
-            // Campos base
-            'title'         => 'sometimes|required|string|max:255',
-            'description'   => 'sometimes|required|string',
+    $validated = $request->validate([
+        // Campos base
+        'title'         => 'sometimes|required|string|max:255',
+        'description'   => 'sometimes|required|string',
 
-            // -> usar IN en vez de boolean por form-data
-            'private'       => 'sometimes|required|in:1,0,true,false,on,off,yes,no',
-            'enabled'       => 'sometimes|in:1,0,true,false,on,off,yes,no',
+        // -> usar IN en vez de boolean por form-data
+        'private'       => 'sometimes|required|in:1,0,true,false,on,off,yes,no',
+        'enabled'       => 'sometimes|in:1,0,true,false,on,off,yes,no',
 
-            'difficulty_id' => 'sometimes|required|exists:difficulties,id',
-            'code'          => ['sometimes','nullable','string', Rule::unique('courses','code')->ignore($course->id)],
+        'difficulty_id' => 'sometimes|required|exists:difficulties,id',
+        'code'          => ['sometimes','nullable','string', Rule::unique('courses','code')->ignore($course->id)],
 
-            // Relaciones
-            'categories'           => 'sometimes|array',
-            'categories.*'         => 'nullable',
-            'categories.*.id'      => 'required_without:categories.*|integer|exists:categories,id',
-            'categories.*.order'   => 'nullable|integer|min:1',
+        // Relaciones
+        'categories'           => 'sometimes|array',
+        'categories.*'         => 'nullable',
+        'categories.*.id'      => 'required_without:categories.*|integer|exists:categories,id',
+        'categories.*.order'   => 'nullable|integer|min:1',
 
-            'careers'      => 'sometimes|array',
-            'careers.*'    => 'integer|exists:careers,id',
+        'careers'      => 'sometimes|array',
+        'careers.*'    => 'integer|exists:careers,id',
 
-            // Miniatura (archivo) -> multipart/form-data
-            'miniature'    => [
-                'sometimes',
-                'nullable',
-                'file',
-                'mimes:' . implode(',', $this->allowedImageExtensions),
-                'max:' . ($this->maxImageSizeMb * 1024), // en KB
-            ],
-        ]);
+        // Miniatura (archivo) -> multipart/form-data
+        'miniature'    => [
+            'sometimes',
+            'nullable',
+            'file',
+            'mimes:' . implode(',', $this->allowedImageExtensions),
+            'max:' . ($this->maxImageSizeMb * 1024), // en KB
+        ],
+    ]);
 
-        // ---- Normalización booleans para form-data ----
-        foreach (['private','enabled'] as $flag) {
-            if ($request->has($flag)) {
-                $validated[$flag] = filter_var(
-                    $request->input($flag),
-                    FILTER_VALIDATE_BOOLEAN,
-                    FILTER_NULL_ON_FAILURE
-                );
-            }
-        }
-
-        // ---- Normalización + límites ----
-        $maxCategories = $this->maxCategories;
-        $maxCareers    = $this->maxCareers;
-
-        // categories -> ['id'=>X,'order'=>Y]
-        $rawCategories  = $request->has('categories') ? ($validated['categories'] ?? []) : null;
-        $normCategories = null;
-        if ($rawCategories !== null) {
-            $seen = [];
-            $normCategories = [];
-            $i = 1;
-            foreach ($rawCategories as $item) {
-                if (is_array($item)) {
-                    $id    = $item['id'] ?? null;
-                    $order = array_key_exists('order', $item) ? (int)$item['order'] : $i;
-                } else {
-                    $id    = $item;
-                    $order = $i;
-                }
-                if ($id && !in_array($id, $seen, true)) {
-                    $normCategories[] = ['id' => (int)$id, 'order' => $order > 0 ? $order : $i];
-                    $seen[] = (int)$id;
-                    $i++;
-                }
-            }
-            if (count($normCategories) > $maxCategories) {
-                throw ValidationException::withMessages([
-                    'categories' => ['Solo se permiten ' . $maxCategories . ' categorías por curso.']
-                ]);
-            }
-        }
-
-        // careers: únicos + límite
-        $normCareers = null;
-        if ($request->has('careers')) {
-            $normCareers = array_values(array_unique(array_map('intval', $validated['careers'] ?? [])));
-            if (count($normCareers) > $maxCareers) {
-                throw ValidationException::withMessages([
-                    'careers' => ['Solo se permiten hasta ' . $maxCareers . ' carreras por curso.']
-                ]);
-            }
-        }
-
-        try {
-            DB::transaction(function () use ($request, $course, $validated, $normCategories, $normCareers) {
-
-                // 1) Actualizar campos base enviados
-                $toUpdate = collect($validated)->only([
-                    'title','description','private','enabled','difficulty_id','code'
-                ])->toArray();
-
-                $course->update($toUpdate);
-
-                // 2) Categorías
-                if ($normCategories !== null) {
-                    usort($normCategories, fn($a,$b) => $a['order'] <=> $b['order']);
-                    $payload = [];
-                    $seq = 1;
-                    foreach ($normCategories as $nc) {
-                        $payload[$nc['id']] = ['order' => $seq++];
-                    }
-                    $course->categories()->sync($payload);
-                }
-
-                // 3) Carreras
-                if ($normCareers !== null) {
-                    $course->careers()->sync($normCareers);
-                }
-
-                // 4) Miniatura (archivo -> Cloudinary)
-                if ($request->hasFile('miniature')) {
-                    $file = $request->file('miniature');
-
-                    $cloudinary = new Cloudinary(config('cloudinary.cloud_url'));
-                    $upload = $cloudinary->uploadApi()->upload(
-                        $file->getRealPath(),
-                        [
-                            'folder'        => "miniatures",
-                            'public_id'     => "curso/{$course->id}",
-                            'overwrite'     => true,
-                            'resource_type' => 'image',
-                            'transformation' => [
-                                ['quality' => 'auto:good'],
-                                ['fetch_format' => 'auto'],
-                            ],
-                        ]
-                    );
-
-                    $secureUrl = $upload['secure_url'] ?? null;
-                    if ($secureUrl) {
-                        $course->miniature()->updateOrCreate([], ['url' => $secureUrl]);
-                    } else {
-                        throw new \RuntimeException('No se pudo obtener la URL de Cloudinary.');
-                    }
-                } elseif ($request->input('miniature') === null) {
-                    $course->miniature()->delete();
-                }
-            });
-
-            $course->load([
-                'categories' => function ($q) {
-                    $q->withPivot('order')->orderBy('category_courses.order');
-                },
-                'careers',
-                'miniature',
-                'difficulty',
-            ]);
-
-            return response()->json([
-                'message' => 'Curso actualizado',
-                'course'  => $course
-            ], 200);
-
-        } catch (\Throwable $e) {
-            Log::error('Error actualizando curso: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
-            return response()->json([
-                'message' => 'No se pudo actualizar el curso.',
-                'error'   => config('app.debug') ? $e->getMessage() : 'Error interno'
-            ], 500);
+    // ---- Normalización booleans para form-data ----
+    foreach (['private','enabled'] as $flag) {
+        if ($request->has($flag)) {
+            $validated[$flag] = filter_var(
+                $request->input($flag),
+                FILTER_VALIDATE_BOOLEAN,
+                FILTER_NULL_ON_FAILURE
+            );
         }
     }
+
+    // ---- Normalización + límites ----
+    $maxCategories = $this->maxCategories;
+    $maxCareers    = $this->maxCareers;
+
+    // categories -> ['id'=>X,'order'=>Y]
+    $rawCategories  = $request->has('categories') ? ($validated['categories'] ?? []) : null;
+    $normCategories = null;
+    if ($rawCategories !== null) {
+        $seen = [];
+        $normCategories = [];
+        $i = 1;
+        foreach ($rawCategories as $item) {
+            if (is_array($item)) {
+                $id    = $item['id'] ?? null;
+                $order = array_key_exists('order', $item) ? (int)$item['order'] : $i;
+            } else {
+                $id    = $item;
+                $order = $i;
+            }
+            if ($id && !in_array($id, $seen, true)) {
+                $normCategories[] = ['id' => (int)$id, 'order' => $order > 0 ? $order : $i];
+                $seen[] = (int)$id;
+                $i++;
+            }
+        }
+        if (count($normCategories) > $maxCategories) {
+            throw ValidationException::withMessages([
+                'categories' => ['Solo se permiten ' . $maxCategories . ' categorías por curso.']
+            ]);
+        }
+    }
+
+    // careers: únicos + límite
+    $normCareers = null;
+    if ($request->has('careers')) {
+        $normCareers = array_values(array_unique(array_map('intval', $validated['careers'] ?? [])));
+        if (count($normCareers) > $maxCareers) {
+            throw ValidationException::withMessages([
+                'careers' => ['Solo se permiten hasta ' . $maxCareers . ' carreras por curso.']
+            ]);
+        }
+    }
+
+    try {
+        // Vamos a detectar si realmente hubo cambios
+        $wasUpdated = false;
+
+        DB::transaction(function () use ($request, $course, $validated, $normCategories, $normCareers, &$wasUpdated) {
+
+            // 1) Actualizar campos base enviados
+            $toUpdate = collect($validated)->only([
+                'title','description','private','enabled','difficulty_id','code'
+            ])->toArray();
+
+            if (!empty($toUpdate)) {
+                $course->update($toUpdate);
+                $wasUpdated = $course->wasChanged(); // true si cambió algo
+            }
+
+            // 2) Categorías
+            if ($normCategories !== null) {
+                usort($normCategories, fn($a,$b) => $a['order'] <=> $b['order']);
+                $payload = [];
+                $seq = 1;
+                foreach ($normCategories as $nc) {
+                    $payload[$nc['id']] = ['order' => $seq++];
+                }
+                $course->categories()->sync($payload);
+                $wasUpdated = true; // cambios en relaciones también cuentan
+            }
+
+            // 3) Carreras
+            if ($normCareers !== null) {
+                $course->careers()->sync($normCareers);
+                $wasUpdated = true;
+            }
+
+            // 4) Miniatura (archivo -> Cloudinary)
+            if ($request->hasFile('miniature')) {
+                $file = $request->file('miniature');
+
+                $cloudinary = new Cloudinary(config('cloudinary.cloud_url'));
+                $upload = $cloudinary->uploadApi()->upload(
+                    $file->getRealPath(),
+                    [
+                        'folder'        => "miniatures",
+                        'public_id'     => "curso/{$course->id}",
+                        'overwrite'     => true,
+                        'resource_type' => 'image',
+                        'transformation' => [
+                            ['quality' => 'auto:good'],
+                            ['fetch_format' => 'auto'],
+                        ],
+                    ]
+                );
+
+                $secureUrl = $upload['secure_url'] ?? null;
+                if ($secureUrl) {
+                    $course->miniature()->updateOrCreate([], ['url' => $secureUrl]);
+                    $wasUpdated = true;
+                } else {
+                    throw new \RuntimeException('No se pudo obtener la URL de Cloudinary.');
+                }
+            } elseif ($request->input('miniature') === null) {
+                $course->miniature()->delete();
+                $wasUpdated = true;
+            }
+        });
+
+        // 🔔 Si realmente hubo cambios, notificar a los estudiantes registrados
+        if ($wasUpdated) {
+            $this->notifyRegisteredUsersCourseUpdated($course, $request->user());
+        }
+
+        $course->load([
+            'categories' => function ($q) {
+                $q->withPivot('order')->orderBy('category_courses.order');
+            },
+            'careers',
+            'miniature',
+            'difficulty',
+        ]);
+
+        return response()->json([
+            'message' => 'Curso actualizado',
+            'course'  => $course
+        ], 200);
+
+    } catch (\Throwable $e) {
+        Log::error('Error actualizando curso: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
+        return response()->json([
+            'message' => 'No se pudo actualizar el curso.',
+            'error'   => config('app.debug') ? $e->getMessage() : 'Error interno'
+        ], 500);
+    }
+}
+/**
+ * Notifica a todos los usuarios registrados en el curso
+ * que el curso ha sido actualizado.
+ *
+ * SOLO los que estén registrados (tabla registrations).
+ */
+protected function notifyRegisteredUsersCourseUpdated(Course $course, ?User $actor = null): void
+{
+    // Obtenemos los IDs de usuarios registrados al curso
+    $userIds = Registration::query()
+        ->where('course_id', $course->id)
+        ->pluck('user_id')
+        ->unique()
+        ->values()
+        ->all();
+
+    if (empty($userIds)) {
+        return;
+    }
+
+    // Obtenemos los usuarios
+    $students = User::query()
+        ->whereIn('id', $userIds)
+        ->get();
+
+    foreach ($students as $student) {
+        // Opcional: no notificar al mismo que editó si él también está registrado
+        if ($actor && $actor->id === $student->id) {
+            continue;
+        }
+
+        $student->notify(new CourseUpdatedNotification($course, $actor));
+    }
+}
+
 
     public function generateCode(): JsonResponse
     {

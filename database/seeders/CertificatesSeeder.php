@@ -15,7 +15,7 @@ class CertificatesSeeder extends Seeder
     {
         
          // Creamos el certificado para el user 1 (curso 1)
-        Certificate::create([
+        /* Certificate::create([
             'registration_id' => 1,
             'code'            => 'CERT-' . strtoupper(Str::random(8)),
             'total_score'     => 95, // puedes ajustar la puntuación que quieras
@@ -55,7 +55,7 @@ class CertificatesSeeder extends Seeder
             'registration_id' => 3,
             'code'            => 'CERT-' . strtoupper(Str::random(8)),
             'total_score'     => 60, // otra puntuación de ejemplo
-        ]);
+        ]); */
 
         
     }

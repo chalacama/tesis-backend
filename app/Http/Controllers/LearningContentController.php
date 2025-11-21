@@ -23,6 +23,11 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\TutorInvitationEmail;
 use Exception;
+use App\Models\Course;
+use App\Models\Registration;
+use App\Models\User;
+use App\Notifications\NewContentInCourseNotification;
+
 
 class LearningContentController extends Controller
 {
@@ -63,8 +68,12 @@ public function update(Request $request, Chapter $chapter): JsonResponse
         'file'            => ['nullable', 'file'], // añade max:size / mimes si lo necesitas
     ]);
 
+    // Flags para saber si hay contenido nuevo
+    $isNewContent    = false;
+    $learningContent = null;
+
     try {
-        return DB::transaction(function () use ($request, $chapter, $data) {
+        DB::transaction(function () use ($request, $chapter, $data, &$isNewContent, &$learningContent) {
 
             // Tipo de contenido
             $type = TypeLearningContent::query()
@@ -93,10 +102,6 @@ public function update(Request $request, Chapter $chapter): JsonResponse
                             'resource_type'   => 'auto', // soporta image/video/pdf
                             'use_filename'    => true,
                             'unique_filename' => false,
-                            /* 'transformation'  => [
-                                ['quality' => 'auto:good'],
-                                ['fetch_format' => 'pdf'],
-                            ], */
                         ]
                     );
 
@@ -121,20 +126,22 @@ public function update(Request $request, Chapter $chapter): JsonResponse
 
             if ($shouldArchive) {
                 if ($existing && is_null($existing->deleted_at)) {
-                    // Marcar como borrado lógico; la purga física la hará Prunable (p. ej. a 30 días)
+                    // Marcar como borrado lógico
                     $existing->delete();
                 }
 
-                return response()->json([
-                    'ok'               => true,
-                    'chapter_id'       => $chapter->id,
-                    'learning_content' => null,
-                ]);
+                // No hay contenido activo
+                $learningContent = null;
+                $isNewContent    = false;
+
+                return;
             }
 
             // Si NO se archiva, crear/actualizar (restaurando si estaba en papelera)
             if ($existing) {
-                if (!is_null($existing->deleted_at)) {
+                $restoredFromTrash = !is_null($existing->deleted_at);
+
+                if ($restoredFromTrash) {
                     $existing->restore();
                 }
 
@@ -143,34 +150,46 @@ public function update(Request $request, Chapter $chapter): JsonResponse
                     'url'             => $newUrl,
                 ])->save();
 
-                $content = $existing;
+                $existing->load([
+                    'typeLearningContent:id,name,max_size_mb,min_duration_seconds,max_duration_seconds,created_at,updated_at'
+                ]);
+
+                $learningContent = $existing;
+                // Lo consideramos "nuevo" solo si antes estaba archivado
+                $isNewContent = $restoredFromTrash;
             } else {
                 $content = LearningContent::create([
                     'chapter_id'      => $chapter->id,
                     'type_content_id' => $type->id,
                     'url'             => $newUrl,
                 ]);
+
+                $content->load([
+                    'typeLearningContent:id,name,max_size_mb,min_duration_seconds,max_duration_seconds,created_at,updated_at'
+                ]);
+
+                $learningContent = $content;
+                $isNewContent    = true;
             }
-
-            // Respuesta consistente con show()
-            $content->load([
-                'typeLearningContent:id,name,max_size_mb,min_duration_seconds,max_duration_seconds,created_at,updated_at'
-            ]);
-
-            return response()->json([
-                'ok'               => true,
-                'chapter_id'       => $chapter->id,
-                'learning_content' => [
-                    'id'                    => $content->id,
-                    'url'                   => $content->url,
-                    'type_content_id'       => $content->type_content_id,
-                    'created_at'            => $content->created_at,
-                    'updated_at'            => $content->updated_at,
-                    // Laravel serializa snake_case para relaciones: type_learning_content
-                    'type_learning_content' => $content->getRelation('typeLearningContent'),
-                ],
-            ]);
         });
+
+        // 🔔 Fuera de la transacción: notificar si realmente hay contenido nuevo
+        if ($isNewContent && $course && $learningContent) {
+            $this->notifyRegisteredUsersNewContent($course, $chapter, $learningContent, Auth::user());
+        }
+
+        return response()->json([
+            'ok'               => true,
+            'chapter_id'       => $chapter->id,
+            'learning_content' => $learningContent ? [
+                'id'                    => $learningContent->id,
+                'url'                   => $learningContent->url,
+                'type_content_id'       => $learningContent->type_content_id,
+                'created_at'            => $learningContent->created_at,
+                'updated_at'            => $learningContent->updated_at,
+                'type_learning_content' => $learningContent->getRelation('typeLearningContent'),
+            ] : null,
+        ]);
     } catch (ValidationException $e) {
         throw $e;
     } catch (\Throwable $e) {
@@ -187,6 +206,46 @@ public function update(Request $request, Chapter $chapter): JsonResponse
 }
 
 
+
+protected function notifyRegisteredUsersNewContent(
+    Course $course,
+    Chapter $chapter,
+    LearningContent $content,
+    ?User $actor = null
+): void {
+    // IDs de usuarios registrados en el curso
+    $userIds = Registration::query()
+        ->where('course_id', $course->id)
+        ->pluck('user_id')
+        ->unique()
+        ->values()
+        ->all();
+
+    if (empty($userIds)) {
+        return;
+    }
+
+    $students = User::query()
+        ->whereIn('id', $userIds)
+        ->get();
+
+    // Aseguramos tener typeLearningContent cargado
+    $content->loadMissing('typeLearningContent');
+
+    foreach ($students as $student) {
+        // Opcional: no notificar al mismo que agregó el contenido si también está registrado
+        if ($actor && $actor->id === $student->id) {
+            continue;
+        }
+
+        $student->notify(new NewContentInCourseNotification(
+            $course,
+            $chapter,
+            $content,
+            $actor
+        ));
+    }
+}
 
 
 }

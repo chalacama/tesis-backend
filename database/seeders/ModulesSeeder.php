@@ -18,7 +18,7 @@ class ModulesSeeder extends Seeder
         'order' => 1,
         'course_id' => 1,
     ]);
-    Module::create([
+    /* Module::create([
         'name' => 'Rutas y Controladores',
         'order' => 2,
         'course_id' => 1,
@@ -27,7 +27,7 @@ class ModulesSeeder extends Seeder
         'name' => 'Eloquent ORM',
         'order' => 3,
         'course_id' => 1,
-    ]);
+    ]); */
 
     // 2. Fundamentos de Diseño Gráfico (Course ID 2) - 3 modules
     Module::create([
