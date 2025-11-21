@@ -16,7 +16,7 @@ class CoursesSeeder extends Seeder
     $course = Course::create([
         'title' => 'Laravel Básico',
         'description' => 'Curso introductorio a Laravel para desarrollar aplicaciones web modernas.',
-        'private' => false,
+        'private' => true,
         'enabled' => true,
         'difficulty_id' => 1,
     ]);

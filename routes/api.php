@@ -87,7 +87,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::prefix('watching')->group(function () {        
         Route::get('/course/{course}/show', [WatchingController::class, 'showCourse'])->middleware('permission:course.read');
-        Route::get('/content/{chapter}/show', [WatchingController::class, 'showContent'])->middleware('permission:course.read');
+        Route::get('/content/{chapter}/show', [WatchingController::class, 'showContent']);
         
         Route::get('/detail/{course}/show', [WatchingController::class, 'showDetail'])->middleware('permission:course.read');
         Route::get('/comment/{course}/index', [CommentController::class, 'index'])->middleware('permission:course.read');

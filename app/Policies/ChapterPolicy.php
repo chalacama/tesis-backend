@@ -5,57 +5,81 @@ namespace App\Policies;
 use App\Models\User;
 use App\Models\Chapter;
 use App\Models\Registration;
+use App\Models\Module;
 use Illuminate\Auth\Access\HandlesAuthorization;
-use Illuminate\Support\Facades\DB;
+
 class ChapterPolicy
 {
+    use HandlesAuthorization;
+
     /**
-     * Ver el CONTENIDO del capítulo (no solo la estructura).
-     * Regla:
-     * - El curso debe estar activo.
-     * - El usuario debe tener permiso course.read (igual que CoursePolicy->view).
-     * - Debe estar registrado en el curso, EXCEPTO si el capítulo es el "intro" (order=1 del primer módulo con order=1).
+     * Admin ve todo.
+     */
+    /* public function before(User $user, string $ability): bool|null
+    {
+        if ($user->hasRole('admin')) {
+            return true;
+        }
+        return null;
+    } */
+
+    /**
+     * Ver el CONTENIDO del capítulo.
      */
     public function viewChapter(User $user, Chapter $chapter): bool
     {
-        // Cargar lo mínimo necesario
-        $chapter->loadMissing('module:id,course_id,order', 'module.course:id,enabled,private');
+        // Cargar curso + módulo
+        $chapter->loadMissing(
+            'module:id,course_id,order',
+            'module.course:id,enabled,private'
+        );
 
         $course = $chapter->module->course;
 
-        // 1) Permiso base (mismo criterio que usarías para ver la estructura del curso)
-        if (!$user->can('course.read')) {
-            return false;
-        }
-
-        // 2) Curso activo
+        // 1) Curso debe estar habilitado
         if (!$course || !$course->enabled) {
             return false;
         }
 
-        // 3) ¿Capítulo introductorio? (primer módulo y primer capítulo)
-        $isIntro = $this->isIntro($chapter);
-
-        if ($isIntro) {
-            // Intro: usuario logueado con permiso puede verlo sin registro
-            return true;
+        // 2) Si es el capítulo introductorio → lo puede ver
+        if ($this->isIntro($chapter)) {
+            // Reglas aquí:
+            // ❍ Si quieres que se pueda ver sin registro pero con login:
+            return true; // ya está autenticado porque type-hint es User
         }
 
-        // 4) Para el resto: debe estar registrado
+        // 3) Para el resto de capítulos → debe estar registrado
         return Registration::where('course_id', $course->id)
             ->where('user_id', $user->id)
             ->exists();
     }
 
-    
-
-    /** Determina si es capítulo introductorio (primer módulo y primer capítulo) */
+    /**
+     * Determina si es el capítulo introductorio:
+     * primer módulo del curso con menor 'order'
+     * y primer capítulo de ese módulo con menor 'order'
+     */
     private function isIntro(Chapter $chapter): bool
     {
-        // Necesitamos el order del módulo y del capítulo
         $chapter->loadMissing('module:id,course_id,order');
 
-        // Por performance: asume que en BD el capítulo con order=1 dentro del módulo con order=1 es "intro"
-        return (int)$chapter->module->order === 1 && (int)$chapter->order === 1;
+        $courseId = $chapter->module->course_id;
+
+        // Buscar el módulo con MENOR 'order'
+        $firstModuleId = Module::where('course_id', $courseId)
+            ->orderBy('order', 'asc')
+            ->value('id');
+
+        if (!$firstModuleId) {
+            return false;
+        }
+
+        // Buscar el capítulo con MENOR 'order' dentro de ese módulo
+        $firstChapterId = Chapter::where('module_id', $firstModuleId)
+            ->orderBy('order', 'asc')
+            ->value('id');
+
+        // ES intro si es exactamente ese capítulo
+        return (int)$chapter->id === (int)$firstChapterId;
     }
 }

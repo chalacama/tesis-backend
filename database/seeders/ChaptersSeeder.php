@@ -20,7 +20,7 @@ class ChaptersSeeder extends Seeder
         'module_id' => 1,
         'order' => 1,
     ]);
-    /* Chapter::create([
+    Chapter::create([
         'title' => 'Instalación y Configuración',
         'description' => 'Guía práctica para instalar Laravel.',
         'module_id' => 1,
@@ -57,11 +57,11 @@ class ChaptersSeeder extends Seeder
         'description' => 'Creación de esquemas de base de datos.',
         'module_id' => 3,
         'order' => 3,
-    ]); */
+    ]);
 
     // Course 2: Fundamentos de Diseño Gráfico (Module IDs 4, 5, 6) - 3 modules, 6 chapters
     // Module 4: Principios del Diseño
-    /* Chapter::create([
+    Chapter::create([
         'title' => 'Teoría del Color',
         'description' => 'Introducción al uso del color en diseño.',
         'module_id' => 4,
@@ -289,6 +289,6 @@ class ChaptersSeeder extends Seeder
         'description' => 'Ejercicios de mindfulness para principiantes.',
         'module_id' => 25,
         'order' => 1,
-    ]); */
+    ]);
     }
 }
