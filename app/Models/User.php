@@ -50,7 +50,7 @@ class User extends Authenticatable
         'registration_method', // Añadido
         'profile_picture_url',
     ];
-    
+
     /**
      * The attributes that should be hidden for serialization.
      *
@@ -87,6 +87,30 @@ class User extends Authenticatable
     {
         return $this->hasOne(EducationalUser::class);
     }
+
+     /**
+     * Helper: ¿Tiene información personal registrada?
+     */
+    public function hasUserInformation(): bool
+    {
+        return $this->userInformation()->exists();
+    }
+
+    /**
+     * Helper: ¿Tiene información educativa registrada?
+     */
+    public function hasEducationalUser(): bool
+    {
+        return $this->educationalUser()->exists();
+    }
+    /**
+     * Helper: ¿Tiene información educativa registrada?
+     */
+    public function hasCategoryInterest(): bool
+    {
+        return $this->categoryInterests()->exists();
+    }
+
     /**
      * Relación uno a muchos con RatingCourse.
      */
@@ -155,7 +179,7 @@ class User extends Authenticatable
         return $this->hasMany(Comment::class);
     }
 
-    
+
     /**
      * Relación uno a muchos con Registration.
      */
@@ -184,7 +208,7 @@ class User extends Authenticatable
     {
         return $this->hasMany(UserAnswer::class);
     }
-    
+
     /**
      * Relación uno a muchos con LikeLearningContent.
      */
@@ -227,6 +251,6 @@ class User extends Authenticatable
         return $this->hasMany(Suggestion::class);
     }
 
-    
+
 
 }

@@ -13,11 +13,35 @@ return new class extends Migration
     {
         Schema::create('user_information', function (Blueprint $table) {
             $table->id();
-            $table->date('birthdate')->nullable();
-            $table->string('phone_number')->nullable();
-            $table->string('province')->nullable();
-            $table->string('canton')->nullable();
-            $table->string('parish')->nullable();
+            $table->date('birthdate');
+            $table->string('phone_number');
+            $table->string('province');
+            $table->string('canton');
+            $table->string('parish');
+            $table->enum('sexo', ['hombre', 'mujer']);
+
+            $table->enum('estado_civil', [
+                'casado/a',
+                'unido/a',
+                'separado/a',
+                'divorciado/a',
+                'viudo/a',
+                'soltero/a',
+            ]);
+
+            $table->enum('discapacidad', ['si', 'no']);
+            $table->enum('discapacidad_permanente', [
+                'intelectual (retraso mental)',
+                'físico-motora (parálisis y amputaciones)',
+                'visual (ceguera)',
+                'auditiva (sordera)',
+                'mental (enfermedades psiquiátricas)',
+                'otro tipo',
+            ])->nullable();
+
+            $table->enum('asistencia_establecimiento_discapacidad', ['si', 'no'])
+                ->nullable();
+
             $table->unsignedBigInteger('user_id')->unique();
 
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');

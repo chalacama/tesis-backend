@@ -2,19 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules\Password;
 use Illuminate\Support\Facades\Log; // Para registrar errores
 use Illuminate\Support\Str; // Para generar cadenas aleatorias
+use Illuminate\Validation\Rules\Password;
 use Laravel\Socialite\Facades\Socialite;
-use Illuminate\Http\JsonResponse;
+
 class AuthController extends Controller
 {
-    
-public function register(Request $request): JsonResponse
+    public function register(Request $request): JsonResponse
     {
         // 1. Validación estricta de los datos de entrada
         $request->validate([
@@ -61,7 +61,7 @@ public function register(Request $request): JsonResponse
         ]);
 
         // 2. Intentar autenticar al usuario
-        if (!Auth::attempt($request->only('email', 'password'))) {
+        if (! Auth::attempt($request->only('email', 'password'))) {
             // Si la autenticación falla, devolver error
             return response()->json(['message' => 'Credenciales incorrectas.'], 401); // 401 Unauthorized
         }
@@ -70,7 +70,7 @@ public function register(Request $request): JsonResponse
         $user = User::where('email', $request->email)->firstOrFail();
 
         // Verificar si el correo está verificado
-        if (!$user->hasVerifiedEmail()) {
+        if (! $user->hasVerifiedEmail()) {
             return response()->json(['message' => 'Por favor, verifica tu correo electrónico antes de iniciar sesión.'], 403);
         }
 
@@ -78,15 +78,23 @@ public function register(Request $request): JsonResponse
         $user->tokens()->delete();
         $token = $user->createToken('auth_token_login')->plainTextToken;
 
-        // 5. Devolver la respuesta
+        // Cargar relaciones
+        $user->load(['userInformation', 'educationalUser']);
+
         return response()->json([
             'message' => 'Inicio de sesión exitoso.',
             'access_token' => $token,
             'token_type' => 'Bearer',
             'user' => $user,
-            'role' => $user->getRoleNames()[0], // Agrega el rol del usuario
+            'role' => $user->getRoleNames()[0],
+
+            // NUEVOS CAMPOS
+            'has_user_information' => $user->hasUserInformation(),
+            'has_educational_user' => $user->hasEducationalUser(),
+            'has_user_category_interest' => $user->hasCategoryInterest(),
         ]);
     }
+
     /**
      * LOGOUT (CIERRE DE SESIÓN)
      * Invalida el token actual del usuario. Funciona para AMBOS métodos.
@@ -120,7 +128,7 @@ public function register(Request $request): JsonResponse
                     'google_id' => $googleUser->id,
                     'name' => $fullName[0] ?? '',
                     'lastname' => $fullName[1] ?? '',
-                    'username' => $googleUser->nickname ?? Str::slug($googleUser->name) . '_' . uniqid(),
+                    'username' => $googleUser->nickname ?? Str::slug($googleUser->name).'_'.uniqid(),
                     'registration_method' => 'google',
                     'email_verified_at' => now(),
                     'profile_picture_url' => $googleUser->avatar,
@@ -130,20 +138,29 @@ public function register(Request $request): JsonResponse
             if ($user->wasRecentlyCreated) {
                 $user->assignRole('student');
             }
-            
+
             // Revocar tokens antiguos para este usuario y crear uno nuevo
             $user->tokens()->where('name', 'like', 'auth_token_%')->delete();
             $token = $user->createToken('auth_token_google')->plainTextToken;
+
+            // Cargar relaciones
+            $user->load(['userInformation', 'educationalUser']);
 
             return response()->json([
                 'access_token' => $token,
                 'token_type' => 'Bearer',
                 'user' => $user,
-                'role' => $user->getRoleNames()[0], // Agrega el rol del usuario
+                'role' => $user->getRoleNames()[0],
+
+                // NUEVOS FLAGS
+                'has_user_information' => $user->hasUserInformation(),
+                'has_educational_user' => $user->hasEducationalUser(),
+                'has_user_category_interest' => $user->hasCategoryInterest(),
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Google Auth Error: ' . $e->getMessage());
+            Log::error('Google Auth Error: '.$e->getMessage());
+
             return response()->json(['error' => 'La autenticación con Google falló.'], 401);
         }
     }

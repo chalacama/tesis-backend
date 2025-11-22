@@ -2,55 +2,74 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use App\Models\UserInformation;
-use App\Models\User;
+use Carbon\Carbon;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
+
 class UserInformationController extends Controller
 {
     use AuthorizesRequests;
+
     public function show(): JsonResponse
     {
-        
         $user = Auth::user();
 
-        // Aplicar la policy 'viewHidden'
         $this->authorize('viewHidden', $user);
 
-        // Cargar la relación con la información
         $user->load('userInformation');
+
         return response()->json([
             'userInformation' => $user->userInformation,
         ]);
     }
+
     public function update(Request $request): JsonResponse
     {
         $user = Auth::user();
-
-        // Autorizar con Policy
         $this->authorize('update', $user);
 
-        // Validación de entrada
-        $validated = $request->validate([
-            'birthdate'     => ['nullable', 'date'],
-            'phone_number'  => ['nullable', 'string', 'max:20'],
-            'province'      => ['nullable', 'string', 'max:100'],
-            'canton'        => ['nullable', 'string', 'max:100'],
-            'parish'        => ['nullable', 'string', 'max:100'],
+        $validator = Validator::make($request->all(), [
+            'birthdate' => ['required', 'date', 'before_or_equal:today'],
+            'phone_number' => ['required', 'regex:/^\+593\s?[0-9]{2}\s?[0-9]{3}\s?[0-9]{4}$/'],
+            'province' => ['required', 'string', 'max:100'],
+            'canton' => ['required', 'string', 'max:100'],
+            'parish' => ['required', 'string', 'max:100'],
+            'sexo' => ['required', 'in:hombre,mujer'],
+            'estado_civil' => ['required', 'in:casado/a,unido/a,separado/a,divorciado/a,viudo/a,soltero/a'],
+            'discapacidad' => ['required', 'in:si,no'],
         ]);
 
-        // Actualizar o crear la información
+        // Reglas condicionales para discapacidad
+        $validator->sometimes('discapacidad_permanente', 'required|in:intelectual (retraso mental),físico-motora (parálisis y amputaciones),visual (ceguera),auditiva (sordera),mental (enfermedades psiquiátricas),otro tipo', function ($input) {
+            return $input->discapacidad === 'si';
+        });
+
+        $validator->sometimes('asistencia_establecimiento_discapacidad', 'required|in:si,no', function ($input) {
+            return $input->discapacidad === 'si';
+        });
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Error de validación',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $validated = $validator->validated();
         $info = UserInformation::updateOrCreate(
             ['user_id' => $user->id],
             $validated
         );
 
         return response()->json([
-            'message' => $info->wasRecentlyCreated ? 'Información creada exitosamente.' : 'Información actualizada correctamente.',
-            'userInformation' => $info
+            'message' => $info->wasRecentlyCreated
+                ? 'Información creada exitosamente.'
+                : 'Información actualizada correctamente.',
+            'userInformation' => $info,
         ]);
     }
-
 }

@@ -15,6 +15,10 @@ class UserInformation extends Model
         'canton',
         'parish',
         'user_id',
+        'sexo',
+        'estado_civil',
+        'discapacidad_permanente',
+        'asistencia_establecimiento_discapacidad'
     ];
 
     /**
@@ -25,6 +29,6 @@ class UserInformation extends Model
         return $this->belongsTo(User::class);
     }
 
-    
+
 
 }
