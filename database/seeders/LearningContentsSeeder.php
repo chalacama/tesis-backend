@@ -17,7 +17,7 @@ class LearningContentsSeeder extends Seeder
             'type_content_id' => 2,
             'chapter_id' => 1,
         ]);
-        LearningContent::create([
+        /* LearningContent::create([
             'url' => 'https://www.youtube.com/watch?v=-0Fr1blovx8',
             'type_content_id' => 1,
             'chapter_id' => 2,
@@ -31,6 +31,6 @@ class LearningContentsSeeder extends Seeder
             'url' => 'https://res.cloudinary.com/dvvqko1vv/raw/upload/v1763338367/archives/chapter/4.tmp',
             'type_content_id' => 2,
             'chapter_id' => 4,
-        ]);
+        ]); */
     }
 }

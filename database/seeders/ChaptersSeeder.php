@@ -20,7 +20,7 @@ class ChaptersSeeder extends Seeder
         'module_id' => 1,
         'order' => 1,
     ]);
-    Chapter::create([
+    /* Chapter::create([
         'title' => 'Instalación y Configuración',
         'description' => 'Guía práctica para instalar Laravel.',
         'module_id' => 1,
@@ -289,6 +289,6 @@ class ChaptersSeeder extends Seeder
         'description' => 'Ejercicios de mindfulness para principiantes.',
         'module_id' => 25,
         'order' => 1,
-    ]);
+    ]); */
     }
 }

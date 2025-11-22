@@ -32,11 +32,11 @@ class RegistrationsSeeder extends Seeder
     ]);
 
     // 3. User 2 in another course (to balance registrations)
-    /* Registration::create([
+    Registration::create([
         
         'user_id' => 2,
         'course_id' => 1, // Laravel Básico (popular course)
-    ]); */
+    ]);
 
     // 4. User 3 in Laravel Básico (popular course)
     // Registration::create([

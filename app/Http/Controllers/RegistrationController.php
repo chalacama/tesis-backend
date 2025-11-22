@@ -60,6 +60,7 @@ class RegistrationController extends Controller
             'data'    => [
                 'registration_id' => $registration->id,
                 'course_id'       => $course->id,
+                'course_title'     => $course->title,
                 'user_id'         => $user->id,
             ],
         ], 201);
@@ -128,7 +129,9 @@ class RegistrationController extends Controller
             'message' => 'Inscripción realizada con éxito mediante código.',
             'data'    => [
                 'registration_id' => $registration->id,
+                
                 'course_id'       => $course->id,
+                'course_title'     => $course->title,
                 'user_id'         => $user->id,
             ],
         ], 201);

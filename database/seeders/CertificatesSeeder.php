@@ -57,6 +57,11 @@ class CertificatesSeeder extends Seeder
             'total_score'     => 60, // otra puntuación de ejemplo
         ]); */
 
+        Certificate::create([
+            'registration_id' => 3,
+            'code'            => 'CERT-' . strtoupper(Str::random(8)),
+            'total_score'     => 70, // otra puntuación de ejemplo
+        ]);
         
     }
 }
