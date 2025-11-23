@@ -21,9 +21,9 @@ class EducationalUserSeeder extends Seeder
         ]);
         //ingenieri@
         EducationalUser::create([
-            'sede_id' => 2,
+            'sede_id' => 1,
             'user_id' => 2,
-            'career_id' => 1,
+            'career_id' => 5,
             
             
         ]); 
@@ -37,13 +37,13 @@ class EducationalUserSeeder extends Seeder
             
         ]);
         //Estudiante de colegio
-        EducationalUser::create([
-            'sede_id' => 3,
-            'user_id' => 4,
+        // EducationalUser::create([
+        //     'sede_id' => 3,
+        //     'user_id' => 4,
             
-            'educational_level_id' => 2,
-            'level' => 3,
-        ]);
+        //     'educational_level_id' => 2,
+        //     'level' => 3,
+        // ]);
 
     }
 }

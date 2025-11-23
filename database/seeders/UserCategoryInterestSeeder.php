@@ -17,7 +17,6 @@ class UserCategoryInterestSeeder extends Seeder
     UserCategoryInterest::create(['user_id' => 1, 'category_id' => 3]); // Marketing
     UserCategoryInterest::create(['user_id' => 1, 'category_id' => 4]); // Negocios
     UserCategoryInterest::create(['user_id' => 1, 'category_id' => 5]); // Tecnología
-    UserCategoryInterest::create(['user_id' => 1, 'category_id' => 18]); // Habilidades Personales
 
     // User 2 (Tutor: Laravel, IA, Fotografía, Música) - 4 interests
     UserCategoryInterest::create(['user_id' => 2, 'category_id' => 1]); // Programación

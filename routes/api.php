@@ -10,7 +10,7 @@ use App\Http\Controllers\{
     QuestionController, TypeQuestionController,TypeLearningContentController, LikeChapterController,
     SavedCourseController, ContentViewController, CommentController, LikeCommentController,
     CompletedChapterController, TestController, HistoryController, CertificateController, EducationalLevelController,
-    ImageProxyController, NotificationController
+    ImageProxyController, NotificationController, UserCategoryInterestController
 
 };
 
@@ -22,7 +22,6 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 Route::prefix('auth')->group(function () {
-    Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/google/callback', [AuthController::class, 'handleGoogleCallback']);
     Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
@@ -130,6 +129,11 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/show', [EducationalUserController::class, 'show'])->middleware('permission:profile.read');
             Route::put('/update', [EducationalUserController::class, 'update'])->middleware('permission:profile.update');
         });
+        Route::prefix('/interest')->group(function () {
+            Route::get('/show', [UserCategoryInterestController::class, 'show'])->middleware('permission:profile.read');
+            Route::put('/update', [UserCategoryInterestController::class, 'update'])->middleware('permission:profile.update');
+        });
+
         Route::prefix('portfolio')->group(function () {
             Route::get('/@{username}', [PortfolioController::class, 'show'])->middleware('permission:user.read');
         });

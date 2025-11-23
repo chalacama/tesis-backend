@@ -36,7 +36,7 @@ class EducationalUserController extends Controller
         $validated = $request->validate([
             'sede_id'              => ['nullable', 'exists:sedes,id'],
             'career_id'           => ['nullable', 'exists:careers,id'],
-            'educational_level_id'=> ['nullable', 'exists:educational_levels,id'],
+            'educational_level_id'=> ['required', 'exists:educational_levels,id'],
             'level'               => ['nullable', 'integer', 'min:1'],
         ]);
 

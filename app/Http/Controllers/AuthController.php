@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Log; // Para registrar errores
 use Illuminate\Support\Str; // Para generar cadenas aleatorias
 use Illuminate\Validation\Rules\Password;
 use Laravel\Socialite\Facades\Socialite;
-
+use Google\Client as GoogleClient;
 class AuthController extends Controller
 {
     public function register(Request $request): JsonResponse
@@ -118,28 +118,46 @@ class AuthController extends Controller
         $request->validate(['token' => 'required|string']);
 
         try {
-            $googleUser = Socialite::driver('google')->stateless()->userFromToken($request->token);
+            // 1. Configurar el cliente de Google para verificar el ID TOKEN (JWT)
+            $client = new GoogleClient(['client_id' => config('services.google.client_id')]);
+            
+            // Verificamos el token que llega desde Angular (que empieza por eyJ...)
+            $payload = $client->verifyIdToken($request->token);
 
-            $fullName = explode(' ', $googleUser->name, 2);
+            if (!$payload) {
+                return response()->json(['error' => 'Token de Google inválido'], 401);
+            }
 
+            // 2. Extraer datos del payload del JWT verificado
+            // El mapeo cambia ligeramente respecto a Socialite (sub = id, picture = avatar)
+            $googleId = $payload['sub'];
+            $email = $payload['email'];
+            $name = $payload['name'];
+            $avatar = $payload['picture'];
+            
+            // Separar nombre y apellido (lógica que ya tenías)
+            $fullName = explode(' ', $name, 2);
+
+            // 3. Crear o actualizar usuario
             $user = User::updateOrCreate(
-                ['email' => $googleUser->email],
+                ['email' => $email],
                 [
-                    'google_id' => $googleUser->id,
+                    'google_id' => $googleId,
                     'name' => $fullName[0] ?? '',
                     'lastname' => $fullName[1] ?? '',
-                    'username' => $googleUser->nickname ?? Str::slug($googleUser->name).'_'.uniqid(),
+                    'username' => Str::slug($name).'_'.uniqid(), // Quitamos nickname porque no viene en JWT estándar
                     'registration_method' => 'google',
                     'email_verified_at' => now(),
-                    'profile_picture_url' => $googleUser->avatar,
+                    'profile_picture_url' => $avatar,
                 ]
             );
-            // 3. Asignar rol por defecto (si usas spatie/laravel-permission)
+
+            // 4. Asignar rol (lógica original)
             if ($user->wasRecentlyCreated) {
                 $user->assignRole('student');
             }
 
-            // Revocar tokens antiguos para este usuario y crear uno nuevo
+            // 5. Gestión de Tokens de Laravel Sanctum
             $user->tokens()->where('name', 'like', 'auth_token_%')->delete();
             $token = $user->createToken('auth_token_google')->plainTextToken;
 
@@ -150,9 +168,7 @@ class AuthController extends Controller
                 'access_token' => $token,
                 'token_type' => 'Bearer',
                 'user' => $user,
-                'role' => $user->getRoleNames()[0],
-
-                // NUEVOS FLAGS
+                'role' => $user->getRoleNames()[0] ?? 'student',
                 'has_user_information' => $user->hasUserInformation(),
                 'has_educational_user' => $user->hasEducationalUser(),
                 'has_user_category_interest' => $user->hasCategoryInterest(),
@@ -160,8 +176,7 @@ class AuthController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Google Auth Error: '.$e->getMessage());
-
-            return response()->json(['error' => 'La autenticación con Google falló.'], 401);
+            return response()->json(['error' => 'La autenticación con Google falló: ' . $e->getMessage()], 401);
         }
     }
 }

@@ -13,13 +13,21 @@ class EducationalUnitSeeder extends Seeder
      */
     public function run(): void
     {
-        // espam.edu.ec
+        // 1 espam.edu.ec
         EducationalUnit::create([
             'name' => 'ESPAM MFL',
             'organization_domain' => 'espam.edu.ec',
             'url_logo' => 'https://www.espam.edu.ec/recursos/plantilla/img/logo.png',
         ]);
-
+        // 2 Otras instituciones - Educativas
+        EducationalUnit::create([
+            'name' => 'Otros',
+        ]);
+        // 3 no pose de unidad educativa
+        EducationalUnit::create([
+            'name' => 'Ninguno', 
+        ]);
+        //  4 Colegio Raymundo Aveiga
         EducationalUnit::create([
             'name' => 'Colegio Raymundo Aveiga',
             // 'organization_domain' => 'uce.edu.ec',
