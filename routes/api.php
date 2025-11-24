@@ -10,7 +10,7 @@ use App\Http\Controllers\{
     QuestionController, TypeQuestionController,TypeLearningContentController, LikeChapterController,
     SavedCourseController, ContentViewController, CommentController, LikeCommentController,
     CompletedChapterController, TestController, HistoryController, CertificateController, EducationalLevelController,
-    ImageProxyController, NotificationController, UserCategoryInterestController
+    ImageProxyController, NotificationController, UserCategoryInterestController, UserController
 
 };
 
@@ -132,6 +132,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::prefix('/interest')->group(function () {
             Route::get('/show', [UserCategoryInterestController::class, 'show'])->middleware('permission:profile.read');
             Route::put('/update', [UserCategoryInterestController::class, 'update'])->middleware('permission:profile.update');
+        });
+        Route::prefix('/user')->group(function () {
+            Route::put('/update', [UserController::class, 'update'])->middleware('permission:profile.update');
+            Route::get('/validate-username', [UserController::class, 'validateUsername'])->middleware('permission:profile.update');
         });
 
         Route::prefix('portfolio')->group(function () {

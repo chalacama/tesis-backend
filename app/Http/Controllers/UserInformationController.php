@@ -34,11 +34,11 @@ class UserInformationController extends Controller
 
         $validator = Validator::make($request->all(), [
             'birthdate' => ['required', 'date', 'before_or_equal:today'],
-            'phone_number' => ['required', 'regex:/^\+593\s?[0-9]{2}\s?[0-9]{3}\s?[0-9]{4}$/'],
+            'phone_number' => ['required', 'regex:/^\+593[0-9]{9}$/'],
             'province' => ['required', 'string', 'max:100'],
             'canton' => ['required', 'string', 'max:100'],
             'parish' => ['required', 'string', 'max:100'],
-            'sexo' => ['required', 'in:hombre,mujer'],
+            'sexo' => ['required', 'in:masculino,femenino'],
             'estado_civil' => ['required', 'in:casado/a,unido/a,separado/a,divorciado/a,viudo/a,soltero/a'],
             'discapacidad' => ['required', 'in:si,no'],
         ]);

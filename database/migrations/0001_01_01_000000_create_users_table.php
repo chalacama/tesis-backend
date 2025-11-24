@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('lastname');
             $table->string('username')->unique();
+            $table->timestamp('username_at')->nullable()->default(null);
             $table->string('email')->unique();
             $table->string('password')->nullable(); // Contraseña opcional
             $table->string('registration_method')->default('email'); // Método de registro

@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('province');
             $table->string('canton');
             $table->string('parish');
-            $table->enum('sexo', ['hombre', 'mujer']);
+            $table->enum('sexo', ['femenino', 'masculino']);
 
             $table->enum('estado_civil', [
                 'casado/a',
