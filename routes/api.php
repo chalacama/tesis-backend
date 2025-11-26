@@ -158,9 +158,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('education-level')->group(function () {
         Route::get('/index', [EducationalLevelController::class, 'index'])->middleware('permission:education.read');
     });
-    Route::prefix('career')->group(function () {
+   /*  Route::prefix('career')->group(function () {
         Route::get('/index', [CareerController::class, 'index'])->middleware('permission:course.read');
-    });
+    }); */
+    Route::apiResource('career',CareerController::class)->only("index","store","update","destroy")->middleware([
+        'index'=>'permission:course.read',
+        'store'=>'permission:course.create',
+        'update'=>'permission:course.update',
+        'destroy'=>'permission:course.update'
+    ]);
     Route::prefix('difficulty')->group(function () {
         Route::get('/index', [DifficultyController::class, 'index'])->middleware('permission:course.read');
     });
