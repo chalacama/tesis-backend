@@ -11,7 +11,7 @@ use App\Http\Controllers\{
     SavedCourseController, ContentViewController, CommentController, LikeCommentController,
     CompletedChapterController, TestController, HistoryController, CertificateController, EducationalLevelController,
     ImageProxyController, NotificationController, UserCategoryInterestController, UserController, 
-    RatingCourseController
+    RatingCourseController, PanelController
 
 };
 
@@ -47,9 +47,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/generate-code', [CourseController::class, 'generateCode'])->middleware('permission:course.update');
         /* Route::get('/@{username}', [CourseController::class, 'showOwner'])->middleware('permission:course.read.hidden'); */
     });
+
     Route::prefix('studio')->group(function () {
         Route::get('/@{username}', [CourseController::class, 'showOwner'])->middleware('permission:course.read.hidden');
         Route::get('/{course}/show/miniature', [MiniatureCourseController::class, 'show'])->middleware('permission:course.read.hidden');
+    });
+    Route::prefix('dashboard')->group(function () {
+        Route::get('/index', [PanelController::class, 'index'])->middleware('permission:course.read.hidden');
+        Route::get('/{course}/show', [PanelController::class, 'show'])->middleware('permission:course.read.hidden');
     });
     Route::prefix('module')->group(function () {
         Route::get('/{course}/index', [ModuleController::class, 'index'])->middleware('permission:course.read.hidden');
@@ -108,9 +113,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/test/{chapter}/show', [TestController::class, 'show'])->middleware('permission:course.read');
         Route::post('/test/{testView}/update', [TestController::class, 'update'])->middleware('permission:course.read');
         
-
-
-
     });
 
     Route::prefix('feedback')->group(function () {
