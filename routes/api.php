@@ -11,7 +11,7 @@ use App\Http\Controllers\{
     SavedCourseController, ContentViewController, CommentController, LikeCommentController,
     CompletedChapterController, TestController, HistoryController, CertificateController, EducationalLevelController,
     ImageProxyController, NotificationController, UserCategoryInterestController, UserController, 
-    RatingCourseController, PanelController
+    RatingCourseController, PanelController, RoleController
 
 };
 
@@ -56,6 +56,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/index', [PanelController::class, 'index'])->middleware('permission:course.read.hidden');
         Route::get('/{course}/show', [PanelController::class, 'show'])->middleware('permission:course.read.hidden');
     });
+    Route::prefix('user')->group(function () {
+        Route::get('/index', [UserController::class, 'index'])->middleware('permission:user.read.hidden');
+        Route::put('/{user}/change-role', [UserController::class, 'changeRole'])->middleware('permission:user.read.hidden');
+    });
+    Route::prefix('role')->group(function () {
+        Route::get('/index', [RoleController::class, 'index'])->middleware('permission:user.read.hidden');
+        
+    });
+
     Route::prefix('module')->group(function () {
         Route::get('/{course}/index', [ModuleController::class, 'index'])->middleware('permission:course.read.hidden');
         Route::post('/update', [ModuleController::class, 'update'])->middleware('permission:course.update');
