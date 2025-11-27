@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Career extends Model
 {
+    use SoftDeletes;
     protected $fillable = [
         'name',
         'max_semesters',
@@ -39,5 +41,5 @@ class Career extends Model
     {
         return $this->hasMany(CareerCourse::class);
     }
-    
+
 }

@@ -171,12 +171,30 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     Route::prefix('career')->group(function () {
         Route::get('/index', [CareerController::class, 'index'])->middleware('permission:course.read');
+        Route::post('/store', [CareerController::class, 'store'])->middleware('permission:course.read');
+        Route::put('/update', [CareerController::class, 'update'])->middleware('permission:course.read');
+        Route::delete('/destroy', [CareerController::class, 'destroy'])->middleware('permission:course.read');
     });
+    /* Route::apiResource('career',CareerController::class)->only("index","store","update","destroy")->middleware([
+        'index'=>'permission:course.read',
+        'store'=>'permission:course.create',
+        'update'=>'permission:course.update',
+        'destroy'=>'permission:course.update'
+    ]); */
     Route::prefix('difficulty')->group(function () {
         Route::get('/index', [DifficultyController::class, 'index'])->middleware('permission:course.read');
     });
+    /* Route::apiResource('category',CategoryController::class)->only("index","store","update","destroy")->middleware([
+        'index'=>'permission:course.read',
+        'store'=>'permission:course.create',
+        'update'=>'permission:course.update',
+        'destroy'=>'permission:course.update'
+    ]); */
     Route::prefix('category')->group(function () {
         Route::get('/index', [CategoryController::class, 'index'])->middleware('permission:course.read');
+        Route::post('/store', [CategoryController::class, 'store'])->middleware('permission:course.create');
+        Route::put('/{category}/update', [CategoryController::class, 'update'])->middleware('permission:course.update');
+        Route::delete('/{category}/destroy', [CategoryController::class, 'destroy'])->middleware('permission:course.updeate');
     });
 
     Route::prefix('notifications')->group(function () {
