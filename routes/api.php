@@ -10,7 +10,8 @@ use App\Http\Controllers\{
     QuestionController, TypeQuestionController,TypeLearningContentController, LikeChapterController,
     SavedCourseController, ContentViewController, CommentController, LikeCommentController,
     CompletedChapterController, TestController, HistoryController, CertificateController, EducationalLevelController,
-    ImageProxyController, NotificationController, UserCategoryInterestController, UserController
+    ImageProxyController, NotificationController, UserCategoryInterestController, UserController, 
+    RatingCourseController
 
 };
 
@@ -74,14 +75,25 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/index/learning-content', [TypeLearningContentController::class, 'index'])->middleware('permission:course.read');
     });
 
+    Route::prefix('collaborator')->group(function () {
 
-    Route::prefix('tutor-course')->group(function () {
-        // Route::post('/store', [TutorCourseController::class, 'store'])->middleware('permission:tutor-courses.create');
-        // Route::post('/change', [TutorCourseController::class, 'change'])->middleware('permission:tutor-courses.update');
-        // Route::delete('/{TutorCourse}/archived', [TutorCourseController::class, 'archived'])->middleware('permission:tutor-courses.archived');
-    });
-    Route::prefix('invitation')->group(function () {
-        Route::post('{course}/store', [CourseInvitationController::class, 'store'])->middleware('permission:tutor-course.collaborator.invite');
+        Route::get('/{course}/show', [CourseInvitationController::class, 'show'])->middleware('permission:course.tutor.collaborator.invite');
+
+        Route::get('/validate', [CourseInvitationController::class, 'validate'])->middleware('permission:course.tutor.collaborator.invite');
+
+        Route::delete('{course}/delete/{user}', [CourseInvitationController::class, 'deleteCollaborator'])->middleware('permission:course.tutor.collaborator.archived');
+
+        Route::delete('{course}/delete-owner/{user}', [CourseInvitationController::class, 'deleteOwner'])->middleware('permission:course.tutor.owner.change');
+
+        Route::delete('/{course}/leave', [CourseInvitationController::class, 'leave'])->middleware('permission:course.tutor.collaborator.archived');
+
+        Route::post('/{course}/store', [CourseInvitationController::class, 'store'])->middleware('permission:course.tutor.collaborator.invite'); 
+
+        Route::put('/{course}/change', [CourseInvitationController::class, 'change'])->middleware('permission:course.tutor.collaborator.invite');
+
+        Route::delete('/{course}/cancel/{invitation}', [CourseInvitationController::class, 'cancel'])->middleware('permission:course.tutor.collaborator.invite');
+        
+        
     });
 
     Route::prefix('watching')->group(function () {
@@ -95,7 +107,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/test/{chapter}/index', [TestController::class, 'index'])->middleware('permission:course.read');
         Route::get('/test/{chapter}/show', [TestController::class, 'show'])->middleware('permission:course.read');
         Route::post('/test/{testView}/update', [TestController::class, 'update'])->middleware('permission:course.read');
-
+        
 
 
 
@@ -104,6 +116,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('feedback')->group(function () {
         Route::post('/like/{chapter}/update', [LikeChapterController::class, 'update'])->middleware('permission:course.read');
         Route::post('/saved/{course}/update', [SavedCourseController::class, 'update'])->middleware('permission:course.read');
+        Route::post('/rating/{course}/update', [RatingCourseController::class, 'update'])->middleware('permission:course.read');
         Route::post('/content/{learningContent}/update', [ContentViewController::class, 'update'])->middleware('permission:course.read');
         Route::post('/progress/{learningContent}/update', [CompletedChapterController::class, 'updateProgress'])->middleware('permission:course.read');
         Route::post('/completed/{testView}/test', [CompletedChapterController::class, 'completedTest'])->middleware('permission:course.read');
@@ -147,9 +160,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::prefix('certificate')->group(function () {
-
         Route::get('/index', [CertificateController::class, 'index'])->middleware('permission:course.read');
-
     });
 
     Route::prefix('sede')->group(function () {

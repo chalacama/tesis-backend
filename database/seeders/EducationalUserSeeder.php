@@ -19,15 +19,22 @@ class EducationalUserSeeder extends Seeder
             
             
         ]);
-        //ingenieri@
+        //ingenieri@ tutor no posen semestre ni nivel
         EducationalUser::create([
             'sede_id' => 1,
             'user_id' => 2,
-            'career_id' => 5,
-            
-            
+            'career_id' => 5, 
         ]); 
         //estudiante de la Espam Mfl
+        EducationalUser::create([
+            'sede_id' => 1,
+            'user_id' => 3,
+            'career_id' => 5,
+            'educational_level_id' => 1,
+            'level' => 8,
+            
+        ]);
+        // persona fuera de la espam
         EducationalUser::create([
             'sede_id' => 1,
             'user_id' => 3,

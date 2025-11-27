@@ -8,7 +8,7 @@ class CourseInvitation extends Model
 {
     protected $fillable = [
         'course_id',
-        'inviter_id',
+        'user_id',
         'email',
         'token',
         'status',

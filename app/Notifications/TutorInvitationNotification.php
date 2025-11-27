@@ -2,21 +2,22 @@
 
 namespace App\Notifications;
 
+use App\Models\CourseInvitation;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 class TutorInvitationNotification extends Notification
 {
     use Queueable;
 
+    public CourseInvitation $invitation;
+
     /**
      * Create a new notification instance.
      */
-    public function __construct()
+    public function __construct(CourseInvitation $invitation)
     {
-        //
+        $this->invitation = $invitation;
     }
 
     /**
@@ -25,21 +26,9 @@ class TutorInvitationNotification extends Notification
      * @return array<int, string>
      */
     public function via(object $notifiable): array
-{
-    // Antes probablemente decía ['mail'].
-    // Lo cambiamos para que solo se guarde en la base de datos.
-    return ['database'];
-}
-
-    /**
-     * Get the mail representation of the notification.
-     */
-    public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage)
-            ->line('The introduction to the notification.')
-            ->action('Notification Action', url('/'))
-            ->line('Thank you for using our application!');
+        // Solo guardamos en base de datos
+        return ['database'];
     }
 
     /**
@@ -49,8 +38,16 @@ class TutorInvitationNotification extends Notification
      */
     public function toArray(object $notifiable): array
     {
+        $course = $this->invitation->course;
+
         return [
-            //
+            'type'       => 'course_invitation',
+            'message'    => 'Has sido invitado a colaborar en el curso "' . ($course->title ?? '') . '".',
+            'course_id'  => $this->invitation->course_id,
+            'token'      => $this->invitation->token,
+            'invitation_id' => $this->invitation->id,
+            // Opcional: podrías guardar también la URL directa para aceptar:
+            'accept_url' => url('/invitation/accept?token=' . $this->invitation->token),
         ];
     }
 }

@@ -35,101 +35,186 @@ class CourseController extends Controller
 
     use AuthorizesRequests;
     public function index(Request $request): JsonResponse
-    {
-        $this->authorize('viewAnyHidden', Course::class);
+{
+    $this->authorize('viewAnyHidden', Course::class);
 
-        $perPage = $request->query('per_page', 10);
-        $search = $request->query('search');
-        $filters = $request->query('filters', []);
-        $user = Auth::user();
+    $perPage = (int) $request->query('per_page', 10);
+    $search  = $request->query('search');
+    $filters = (array) $request->query('filters', []);
+    $user    = Auth::user();
 
-        $query = Course::query()->withTrashed();
+    // Base query: solo columnas necesarias del curso
+    $query = Course::query()
+        ->withTrashed()
+        ->select([
+            'id',
+            'title',
+            'description',
+            'private',
+            'code',
+            'enabled',
+            'difficulty_id',
+            'deleted_at',
+            'created_at',
+        ]);
 
-        // 🔐 Filtro para tutores: solo ver cursos donde colaboran
-        if ($user->hasRole('tutor')) {
+    // 🔐 Filtro para tutores: solo ver cursos donde colaboran (aquí solo dueño)
+    if ($user->hasRole('tutor')) {
         $query->whereHas('tutors', function ($q) use ($user) {
-        $q->where('users.id', $user->id)
-        ->where('tutor_courses.is_owner', true); // comentar para que colaboren todos
+            $q->where('users.id', $user->id)
+              ->where('tutor_courses.is_owner', true); // comenta si quieres todos
         });
-    
+    }
 
-        }
-        if ($request->has('username') && $user->hasRole('admin')) {
-        $query->whereHas('tutors', function ($q) use ($request) {
-        $q->where('username', $request->query('username'))
-          ->where('tutor_courses.is_owner', true); // comentar para que colaboren todos
+    // 🔐 Filtro por username (solo admin) → dueño del curso
+    if ($request->has('username') && $user->hasRole('admin')) {
+        $query->whereHas('owner', function ($q) use ($request) {
+            $q->where('username', $request->query('username'));
         });
-        }
+    }
 
-
-        // 🔎 Búsqueda por título o descripción
-        if ($search) {
+    // 🔎 Búsqueda por título o descripción
+    if (!empty($search)) {
         $query->where(function ($q) use ($search) {
             $q->where('title', 'like', "%{$search}%")
-            ->orWhere('description', 'like', "%{$search}%");
+              ->orWhere('description', 'like', "%{$search}%");
         });
-        }
+    }
 
-        // 🎛️ Filtros opcionales
-        if (!empty($filters)) {
-        $query->when(isset($filters['enabled']), fn($q) => $q->where('enabled', $filters['enabled']));
-        $query->when(isset($filters['private']), fn($q) => $q->where('private', $filters['private']));
-        $query->when(isset($filters['difficulty_id']), fn($q) => $q->where('difficulty_id', $filters['difficulty_id']));
-        }
+    // 🎛️ Filtros opcionales
+    if (!empty($filters)) {
+        // enabled (boolean)
+        $query->when(isset($filters['enabled']), function ($q) use ($filters) {
+            $q->where('enabled', (bool) $filters['enabled']);
+        });
 
-        // 🧠 Relaciones necesarias y métricas resumidas
-        $courses = $query->with([
-        'miniature:id,course_id,url',
-        'categories:id,name',
-        'tutors:id,name,lastname',
-        'difficulty:id,name'
+        // private (boolean)
+        $query->when(isset($filters['private']), function ($q) use ($filters) {
+            $q->where('private', (bool) $filters['private']);
+        });
+
+        // dificultad
+        $query->when(isset($filters['difficulty_id']), function ($q) use ($filters) {
+            $q->where('difficulty_id', $filters['difficulty_id']);
+        });
+
+        // ✅ Filtrar por categoría
+        // filters[category_id]=ID
+        $query->when(isset($filters['category_id']), function ($q) use ($filters) {
+            $q->whereHas('categories', function ($q2) use ($filters) {
+                $q2->where('categories.id', $filters['category_id']);
+            });
+        });
+
+        // ✅ Filtrar por carrera
+        // filters[career_id]=ID
+        $query->when(isset($filters['career_id']), function ($q) use ($filters) {
+            $q->whereHas('careers', function ($q2) use ($filters) {
+                $q2->where('careers.id', $filters['career_id']);
+            });
+        });
+
+        // ✅ NUEVO: filtrar por COLABORADOR (nombre+apellido o username)
+        // filters[collaborator]=string
+        $query->when(
+            isset($filters['collaborator']) && trim($filters['collaborator']) !== '',
+            function ($q) use ($filters) {
+                $term = trim($filters['collaborator']);
+
+                $q->whereHas('collaborators', function ($q2) use ($term) {
+                    $q2->where(function ($qq) use ($term) {
+                        // nombre + apellido juntos
+                        $qq->whereRaw(
+                            "CONCAT(users.name, ' ', COALESCE(users.lastname, '')) LIKE ?",
+                            ["%{$term}%"]
+                        )
+                        // o por username
+                        ->orWhere('users.username', 'like', "%{$term}%");
+                    });
+                });
+            }
+        );
+    }
+
+    // 🧠 Relaciones necesarias y métricas RESUMIDAS
+    $courses = $query
+        ->with([
+            'miniature:id,course_id,url',
+            'difficulty:id,name',
+            // dueño del curso
+            'owner:id,name,lastname,email,profile_picture_url,username',
+            // colaboradores
+            'collaborators:id,name,lastname,email,profile_picture_url,username',
         ])
-        ->withCount(['modules', 'allComments', 'savedCourses', 'registrations'])
-        ->withSum('ratingCourses as total_stars', 'stars')
-        ->orderBy('created_at', 'desc')
+        // Solo contadores que sí necesitas
+        ->withCount([
+            'savedCourses',
+            'registrations',
+        ])
+        ->orderByDesc('created_at')
         ->paginate($perPage)
-        ->through(function ($course) {
-        return [
-            'id' => $course->id,
-            'title' => $course->title,
-            'description' => $course->description,
-            'private' => $course->private,
-            'code' => $course->code,
-            'enabled' => $course->enabled,
-            'deleted_at' => $course->deleted_at,
-            'modules_count' => $course->modules_count,
-            'total_comments_count' => $course->all_comments_count,
-            'saved_courses_count' => $course->saved_courses_count,
-            'registrations_count' => $course->registrations_count,
-            'total_stars' => (int) $course->total_stars,
-            
-            'miniature' => $course->miniature ? [
-                'id' => $course->miniature->id,
-                'url' => $course->miniature->url,
-            ] : null,
-            'difficulty' => $course->difficulty ? [
-                'id' => $course->difficulty->id,
-                'name' => $course->difficulty->name,
-            ] : null,
-            'categorias' => $course->categories->map(fn($cat) => [
-                'id' => $cat->id,
-                'name' => $cat->name,
-            ]),
-            'creador' => $this->getCreator($course),
-            'colaboradores' => $this->getCollaborators($course),
-        ];
+        ->through(function (Course $course) {
+            // owner() es belongsToMany con is_owner = true → Collection
+            $owner = $course->owner->first();
+
+            return [
+                'id'          => $course->id,
+                'title'       => $course->title,
+                'description' => $course->description,
+                'private'     => $course->private,
+                'code'        => $course->code,
+                'enabled'     => $course->enabled,
+                'deleted_at'  => $course->deleted_at,
+
+                'saved_courses_count' => $course->saved_courses_count,
+                'registrations_count' => $course->registrations_count,
+
+                'miniature' => $course->miniature ? [
+                    'id'  => $course->miniature->id,
+                    'url' => $course->miniature->url,
+                ] : null,
+
+                'difficulty' => $course->difficulty ? [
+                    'id'   => $course->difficulty->id,
+                    'name' => $course->difficulty->name,
+                ] : null,
+
+                'creador' => $owner ? [
+                    'id'                  => $owner->id,
+                    'name'                => $owner->name,
+                    'lastname'            => $owner->lastname,
+                    'email'               => $owner->email,
+                    'profile_picture_url' => $owner->profile_picture_url,
+                    'username'            => $owner->username,
+                ] : null,
+
+                'colaboradores' => $course->collaborators
+                    ->map(function (User $user) {
+                        return [
+                            'id'                  => $user->id,
+                            'name'                => $user->name,
+                            'lastname'            => $user->lastname,
+                            'email'               => $user->email,
+                            'profile_picture_url' => $user->profile_picture_url,
+                            'username'            => $user->username,
+                        ];
+                    })
+                    ->values(),
+            ];
         });
 
-        return response()->json([
+    return response()->json([
         'courses' => $courses->items(),
         'pagination' => [
-            'total' => $courses->total(),
-            'per_page' => $courses->perPage(),
+            'total'        => $courses->total(),
+            'per_page'     => $courses->perPage(),
             'current_page' => $courses->currentPage(),
-            'last_page' => $courses->lastPage(),
+            'last_page'    => $courses->lastPage(),
         ],
-        ]);
-    }
+    ]);
+}
+
+
 
     private function getCreator(Course $course): string
     {

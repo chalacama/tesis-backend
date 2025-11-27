@@ -15,8 +15,8 @@ class TutorCourseSeeder extends Seeder
     {
         
     // 1. Laravel Básico (Owner: User 2, Collaborator: User 3)
-    TutorCourse::create(['course_id' => 1, 'user_id' => 2, 'is_owner' => true]);
-    TutorCourse::create(['course_id' => 1, 'user_id' => 3, 'is_owner' => false]);
+    TutorCourse::create(['course_id' => 1, 'user_id' => 2, 'is_owner' => false]);
+    TutorCourse::create(['course_id' => 1, 'user_id' => 3, 'is_owner' => true]);
 
     // 2. Fundamentos de Diseño Gráfico (Owner: User 3)
     TutorCourse::create(['course_id' => 2, 'user_id' => 3, 'is_owner' => true]);

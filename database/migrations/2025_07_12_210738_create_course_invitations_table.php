@@ -14,9 +14,9 @@ return new class extends Migration
         Schema::create('course_invitations', function (Blueprint $table) {
             $table->id();
             $table->foreignId('course_id')->constrained()->onDelete('cascade');
-            $table->foreignId('inviter_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade'); // Usuario que envía la invitación
             $table->string('email'); // Email del usuario a invitar
-            $table->string('token', 60)->unique(); // Token único para la URL de invitación
+            $table->string('token', 60)->unique();
             $table->enum('status', ['pending', 'accepted', 'expired'])->default('pending');
             $table->timestamps();
         });

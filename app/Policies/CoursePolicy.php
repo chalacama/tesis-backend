@@ -106,6 +106,11 @@ class CoursePolicy
     {
         return false;
     }
-    
+    public function leave(User $user, Course $course): bool
+{
+    // Puede salir si es dueño o colaborador del curso
+    return $this->owns($user, $course) || $this->collaborator($user, $course);
+}
+
     
 }
