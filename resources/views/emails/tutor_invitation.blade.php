@@ -44,13 +44,18 @@
         <p>Hola,</p>
         <p>Has sido invitado a colaborar en el curso <strong>{{ $invitation->course->title }}</strong>.</p>
         <p>Para aceptar la invitación, haz clic en el siguiente enlace:</p>
-        <p><a href="{{ url('/invitation/accept/' . $invitation->token) }}" class="button">Aceptar Invitación</a></p>
+        <p><a href="{{ $acceptUrl }}" class="button">Aceptar Invitación</a></p>
+
         <p>Detalles de la invitación:</p>
         <ul>
             <li>Correo invitado: {{ $invitation->email }}</li>
             <li>Curso: {{ $invitation->course->title }}</li>
-            <li>Invitador ID: {{ $invitation->inviter_id }}</li>
+            
+            @if(method_exists($invitation, 'inviter') && $invitation->inviter)
+            <li>Invitado por: {{ $invitation->inviter->name }} {{ $invitation->inviter->lastname }}</li>
+            @endif
         </ul>
+
         <p>Si no deseas aceptar, simplemente ignora este correo.</p>
         <p>Gracias,<br>Equipo de la plataforma</p>
     </div>

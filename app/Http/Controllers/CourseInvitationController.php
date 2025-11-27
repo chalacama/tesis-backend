@@ -467,8 +467,6 @@ public function store(Request $request, Course $course)
 }
 
 
-
-
 public function accept(Request $request)
 {
     $request->validate(['token' => 'required|string']);
@@ -496,6 +494,9 @@ public function accept(Request $request)
         ], 200);
     }
 
+    // 🔹 Cargar relaciones necesarias: curso + miniatura + quien invitó
+    $invitation->load(['course.miniature', 'inviter']);
+
     // 4. Adjuntar al curso como colaborador (sin autenticación, basado en el email)
     DB::transaction(function () use ($user, $invitation) {
         $course = $invitation->course;
@@ -512,14 +513,35 @@ public function accept(Request $request)
         $invitation->update(['status' => 'accepted']);
     });
 
+    // 🔹 Construir respuesta enriquecida
+    $course  = $invitation->course;
+    $inviter = $invitation->inviter; // puede ser null si algo raro pasó
+
     return response()->json([
         'message' => 'Invitación aceptada correctamente. Ya eres colaborador del curso.',
+
+        'course' => [
+            'id'            => $course->id,
+            'title'         => $course->title,
+            'miniature_url' => optional($course->miniature)->url,
+        ],
+
+        'invited_user' => [
+            'id'                   => $user->id,
+            'name'                 => $user->name,
+            'lastname'             => $user->lastname,
+            'username'             => $user->username,
+            'profile_picture_url'  => $user->profile_picture_url,
+        ],
+
+        'inviter_user' => $inviter ? [
+            'id'                   => $inviter->id,
+            'name'                 => $inviter->name,
+            'lastname'             => $inviter->lastname,
+            'username'             => $inviter->username,
+            'profile_picture_url'  => $inviter->profile_picture_url,
+        ] : null,
     ], 200);
 }
-
-
-
-
-
 
 }

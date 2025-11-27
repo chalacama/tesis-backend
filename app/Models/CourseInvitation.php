@@ -17,4 +17,8 @@ class CourseInvitation extends Model
     {
         return $this->belongsTo(Course::class);
     }
+    public function inviter()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 }

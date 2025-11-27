@@ -7,6 +7,7 @@ use App\Models\Comment;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Str;
 
 class CourseCommentedNotification extends Notification
 {
@@ -52,7 +53,7 @@ class CourseCommentedNotification extends Notification
             'course_title'  => $this->course->title,
             'comment_id'    => $this->comment->id,
             // Ajusta a tu ruta real en Angular
-            'url'           => "/courses/{$this->course->id}#comment-{$this->comment->id}",
+            'url' => "learning/course/" . Str::slug($this->course->title) . "/{$this->course->id}#comment-{$this->comment->id}",
         ];
     }
 }

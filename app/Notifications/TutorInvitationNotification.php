@@ -37,17 +37,22 @@ class TutorInvitationNotification extends Notification
      * @return array<string, mixed>
      */
     public function toArray(object $notifiable): array
-    {
-        $course = $this->invitation->course;
+{
+    $course = $this->invitation->course;
+    $frontendUrl = config('app.frontend_url', config('app.url'));
+    $acceptUrl = rtrim($frontendUrl, '/') . '/invitation/accept?token=' . $this->invitation->token;
 
-        return [
-            'type'       => 'course_invitation',
-            'message'    => 'Has sido invitado a colaborar en el curso "' . ($course->title ?? '') . '".',
-            'course_id'  => $this->invitation->course_id,
-            'token'      => $this->invitation->token,
-            'invitation_id' => $this->invitation->id,
-            // Opcional: podrías guardar también la URL directa para aceptar:
-            'accept_url' => url('/invitation/accept?token=' . $this->invitation->token),
-        ];
-    }
+    return [
+        'key'          => 'course.invitation', // encaja con NotificationKey | string
+        'title'        => 'Invitación a colaborar en un curso',
+        'message'      => 'Has sido invitado a colaborar en el curso "' . ($course->title ?? '') . '".',
+        'url'          => $acceptUrl, // 🔗 ruta pública de Angular
+
+        'course_id'    => $this->invitation->course_id,
+        'course_title' => $course->title ?? null,
+        'token'        => $this->invitation->token,
+        'invitation_id'=> $this->invitation->id,
+    ];
+}
+
 }
