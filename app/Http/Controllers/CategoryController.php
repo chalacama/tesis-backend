@@ -9,9 +9,10 @@ use App\Http\Requests\UpdateCategoryRequest;
 
 class CategoryController extends Controller
 {
-    public function index()
+    
+   public function index()
     {
-        // Obtiene todas las categorías ordenadas por nombre ascendente
+        // Obtiene todas las categorías ordenadas por ID descendente
         $categories = Category::orderBy('name', 'asc')->get();
 
         return response()->json([

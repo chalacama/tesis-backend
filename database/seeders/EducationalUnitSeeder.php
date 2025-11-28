@@ -21,11 +21,13 @@ class EducationalUnitSeeder extends Seeder
         ]);
         // 2 Otras instituciones - Educativas
         EducationalUnit::create([
-            'name' => 'Otros',
+            'name' => 'Otras sedes educativas',
+            'url_logo' => 'https://res.cloudinary.com/dvvqko1vv/image/upload/v1764369743/logo-otras-instituciones-educativas_thulyo.png',
         ]);
         // 3 no pose de unidad educativa
         EducationalUnit::create([
-            'name' => 'Ninguno', 
+            'name' => 'Ninguno (No posee ninguna sede educativa)', 
+            'url_logo' => 'https://res.cloudinary.com/dvvqko1vv/image/upload/v1764369806/logo-no-pose-institucion-educativa_kg1myq.png',
         ]);
         //  4 Colegio Raymundo Aveiga
         EducationalUnit::create([
