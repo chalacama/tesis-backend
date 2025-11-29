@@ -4,15 +4,19 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use App\Models\EducationalUnit;
-use App\Models\CareerSede;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\EducationalUnit;
+use App\Models\Career;
+use App\Models\EducationalUser;
+
 class Sede extends Model
 {
     use HasFactory, SoftDeletes;
+
     protected $fillable = [
-        'province',
-        'canton',
+        'contry',
+        'province_id',
+        'canton_id',
         'educational_unit_id',
     ];
 
@@ -25,5 +29,11 @@ class Sede extends Model
     public function careers()
     {
         return $this->belongsToMany(Career::class, 'career_sedes', 'sede_id', 'career_id');
+    }
+
+    // Usuarios educativos asociados a la sede (para conteo en indexAll)
+    public function educationalUsers()
+    {
+        return $this->hasMany(EducationalUser::class);
     }
 }

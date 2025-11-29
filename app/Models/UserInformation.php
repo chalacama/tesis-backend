@@ -11,16 +11,19 @@ class UserInformation extends Model
     protected $fillable = [
         'birthdate',
         'phone_number',
-        'province',
-        'canton',
-        'parish',
+        'province_id',
+        'canton_id',
+        'parish_id',
         'user_id',
         'sexo',
         'estado_civil',
+        'discapacidad',
         'discapacidad_permanente',
-        'asistencia_establecimiento_discapacidad'
+        'asistencia_establecimiento_discapacidad',
     ];
-
+    protected $casts = [
+        'birthdate' => 'date',
+    ];
     /**
      * Relación inversa uno a uno con User.
      */

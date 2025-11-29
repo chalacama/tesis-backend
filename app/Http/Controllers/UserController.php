@@ -26,7 +26,7 @@ class UserController extends Controller
                 'string',
                 'min:3',
                 'max:30',
-                'regex:/^[a-z0-9._]+$/',
+                'regex:/^[a-z0-9._-]+$/',
                 Rule::unique('users', 'username')->ignore($user->id),
             ],
         ], [
@@ -85,7 +85,7 @@ class UserController extends Controller
                 'string',
                 'min:3',
                 'max:30',
-                'regex:/^[a-z0-9._]+$/',
+                'regex:/^[a-z0-9._-]+$/',
             ],
         ], [
             'username.regex' => 'El usuario solo puede contener letras minúsculas, números, puntos (.) y guiones bajos (_). Sin espacios ni mayúsculas.',

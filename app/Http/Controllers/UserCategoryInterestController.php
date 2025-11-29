@@ -68,7 +68,7 @@ class UserCategoryInterestController extends Controller
 
         // Validación: exactamente 4 categorias, sin duplicados, que existan en categories.id
         $validated = $request->validate([
-            'categories'   => ['required', 'array', 'size:4'],
+            'categories'   => ['required', 'array', 'size:4'  ],
             'categories.*' => ['integer', 'distinct', 'exists:categories,id'],
         ]);
 

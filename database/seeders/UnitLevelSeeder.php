@@ -12,40 +12,62 @@ class UnitLevelSeeder extends Seeder
      */
     public function run(): void
     {
-        // espam.edu.ec - Educación Superior
+        // espam.edu.ec
         UnitLevel::create([
             'educational_unit_id' => 1,
-            'educational_level_id' => 1,
+            'educational_level_id' => 3, //nivel 3
         ]);
-        // espam.edu.ec - Otros
+        
         UnitLevel::create([
             'educational_unit_id' => 1,
-            'educational_level_id' => 4,
+            'educational_level_id' => 4, //nivel 4
         ]);
+        
+        
+        
+        
         // Otras instituciones - Educativas
         UnitLevel::create([
             'educational_unit_id' => 2,
-            'educational_level_id' => 1,
+            'educational_level_id' => 1, //nivel 1
         ]);
         UnitLevel::create([
             'educational_unit_id' => 2,
-            'educational_level_id' => 2,
+            'educational_level_id' => 2, //nivel 2
         ]);
 
         UnitLevel::create([
             'educational_unit_id' => 2,
-            'educational_level_id' => 3,
+            'educational_level_id' => 3, //nivel 3
         ]);
         UnitLevel::create([
             'educational_unit_id' => 2,
-            'educational_level_id' => 4,
+            'educational_level_id' => 4, //nivel 4
+        ]);
+        UnitLevel::create([
+            'educational_unit_id' => 2,
+            'educational_level_id' => 5, //otros niveles 5
         ]);
 
         // no posee unidad educativa ni nivel educativo
         UnitLevel::create([
             'educational_unit_id' => 3,
-            'educational_level_id' => 5,
+            'educational_level_id' => 6,  //no hay nivel 6
         ]);
+
+        // Colegio Raymundo Aveiga
+        UnitLevel::create([
+            'educational_unit_id' => 4,
+            'educational_level_id' => 1, //nivel 1
+        ]);
+
+        UnitLevel::create([
+            'educational_unit_id' => 4,
+            'educational_level_id' => 2, //nivel 2
+        ]);
+        
+
+        
         
     }
 }

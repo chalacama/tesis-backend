@@ -10,45 +10,55 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void
-    {
-        Schema::create('user_information', function (Blueprint $table) {
-            $table->id();
-            $table->date('birthdate');
-            $table->string('phone_number');
-            $table->string('province');
-            $table->string('canton');
-            $table->string('parish');
-            $table->enum('sexo', ['femenino', 'masculino']);
+{
+    Schema::create('user_information', function (Blueprint $table) {
+        $table->id();
+        $table->date('birthdate');
+        $table->string('phone_number');
 
-            $table->enum('estado_civil', [
-                'casado/a',
-                'unido/a',
-                'separado/a',
-                'divorciado/a',
-                'viudo/a',
-                'soltero/a',
-            ]);
+        // 👇 Ahora guardamos solo IDs numéricos
+        $table->unsignedInteger('province_id');
+        $table->unsignedInteger('canton_id');
+        $table->unsignedInteger('parish_id');
 
-            $table->enum('discapacidad', ['si', 'no']);
-            $table->enum('discapacidad_permanente', [
-                'intelectual (retraso mental)',
-                'físico-motora (parálisis y amputaciones)',
-                'visual (ceguera)',
-                'auditiva (sordera)',
-                'mental (enfermedades psiquiátricas)',
-                'otro tipo',
-            ])->nullable();
+        $table->enum('sexo', ['femenino', 'masculino']);
 
-            $table->enum('asistencia_establecimiento_discapacidad', ['si', 'no'])
-                ->nullable();
+        $table->enum('estado_civil', [
+            'casado/a',
+            'unido/a',
+            'separado/a',
+            'divorciado/a',
+            'viudo/a',
+            'soltero/a',
+        ]);
 
-            $table->unsignedBigInteger('user_id')->unique();
+        $table->enum('discapacidad', ['si', 'no']);
 
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+        $table->enum('discapacidad_permanente', [
+            'intelectual (retraso mental)',
+            'físico-motora (parálisis y amputaciones)',
+            'visual (ceguera)',
+            'auditiva (sordera)',
+            'mental (enfermedades psiquiátricas)',
+            'otro tipo',
+        ])->nullable();
 
-            $table->timestamps();
-        });
-    }
+        $table->enum('asistencia_establecimiento_discapacidad', ['si', 'no'])
+            ->nullable();
+
+        $table->unsignedBigInteger('user_id')->unique();
+
+        $table->foreign('user_id')
+            ->references('id')
+            ->on('users')
+            ->onDelete('cascade');
+
+        // 👇 Opcional, pero ayuda a buscar rápido por ubicación
+        $table->index(['province_id', 'canton_id', 'parish_id']);
+
+        $table->timestamps();
+    });
+}
 
     /**
      * Reverse the migrations.

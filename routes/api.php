@@ -11,7 +11,7 @@ use App\Http\Controllers\{
     SavedCourseController, ContentViewController, CommentController, LikeCommentController,
     CompletedChapterController, TestController, HistoryController, CertificateController, EducationalLevelController,
     ImageProxyController, NotificationController, UserCategoryInterestController, UserController, 
-    RatingCourseController, PanelController, RoleController
+    RatingCourseController, PanelController, RoleController, EcuadorLocationController
 
 };
 
@@ -176,9 +176,14 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::prefix('sede')->group(function () {
         Route::get('/index', [SedeController::class, 'index'])->middleware('permission:education.read');
+         Route::get('/index-all', [SedeController::class, 'indexAll'])->middleware('permission:education.read.hidden');
     });
+
     Route::prefix('education-level')->group(function () {
-        Route::get('/index', [EducationalLevelController::class, 'index'])->middleware('permission:education.read');
+        Route::get('/index', [EducationalLevelController::class, 'index'])->middleware('permission:education.read.hidden');
+        Route::post('/store', [EducationalLevelController::class, 'store'])->middleware('permission:education.create');
+        Route::put('/update', [EducationalLevelController::class, 'update'])->middleware('permission:education.update');
+        Route::delete('/destroy', [EducationalLevelController::class, 'destroy'])->middleware('permission:education.update');
     });
     Route::prefix('career')->group(function () {
         Route::get('/index', [CareerController::class, 'index'])->middleware('permission:course.read');
@@ -203,6 +208,18 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/unread-count',[NotificationController::class, 'unreadCount']); // solo contador
         Route::post('/{id}/read',  [NotificationController::class, 'markAsRead']);   // marcar una
         Route::post('/read-all',   [NotificationController::class, 'markAllAsRead']); // marcar todas
+    });
+
+    Route::prefix('locations')->group(function () {
+        // Todas las provincias
+        Route::get('/provinces', [EcuadorLocationController::class, 'provinces'])->middleware('permission:profile.read');
+
+        // Cantones por provincia
+        Route::get('/provinces/{province}/cantons', [EcuadorLocationController::class, 'cantons'])->middleware('permission:profile.read');
+
+        // Parroquias por provincia y cantón
+        Route::get(
+        '/provinces/{province}/cantons/{canton}/parishes',[EcuadorLocationController::class, 'parishes'])->middleware('permission:profile.read');
     });
 
 });

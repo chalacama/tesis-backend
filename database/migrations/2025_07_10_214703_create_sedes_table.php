@@ -9,20 +9,29 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
+public function up(): void
     {
         Schema::create('sedes', function (Blueprint $table) {
             $table->id();
+
+            // Siempre Ecuador
             $table->string('contry')->default('Ecuador');
-            $table->string('province')->nullable();
-            $table->string('canton')->nullable();
+
+            // Ahora guardamos SOLO IDs, opcionalmente null
+            $table->unsignedInteger('province_id')->nullable();
+            $table->unsignedInteger('canton_id')->nullable();
+
             $table->unsignedBigInteger('educational_unit_id');
             $table->timestamps();
             $table->softDeletes();
 
-            $table->foreign('educational_unit_id')->references('id')
-            ->on('educational_units')
-            ->onDelete('cascade');
+            $table->foreign('educational_unit_id')
+                ->references('id')
+                ->on('educational_units')
+                ->onDelete('cascade');
+
+            // Opcional: índices para filtros
+            $table->index(['province_id', 'canton_id']);
         });
     }
 
