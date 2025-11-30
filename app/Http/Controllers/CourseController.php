@@ -320,7 +320,7 @@ class CourseController extends Controller
     public int $maxCareers    = 2;
 
     /** Config de imagen */
-    public array $allowedImageExtensions = ['jpg','png','gif'];
+    public array $allowedImageExtensions = ['jpg','png','webp'];
     public int   $maxImageSizeMb = 20;
     public function update(Request $request, Course $course): JsonResponse
 {
