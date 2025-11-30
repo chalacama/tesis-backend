@@ -38,7 +38,7 @@ class QuestionController extends Controller
 
     // Base query (si no hay test => devolver vacío)
     $query = Question::query()
-        ->when($test, fn ($q) => $q->where('test_id', $test->id)->whereNull('deleted_at'),
+        ->when($test, fn ($q) => $q->where('test_id', $test->id),
             fn ($q) => $q->whereRaw('1=0')) // sin test => lista vacía
         ->with([
             'typeQuestion:id,nombre',
