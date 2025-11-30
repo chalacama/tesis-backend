@@ -91,10 +91,10 @@ public function update(Request $request): JsonResponse
 
             // 3) Respuesta: módulos con capítulos enriquecidos
             $modules = $course->modules()
-                ->select('id','name','order','course_id','created_at','updated_at','deleted_at')
+                ->select('id','name','order','course_id','created_at','updated_at')
                 ->with([
                     'chapters' => function ($q) {
-                        $q->select('id','title','description','order','module_id','created_at','updated_at','deleted_at')
+                        $q->select('id','title','description','order','module_id','created_at','updated_at')
                           ->withCount('questions')
                           ->with(['learningContent' => function ($c) {
                               $c->select('id','type_content_id','chapter_id')

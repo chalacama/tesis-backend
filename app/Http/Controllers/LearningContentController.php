@@ -54,14 +54,14 @@ public function show(Chapter $chapter): JsonResponse
         ]);
 }
 
-public function update(Request $request, Chapter $chapter): JsonResponse
+public function update(Request $request, Chapter $chapter): JsonResponse 
 {
     set_time_limit(300);
 
     $course = $chapter->module?->course;
     $this->authorize('update', $course);
 
-    // Validación básica
+    // ⚠ NO TOCAMOS VALIDACIÓN (Angular ya depende de esto)
     $data = $request->validate([
         'type_content_id' => ['required', 'integer', 'exists:type_learning_contents,id'],
         'url'             => ['nullable', 'string'],
@@ -92,7 +92,7 @@ public function update(Request $request, Chapter $chapter): JsonResponse
 
                     $cloudinary = new Cloudinary(config('cloudinary.cloud_url'));
 
-                    // public_id final quedará como "archives/chapter/{id}"
+                    // public_id final quedará como algo tipo "archives/chapter/{id}"
                     $upload = $cloudinary->uploadApi()->upload(
                         $file->getRealPath(),
                         [
@@ -107,26 +107,42 @@ public function update(Request $request, Chapter $chapter): JsonResponse
 
                     $newUrl = $upload['secure_url'] ?? $upload['url'] ?? null;
                 }
-                // Si no hay file, se respetará $newUrl (puede ser null para archivar)
+                // Si no hay file, se respetará $newUrl (puede ser null para eliminar contenido)
             }
 
-            // Buscar contenido existente (incluyendo soft-deleted)
-            // Buscar contenido existente
-            $existing = LearningContent::where('chapter_id', $chapter->id)
-            ->first();
+            // Buscar contenido existente (solo registros reales, ya no hay soft delete)
+            $existing = LearningContent::where('chapter_id', $chapter->id)->first();
 
-            // Reglas para archivar (soft delete) automáticamente:
+            // Reglas para ELIMINAR automáticamente:
             // - YOUTUBE sin URL
             // - ARCHIVO sin file y sin URL
-            $shouldArchive =
+            $shouldDelete =
                 ($typeName === 'youtube' && is_null($newUrl)) ||
                 ($typeName === 'archivo'
                     && (!($request->hasFile('file') && $request->file('file')->isValid()))
                     && is_null($newUrl));
 
-            if ($shouldArchive) {
-                if ($existing && is_null($existing->deleted_at)) {
-                    // Marcar como borrado lógico
+            if ($shouldDelete) {
+                if ($existing) {
+                    // Si el contenido está/estaba asociado a un archivo, intentamos borrar de Cloudinary
+                    try {
+                        // Asumimos convención "archives/chapter/{id}"
+                        $cloudinary = new Cloudinary(config('cloudinary.cloud_url'));
+                        $publicId   = "archives/chapter/{$chapter->id}";
+
+                        $cloudinary->uploadApi()->destroy($publicId, [
+                            'resource_type' => 'auto',
+                            'invalidate'    => true,
+                        ]);
+                    } catch (\Throwable $e) {
+                        Log::warning('No se pudo eliminar el archivo de Cloudinary al borrar LearningContent', [
+                            'chapter_id' => $chapter->id,
+                            'error'      => $e->getMessage(),
+                        ]);
+                        // No lanzamos excepción: preferimos que la operación de BD se complete
+                    }
+
+                    // Eliminamos definitivamente el registro (ya no hay softDeletes)
                     $existing->delete();
                 }
 
@@ -137,14 +153,9 @@ public function update(Request $request, Chapter $chapter): JsonResponse
                 return;
             }
 
-            // Si NO se archiva, crear/actualizar (restaurando si estaba en papelera)
+            // Si NO se elimina, crear/actualizar contenido
             if ($existing) {
-                $restoredFromTrash = !is_null($existing->deleted_at);
-
-                if ($restoredFromTrash) {
-                    $existing->restore();
-                }
-
+                // Actualización normal de un contenido ya existente
                 $existing->fill([
                     'type_content_id' => $type->id,
                     'url'             => $newUrl,
@@ -155,9 +166,10 @@ public function update(Request $request, Chapter $chapter): JsonResponse
                 ]);
 
                 $learningContent = $existing;
-                // Lo consideramos "nuevo" solo si antes estaba archivado
-                $isNewContent = $restoredFromTrash;
+                // Ya existía -> NO lo contamos como "nuevo" para notificaciones
+                $isNewContent = false;
             } else {
+                // Crear nuevo contenido
                 $content = LearningContent::create([
                     'chapter_id'      => $chapter->id,
                     'type_content_id' => $type->id,
@@ -204,6 +216,7 @@ public function update(Request $request, Chapter $chapter): JsonResponse
         ], 500);
     }
 }
+
 
 
 

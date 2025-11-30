@@ -12,10 +12,10 @@ class MiniatureCoursesSeeder extends Seeder
      */
     public function run(): void
     {
-        MiniatureCourse::create([
-        'course_id' => 1, // Laravel Básico
-        'url' => 'https://i.ytimg.com/vi/AE5U8zjkU2s/maxresdefault.jpg', // Coding-related image
-    ]);
+    //     MiniatureCourse::create([
+    //     'course_id' => 1, // Laravel Básico
+    //     'url' => 'https://i.ytimg.com/vi/AE5U8zjkU2s/maxresdefault.jpg', // Coding-related image
+    // ]);
     MiniatureCourse::create([
         'course_id' => 2, // Fundamentos de Diseño Gráfico
         'url' => 'https://edteam-media.s3.amazonaws.com/courses/original/242a3c4d-0182-4164-afc2-4649ce119c5b.jpg', // Design tools
@@ -30,7 +30,7 @@ class MiniatureCoursesSeeder extends Seeder
     ]);
     MiniatureCourse::create([
         'course_id' => 5, // Introducción a la Inteligencia Artificial
-        'url' => 'https://fdlformacion.com/wp-content/uploads/2025/04/introduccion-IA.jpg', // AI tech
+        'url' => 'https://res.cloudinary.com/dvvqko1vv/image/upload/v1764480685/miniatures/curso/5.jpg', // AI tech
     ]);
     MiniatureCourse::create([
         'course_id' => 6, // Análisis de Datos con Python

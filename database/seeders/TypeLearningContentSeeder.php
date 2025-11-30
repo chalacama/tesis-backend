@@ -21,7 +21,7 @@ class TypeLearningContentSeeder extends Seeder
         ]);
         TypeLearningContent::create([
             'name' => 'archivo',
-            'max_size_mb' => 100.00,
+            'max_size_mb' => 800.00,
             'min_duration_seconds' => 120,
             'max_duration_seconds' => 480,
         ]);

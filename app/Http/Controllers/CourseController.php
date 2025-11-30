@@ -350,15 +350,17 @@ class CourseController extends Controller
         // Miniatura (archivo) -> multipart/form-data
         'miniature'    => [
             'sometimes',
-            'nullable',
-            'file',
+            'file', // 👈 ya no nullable, si viene debe ser archivo
             'mimes:' . implode(',', $this->allowedImageExtensions),
             'max:' . ($this->maxImageSizeMb * 1024), // en KB
         ],
+
+        // Flag explícito para eliminar miniatura
+        'remove_miniature' => 'sometimes|in:1,0,true,false,on,off,yes,no',
     ]);
 
     // ---- Normalización booleans para form-data ----
-    foreach (['private','enabled'] as $flag) {
+    foreach (['private','enabled','remove_miniature'] as $flag) {
         if ($request->has($flag)) {
             $validated[$flag] = filter_var(
                 $request->input($flag),
@@ -367,6 +369,8 @@ class CourseController extends Controller
             );
         }
     }
+
+    $removeMiniature = (bool)($validated['remove_miniature'] ?? false);
 
     // ---- Normalización + límites ----
     $maxCategories = $this->maxCategories;
@@ -412,10 +416,9 @@ class CourseController extends Controller
     }
 
     try {
-        // Vamos a detectar si realmente hubo cambios
         $wasUpdated = false;
 
-        DB::transaction(function () use ($request, $course, $validated, $normCategories, $normCareers, &$wasUpdated) {
+        DB::transaction(function () use ($request, $course, $validated, $normCategories, $normCareers, $removeMiniature, &$wasUpdated) {
 
             // 1) Actualizar campos base enviados
             $toUpdate = collect($validated)->only([
@@ -424,7 +427,7 @@ class CourseController extends Controller
 
             if (!empty($toUpdate)) {
                 $course->update($toUpdate);
-                $wasUpdated = $course->wasChanged(); // true si cambió algo
+                $wasUpdated = $course->wasChanged() || $wasUpdated;
             }
 
             // 2) Categorías
@@ -436,7 +439,7 @@ class CourseController extends Controller
                     $payload[$nc['id']] = ['order' => $seq++];
                 }
                 $course->categories()->sync($payload);
-                $wasUpdated = true; // cambios en relaciones también cuentan
+                $wasUpdated = true;
             }
 
             // 3) Carreras
@@ -447,6 +450,7 @@ class CourseController extends Controller
 
             // 4) Miniatura (archivo -> Cloudinary)
             if ($request->hasFile('miniature')) {
+                // OPCIÓN 2: actualizar miniatura
                 $file = $request->file('miniature');
 
                 $cloudinary = new Cloudinary(config('cloudinary.cloud_url'));
@@ -471,10 +475,29 @@ class CourseController extends Controller
                 } else {
                     throw new \RuntimeException('No se pudo obtener la URL de Cloudinary.');
                 }
-            } elseif ($request->input('miniature') === null) {
-                $course->miniature()->delete();
-                $wasUpdated = true;
+
+            } elseif ($removeMiniature) {
+                // OPCIÓN 3: quitar miniatura (sin subir nueva)
+                $miniature = $course->miniature;
+
+                if ($miniature) {
+                    try {
+                        // Intentar borrar también en Cloudinary
+                        $cloudinary = new Cloudinary(config('cloudinary.cloud_url'));
+                        // Mismo public_id que usamos al subir
+                        $cloudinary->uploadApi()->destroy("miniatures/curso/{$course->id}");
+                    } catch (\Throwable $e) {
+                        Log::warning('No se pudo borrar miniatura de Cloudinary', [
+                            'course_id' => $course->id,
+                            'error'     => $e->getMessage(),
+                        ]);
+                    }
+
+                    $course->miniature()->delete();
+                    $wasUpdated = true;
+                }
             }
+            // OPCIÓN 1: no enviar ni miniature ni remove_miniature -> no se toca la miniatura
         });
 
         // 🔔 Si realmente hubo cambios, notificar a los estudiantes registrados
@@ -504,6 +527,7 @@ class CourseController extends Controller
         ], 500);
     }
 }
+
 /**
  * Notifica a todos los usuarios registrados en el curso
  * que el curso ha sido actualizado.
