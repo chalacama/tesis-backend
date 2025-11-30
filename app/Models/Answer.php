@@ -7,11 +7,10 @@ use App\Models\Question;
 use App\Models\UserAnswer;
 use Spatie\EloquentSortable\Sortable;
 use Spatie\EloquentSortable\SortableTrait;
-use Illuminate\Database\Eloquent\SoftDeletes;
 // use Spatie\EloquentSortable\Sortable;
 class Answer extends Model implements Sortable
 {
-    use SortableTrait , SoftDeletes;
+    use SortableTrait ;
     
     public $sortable = [
         'order_column_name' => 'order',

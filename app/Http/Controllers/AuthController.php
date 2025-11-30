@@ -84,9 +84,10 @@ class AuthController extends Controller
     }
 
     // 4. Revocar tokens antiguos y crear uno nuevo
-    $user->tokens()->delete();
+    // 4. Crear token para ESTA sesión sin eliminar los anteriores
     $token = $user->createToken('auth_token_login')->plainTextToken;
-
+    $expiresInMinutes = config('sanctum.expiration'); // 1440
+    $expiresAt = now()->addMinutes($expiresInMinutes);
     // Cargar relaciones
     $user->load(['userInformation', 'educationalUser']);
 
@@ -112,6 +113,7 @@ class AuthController extends Controller
         'message'                   => 'Inicio de sesión exitoso.',
         'access_token'              => $token,
         'token_type'                => 'Bearer',
+        'expires_at'                => $expiresAt->toIso8601String(), // 👈 NUEVO
         'user'                      => $user,
         'role'                      => $user->getRoleNames()[0] ?? 'student',
         'can_update_username'       => $canUpdateUsername, // 👈 AQUÍ, justo después de role
@@ -218,9 +220,10 @@ class AuthController extends Controller
             }
 
             // 4. Gestión de Tokens de Laravel Sanctum
-            $user->tokens()->where('name', 'like', 'auth_token_%')->delete();
+            // Simplemente crea un token nuevo
             $token = $user->createToken('auth_token_google')->plainTextToken;
-
+            $expiresInMinutes = config('sanctum.expiration');
+            $expiresAt = now()->addMinutes($expiresInMinutes);
             // 5. Calcular si puede actualizar el username (booleano)
             $canUpdateUsername = false;
 
@@ -247,6 +250,7 @@ class AuthController extends Controller
                 'access_token'               => $token,
                 'token_type'                 => 'Bearer',
                 'user'                       => $user,
+                'expires_at'                 => $expiresAt->toIso8601String(), // 👈
                 'role'                       => $user->getRoleNames()[0] ?? 'student',
                 'can_update_username'        => $canUpdateUsername, // 👈 AQUÍ EL BOOLEANO
                 'has_user_information'       => $user->hasUserInformation(),

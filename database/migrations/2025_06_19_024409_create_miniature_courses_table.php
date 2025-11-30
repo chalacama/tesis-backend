@@ -16,7 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('course_id')->unique(); // Unique to enforce one-to-one
             $table->string('url');
             $table->timestamps();
-            $table->softDeletes();
+            
             $table->foreign('course_id')->references('id')->on('courses')->onDelete('cascade');
         });
     }

@@ -38,7 +38,7 @@ class StartController extends Controller
 {
     return [
         'tutors:id,name,lastname,profile_picture_url,username',
-        'miniature:id,course_id,url,deleted_at',
+        'miniature:id,course_id,url',
         // Solo lo necesario para is_saved / is_registered
         'savedCourses:course_id,user_id',
         'registrations:course_id,user_id',
@@ -82,7 +82,7 @@ class StartController extends Controller
                 ? \Carbon\Carbon::parse($course->created_at)->locale('es')->isoFormat('D MMM YYYY')
                 : null,
 
-            'thumbnail_url' => $course->miniature && !$course->miniature->trashed()
+            'thumbnail_url' => $course->miniature
                 ? $course->miniature->url
                 : null,
 

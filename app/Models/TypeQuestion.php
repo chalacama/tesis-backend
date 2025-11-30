@@ -3,20 +3,28 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Question;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Question;
+
 class TypeQuestion extends Model
 {
-    use SoftDeletes;
+    use HasFactory, SoftDeletes;
+
     protected $fillable = [
         'nombre',
     ];
 
     /**
-     * Relación: un tipo de pregunta tiene muchas preguntas.
+     * Un tipo de pregunta tiene muchas preguntas.
      */
     public function questions()
     {
         return $this->hasMany(Question::class, 'type_questions_id');
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->whereNull('deleted_at');
     }
 }

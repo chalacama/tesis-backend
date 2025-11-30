@@ -6,11 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\TypeLearningContent;
 use App\Models\Chapter;
 use App\Models\ContentView;
-use Illuminate\Database\Eloquent\SoftDeletes;
+
 
 class LearningContent extends Model
 {
-    use SoftDeletes;
+    
     protected $fillable = [
         'url',
         'type_content_id',

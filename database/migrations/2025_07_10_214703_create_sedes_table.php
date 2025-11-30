@@ -15,7 +15,7 @@ public function up(): void
             $table->id();
 
             // Siempre Ecuador
-            $table->string('contry')->default('Ecuador');
+            $table->string('contry')->default('ECUADOR');
 
             // Ahora guardamos SOLO IDs, opcionalmente null
             $table->unsignedInteger('province_id')->nullable();
@@ -23,7 +23,6 @@ public function up(): void
 
             $table->unsignedBigInteger('educational_unit_id');
             $table->timestamps();
-            $table->softDeletes();
 
             $table->foreign('educational_unit_id')
                 ->references('id')

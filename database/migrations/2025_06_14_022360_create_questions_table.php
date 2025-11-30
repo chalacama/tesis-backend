@@ -21,7 +21,6 @@ return new class extends Migration
             //order
             
             $table->timestamps();
-            $table->softDeletes();
             $table->foreign('type_questions_id')->references('id')->on('type_questions')->onDelete('cascade');
             $table->foreign('test_id')->references('id')->on('tests')->onDelete('cascade');
         });

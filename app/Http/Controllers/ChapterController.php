@@ -36,7 +36,7 @@ class ChapterController extends Controller
             'module_id',
             'created_at',
             'updated_at',
-            'deleted_at',
+            
         ]);
 
         return response()->json([
@@ -75,7 +75,7 @@ class ChapterController extends Controller
             'module_id',
             'created_at',
             'updated_at',
-            'deleted_at',
+            
         ]);
 
         return response()->json([

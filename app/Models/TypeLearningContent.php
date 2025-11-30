@@ -3,11 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\LearningContent;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\LearningContent;
+
 class TypeLearningContent extends Model
 {
-    use SoftDeletes;
+    use HasFactory, SoftDeletes;
+
     protected $fillable = [
         'name',
         'max_size_mb',
@@ -16,10 +19,18 @@ class TypeLearningContent extends Model
     ];
 
     /**
-     * Relación: un tipo tiene muchos contenidos de aprendizaje.
+     * Un tipo tiene muchos contenidos de aprendizaje.
      */
     public function learningContents()
     {
         return $this->hasMany(LearningContent::class, 'type_content_id');
+    }
+
+    /**
+     * Scope para obtener solo tipos activos (no archivados).
+     */
+    public function scopeActive($query)
+    {
+        return $query->whereNull('deleted_at');
     }
 }

@@ -27,7 +27,6 @@ return new class extends Migration
             
 
             $table->timestamps();
-            $table->softDeletes();
             // Definimos la llave foránea para las respuestas (apunta a la misma tabla).
             $table->foreign('parent_id')->references('id')->on('comments')->onDelete('cascade');
         });

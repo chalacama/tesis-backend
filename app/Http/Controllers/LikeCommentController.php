@@ -18,12 +18,7 @@ class LikeCommentController extends Controller
         $this->authorize('viewRegistered', $course);
 
         // Evita likes sobre comentarios eliminados lógicamente
-        if ($comment->trashed()) {
-            return response()->json([
-                'ok' => false,
-                'message' => 'Este comentario ya no está disponible.'
-            ], 410); // Gone
-        }
+        
 
         $user = $request->user();
         if (!$user) {

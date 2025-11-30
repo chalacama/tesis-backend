@@ -17,10 +17,8 @@ return new class extends Migration
             $table->unsignedBigInteger('type_content_id');
             $table->unsignedBigInteger('chapter_id')->unique(); // uno a uno
             $table->timestamps();
-            $table->softDeletes();
             $table->foreign('type_content_id')->references('id')->on('type_learning_contents')->onDelete('cascade');
-            $table->foreign('chapter_id')->references('id')->on('chapters')->onDelete('cascade');
-            
+            $table->foreign('chapter_id')->references('id')->on('chapters')->onDelete('restrict');
             
             
         });

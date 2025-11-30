@@ -80,9 +80,8 @@ class Course extends Model
     public function tutors()
     {
         return $this->belongsToMany(User::class, 'tutor_courses')
-                    ->withPivot('is_owner')
-                    ->withTimestamps()
-                    ->wherePivotNull('deleted_at');
+                    ->withPivot('is_owner');
+                    
     }
 
     /**

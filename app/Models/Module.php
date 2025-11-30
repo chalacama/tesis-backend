@@ -6,14 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\Course;
 use App\Models\Chapter;
 use App\Models\ModuleAttempt;
-use Illuminate\Database\Eloquent\SoftDeletes;
+
 use Spatie\EloquentSortable\Sortable;
 use Spatie\EloquentSortable\SortableTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Module extends Model implements Sortable
 {
-    use SoftDeletes,SortableTrait; 
+    use SortableTrait; 
     
     public $sortable = [
         'order_column_name' => 'order',

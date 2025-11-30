@@ -111,9 +111,9 @@ public function update(Request $request, Chapter $chapter): JsonResponse
             }
 
             // Buscar contenido existente (incluyendo soft-deleted)
-            $existing = LearningContent::withTrashed()
-                ->where('chapter_id', $chapter->id)
-                ->first();
+            // Buscar contenido existente
+            $existing = LearningContent::where('chapter_id', $chapter->id)
+            ->first();
 
             // Reglas para archivar (soft delete) automáticamente:
             // - YOUTUBE sin URL

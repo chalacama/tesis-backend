@@ -11,10 +11,10 @@ use App\Models\Test;
 use Spatie\EloquentSortable\Sortable;
 use Spatie\EloquentSortable\SortableTrait;
 
-use Illuminate\Database\Eloquent\SoftDeletes;
+
 class Question extends Model implements Sortable
 {
-    use SoftDeletes , SortableTrait;
+    use SortableTrait;
     public $sortable = [
         'order_column_name' => 'order',
         'sort_when_creating' => true,

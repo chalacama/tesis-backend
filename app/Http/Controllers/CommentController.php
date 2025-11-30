@@ -266,8 +266,7 @@ public function replies(Request $request, Course $course, Comment $comment)
             Rule::exists('comments','id')
                 ->where(function($q) use ($course) {
                     $q->where('commentable_type', Course::class)
-                      ->where('commentable_id', $course->id)
-                      ->whereNull('deleted_at');
+                      ->where('commentable_id', $course->id);
                 }),
         ],
     ]);

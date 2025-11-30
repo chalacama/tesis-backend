@@ -5,17 +5,17 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Module;
 use App\Models\LearningContent;
-use Illuminate\Database\Eloquent\SoftDeletes;
+
 use Spatie\EloquentSortable\Sortable;
 use Spatie\EloquentSortable\SortableTrait;
-use Illuminate\Database\Eloquent\Prunable;
+/* use Illuminate\Database\Eloquent\Prunable; */
 use App\Models\Question;
 use App\Models\LikeChapter;
 use App\Models\CompletedChapter;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 class Chapter extends Model implements Sortable
 {
-    use SoftDeletes,SortableTrait , Prunable; 
+    use SortableTrait ; 
     
     public $sortable = [
         'order_column_name' => 'order',
@@ -27,11 +27,11 @@ class Chapter extends Model implements Sortable
         'order',
         'module_id',
     ];
-    public function prunable()
+    /* public function prunable()
     {
         return static::onlyTrashed()
             ->where('deleted_at', '<=', now()->subDays(30));
-    }
+    } */
     protected function pruning()
     {
         // Aquí puedes borrar archivos en Cloudinary, logs, etc.

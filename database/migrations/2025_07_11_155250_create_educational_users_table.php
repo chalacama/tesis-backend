@@ -22,7 +22,14 @@ return new class extends Migration
 
             $table->foreign('sede_id')->references('id')->on('sedes')->onDelete('cascade');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('career_id')->references('id')->on('careers')->onDelete('set null');
+            $table->foreign('educational_level_id')
+                ->references('id')
+                ->on('educational_levels')
+                ->onDelete('set null');
+            $table->foreign('career_id')
+                ->references('id')
+                ->on('careers')
+                ->onDelete('set null');
         });
     }
 

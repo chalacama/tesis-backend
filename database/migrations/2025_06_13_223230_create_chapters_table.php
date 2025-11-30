@@ -13,16 +13,18 @@ return new class extends Migration
     {
         Schema::create('chapters', function (Blueprint $table) {
             $table->id();
-            $table->string('title')->nullable();
+            $table->string('title');
             $table->text('description')->nullable();
-            
             $table->integer('order')->default(1);
             $table->unsignedBigInteger('module_id');
             $table->timestamps();
-            $table->softDeletes();
-            $table->foreign('module_id')->references('id')->on('modules')->onDelete('cascade');
-            
+
+            $table->foreign('module_id')
+                ->references('id')
+                ->on('modules')
+                ->onDelete('cascade');
         });
+
     }
 
     /**

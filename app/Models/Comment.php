@@ -9,12 +9,12 @@ use App\Models\Course;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
-use Illuminate\Database\Eloquent\SoftDeletes;
+
 use App\Models\LikeComment;
 
 class Comment extends Model
 {
-    use HasFactory , SoftDeletes;
+    use HasFactory;
     protected $fillable = [
         'user_id',
         'texto',

@@ -17,7 +17,6 @@ return new class extends Migration
             $table->integer('order')->default(1);
             $table->unsignedBigInteger('course_id');
             $table->timestamps();
-            $table->softDeletes();
 
             $table->foreign('course_id')->references('id')->on('courses')->onDelete('cascade');
         });
