@@ -19,6 +19,9 @@ class Sede extends Model
         'canton_id',
         'educational_unit_id',
     ];
+    protected $attributes = [
+        'contry' => 'ECUADOR',
+    ];
 
     public function educationalUnit()
     {

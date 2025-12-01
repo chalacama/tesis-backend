@@ -136,115 +136,154 @@ class SedeController extends Controller
         return response()->json($paginator);
     }
 
-    /**
-     * STORE
-     * Crear una nueva sede.
-     * Recibe IDs de provincia, cantón y unidad educativa.
-     */
-    public function store(Request $request, EcuadorLocationService $locations): JsonResponse
-    {
-        $validator = Validator::make(
-            $request->all(),
-            [
-                'contry'             => 'required|string|max:255',
-                'province_id'        => 'required|integer',
-                'canton_id'          => 'required|integer',
-                'educational_unit_id'=> 'required|exists:educational_units,id',
-            ],
-            [
-                'contry.required'      => 'El país es obligatorio.',
-                'contry.string'        => 'El país debe ser una cadena de texto.',
-                'contry.max'           => 'El país no debe superar los 255 caracteres.',
+/**
+ * STORE
+ * Crear una nueva sede.
+ * Recibe IDs de provincia, cantón, unidad educativa y opcionalmente carreras.
+ */
+public function store(Request $request, EcuadorLocationService $locations): JsonResponse
+{
+    $validator = Validator::make(
+        $request->all(),
+        [
+            
+            // 🔹 Ya NO recibimos "contry"
+            'province_id'          => 'required|integer',
+            'canton_id'            => 'required|integer',
+            'educational_unit_id'  => 'required|exists:educational_units,id',
 
-                'province_id.required' => 'La provincia es obligatoria.',
-                'province_id.integer'  => 'La provincia debe ser un ID numérico válido.',
+            // 🔹 OPCIONAL: carreras para la sede
+            'career_ids'           => 'sometimes|array',
+            'career_ids.*'         => 'integer|exists:careers,id',
+        ],
+        [
+            'province_id.required' => 'La provincia es obligatoria.',
+            'province_id.integer'  => 'La provincia debe ser un ID numérico válido.',
 
-                'canton_id.required'   => 'El cantón es obligatorio.',
-                'canton_id.integer'    => 'El cantón debe ser un ID numérico válido.',
+            'canton_id.required'   => 'El cantón es obligatorio.',
+            'canton_id.integer'    => 'El cantón debe ser un ID numérico válido.',
 
-                'educational_unit_id.required' => 'La unidad educativa es obligatoria.',
-                'educational_unit_id.exists'   => 'La unidad educativa seleccionada no existe.',
-            ]
-        );
+            'educational_unit_id.required' => 'La unidad educativa es obligatoria.',
+            'educational_unit_id.exists'   => 'La unidad educativa seleccionada no existe.',
 
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error de validación',
-                'errors'  => $validator->errors(),
-            ], 422);
-        }
+            'career_ids.array'     => 'Las carreras deben enviarse como un arreglo de IDs.',
+            'career_ids.*.integer' => 'Cada carrera debe ser un ID numérico válido.',
+            'career_ids.*.exists'  => 'Alguna de las carreras seleccionadas no existe.',
+        ]
+    );
 
-        $sede = Sede::create($validator->validated());
-
-        // Cargamos relaciones para devolver todo completo
-        $sede->load([
-            'educationalUnit.educationalLevels',
-            'careers',
-        ]);
-
-        $data = $this->transformSede($sede, $locations, true);
-
+    if ($validator->fails()) {
         return response()->json([
-            'success' => true,
-            'message' => 'Sede creada correctamente.',
-            'data'    => $data,
-        ], 201);
+            'success' => false,
+            'message' => 'Error de validación',
+            'errors'  => $validator->errors(),
+        ], 422);
     }
 
-    /**
-     * UPDATE
-     * Actualizar una sede existente.
-     */
-    public function update(Request $request, Sede $sede, EcuadorLocationService $locations): JsonResponse
-    {
-        $validator = Validator::make(
-            $request->all(),
-            [
-                'contry'             => 'required|string|max:255',
-                'province_id'        => 'required|integer',
-                'canton_id'          => 'required|integer',
-                'educational_unit_id'=> 'required|exists:educational_units,id',
-            ],
-            [
-                'contry.required'      => 'El país es obligatorio.',
-                'contry.string'        => 'El país debe ser una cadena de texto.',
-                'contry.max'           => 'El país no debe superar los 255 caracteres.',
+    $validated  = $validator->validated();
+    $careerIds  = $validated['career_ids'] ?? null;
+    unset($validated['career_ids']); // No es columna de la tabla sedes
 
-                'province_id.required' => 'La provincia es obligatoria.',
-                'province_id.integer'  => 'La provincia debe ser un ID numérico válido.',
+    // contry se pone solo con el default 'ECUADOR' de la migración
+    $sede = Sede::create($validated);
 
-                'canton_id.required'   => 'El cantón es obligatorio.',
-                'canton_id.integer'    => 'El cantón debe ser un ID numérico válido.',
-
-                'educational_unit_id.required' => 'La unidad educativa es obligatoria.',
-                'educational_unit_id.exists'   => 'La unidad educativa seleccionada no existe.',
-            ]
-        );
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error de validación',
-                'errors'  => $validator->errors(),
-            ], 422);
-        }
-
-        $sede->update($validator->validated());
-
-        $sede->load([
-            'educationalUnit.educationalLevels',
-            'careers',
-        ]);
-
-        $data = $this->transformSede($sede, $locations, true);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Sede actualizada correctamente.',
-            'data'    => $data,
-        ], 200);
+    // Asociar carreras si se enviaron
+    if (!is_null($careerIds)) {
+        $sede->careers()->sync($careerIds);
     }
+
+    // Cargamos relaciones para devolver todo completo
+    $sede->load([
+        'educationalUnit.educationalLevels',
+        'careers',
+    ]);
+
+    $data = $this->transformSede($sede, $locations, true);
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Sede creada correctamente.',
+        'data'    => $data,
+    ], 201);
+}
+
+/**
+ * UPDATE
+ * Actualizar una sede existente.
+ * También permite actualizar (o limpiar) sus carreras opcionalmente.
+ */
+public function update(Request $request, Sede $sede, EcuadorLocationService $locations): JsonResponse
+{
+    $validator = Validator::make(
+        $request->all(),
+        [
+            // 🔹 Ya NO recibimos "contry"
+
+            'province_id'          => 'required|integer',
+            'canton_id'            => 'required|integer',
+            'educational_unit_id'  => 'required|exists:educational_units,id',
+
+            // 🔹 OPCIONAL: carreras para la sede
+            'career_ids'           => 'sometimes|array',
+            'career_ids.*'         => 'integer|exists:careers,id',
+        ],
+        [
+            'province_id.required' => 'La provincia es obligatoria.',
+            'province_id.integer'  => 'La provincia debe ser un ID numérico válido.',
+
+            'canton_id.required'   => 'El cantón es obligatorio.',
+            'canton_id.integer'    => 'El cantón debe ser un ID numérico válido.',
+
+            'educational_unit_id.required' => 'La unidad educativa es obligatoria.',
+            'educational_unit_id.exists'   => 'La unidad educativa seleccionada no existe.',
+
+            'career_ids.array'     => 'Las carreras deben enviarse como un arreglo de IDs.',
+            'career_ids.*.integer' => 'Cada carrera debe ser un ID numérico válido.',
+            'career_ids.*.exists'  => 'Alguna de las carreras seleccionadas no existe.',
+        ]
+    );
+
+    if ($validator->fails()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Error de validación',
+            'errors'  => $validator->errors(),
+        ], 422);
+    }
+
+    $validated = $validator->validated();
+
+    // Solo modificamos carreras si el campo viene en el request
+    $careerIds = array_key_exists('career_ids', $validated)
+        ? $validated['career_ids']
+        : null;
+
+    unset($validated['career_ids']); // no es columna de la tabla
+
+    // contry no se toca, se queda con el valor actual (ECUADOR)
+    $sede->update($validated);
+
+    if (!is_null($careerIds)) {
+        // [] → limpia todas las carreras
+        // [1,2,3] → sincroniza esas carreras
+        $sede->careers()->sync($careerIds);
+    }
+
+    $sede->load([
+        'educationalUnit.educationalLevels',
+        'careers',
+    ]);
+
+    $data = $this->transformSede($sede, $locations, true);
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Sede actualizada correctamente.',
+        'data'    => $data,
+    ], 200);
+}
+
+
 
     /**
      * DESTROY
