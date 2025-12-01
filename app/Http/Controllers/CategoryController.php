@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Category;
 use App\Http\Requests\StoreCategoryRequest;
 use App\Http\Requests\UpdateCategoryRequest;
-
+use Illuminate\Http\JsonResponse;
 class CategoryController extends Controller
 {
     
@@ -21,7 +21,7 @@ class CategoryController extends Controller
             'data' => $categories
         ], 200);
     }
-
+    
     public function store(StoreCategoryRequest $request)
     {
         $category = Category::create($request->validated());
@@ -32,7 +32,57 @@ class CategoryController extends Controller
             'data' => $category
         ], 201);
     }
+    /**
+     * Index administrativo con filtros, paginación y datos adicionales.
+     *
+     * Query params esperados:
+     *  - search   (string, opcional): filtra por nombre de categoría
+     *  - per_page (int, opcional): cantidad por página (default 10, máx 100)
+     *  - page     (int, opcional): página actual (Laravel lo maneja solo)
+     */
+    public function indexAdmin(Request $request): JsonResponse
+    {
+        $search  = $request->input('search');
+        $perPage = (int) $request->input('per_page', 10);
 
+        // Limitar per_page a un rango razonable
+        if ($perPage <= 0) {
+            $perPage = 10;
+        } elseif ($perPage > 100) {
+            $perPage = 100;
+        }
+
+        $query = Category::query()
+            // Conteos adicionales
+            ->withCount([
+                // cantidad de cursos asociados a la categoría
+                'courses as courses_count',
+                // cantidad de usuarios interesados en la categoría
+                'userCategoryInterests as users_interested_count',
+            ])
+            // Filtro por nombre si viene "search"
+            ->when($search, function ($q) use ($search) {
+                $q->where('name', 'LIKE', '%' . $search . '%');
+            })
+            ->orderBy('name', 'asc');
+
+        $categories = $query->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Lista de categorías administrativa obtenida correctamente',
+            'data'    => $categories->items(), // solo los registros de la página actual
+            'meta'    => [
+                'current_page' => $categories->currentPage(),
+                'per_page'     => $categories->perPage(),
+                'total'        => $categories->total(),
+                'last_page'    => $categories->lastPage(),
+                'from'         => $categories->firstItem(),
+                'to'           => $categories->lastItem(),
+                'search'       => $search,
+            ],
+        ], 200);
+    }
     public function update(UpdateCategoryRequest $request, Category $category)
     {
         $category->update($request->validated());

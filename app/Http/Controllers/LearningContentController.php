@@ -216,10 +216,6 @@ public function update(Request $request, Chapter $chapter): JsonResponse
         ], 500);
     }
 }
-
-
-
-
 protected function notifyRegisteredUsersNewContent(
     Course $course,
     Chapter $chapter,

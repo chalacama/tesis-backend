@@ -39,7 +39,7 @@ class CourseUpdatedNotification extends Notification
             'course_title' => $this->course->title,
             'updated_at'   => now()->toIso8601String(),
             // Ajusta esta ruta a la que usas en Angular para ver el curso:
-            'url'          => "/course/{$this->course->id}",
+            'url'          => "learning/course/{$this->course->title}/{$this->course->id}",
         ];
     }
 

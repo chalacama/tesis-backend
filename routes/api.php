@@ -11,7 +11,7 @@ use App\Http\Controllers\{
     SavedCourseController, ContentViewController, CommentController, LikeCommentController,
     CompletedChapterController, TestController, HistoryController, CertificateController, EducationalLevelController,
     ImageProxyController, NotificationController, UserCategoryInterestController, UserController, 
-    RatingCourseController, PanelController, RoleController, EcuadorLocationController
+    RatingCourseController, PanelController, RoleController, EcuadorLocationController, EducationalUnitController
 
 };
 
@@ -176,20 +176,32 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::prefix('sede')->group(function () {
         Route::get('/index', [SedeController::class, 'index'])->middleware('permission:education.read');
-         Route::get('/index-all', [SedeController::class, 'indexAll'])->middleware('permission:education.read.hidden');
+        Route::get('/index-admin', [SedeController::class, 'indexAdmin'])->middleware('permission:education.read.hidden');
+        Route::post('/store', [SedeController::class, 'store'])->middleware('permission:education.create');
+        Route::put('/{sede}/update', [SedeController::class, 'update'])->middleware('permission:education.update');
+        Route::delete('{sede}/destroy', [SedeController::class, 'destroy'])->middleware('permission:education.update');
     });
 
-    Route::prefix('education-level')->group(function () {
+    Route::prefix('edu-level')->group(function () {
         Route::get('/index', [EducationalLevelController::class, 'index'])->middleware('permission:education.read.hidden');
+        Route::get('/index-admin', [EducationalLevelController::class, 'indexAdmin'])->middleware('permission:education.read.hidden');
         Route::post('/store', [EducationalLevelController::class, 'store'])->middleware('permission:education.create');
-        Route::put('/update', [EducationalLevelController::class, 'update'])->middleware('permission:education.update');
-        Route::delete('/destroy', [EducationalLevelController::class, 'destroy'])->middleware('permission:education.update');
+        Route::put('/{educationalLevel}/update', [EducationalLevelController::class, 'update'])->middleware('permission:education.update');
+        Route::delete('{educationalLevel}/destroy', [EducationalLevelController::class, 'destroy'])->middleware('permission:education.update');
+    });
+    Route::prefix('edu-unit')->group(function () {
+        Route::get('/index', [EducationalUnitController::class, 'index'])->middleware('permission:education.read.hidden');
+        Route::get('/index-admin', [EducationalUnitController::class, 'indexAdmin'])->middleware('permission:education.read.hidden');
+        Route::post('/store', [EducationalUnitController::class, 'store'])->middleware('permission:education.create');
+        Route::put('/{educationalUnit}/update', [EducationalUnitController::class, 'update'])->middleware('permission:education.update');
+        Route::delete('/{educationalUnit}/destroy', [EducationalUnitController::class, 'destroy'])->middleware('permission:education.update');
     });
     Route::prefix('career')->group(function () {
         Route::get('/index', [CareerController::class, 'index'])->middleware('permission:course.read');
+        Route::get('/index-admin', [CareerController::class, 'indexAdmin'])->middleware('permission:course.setting.read.hidden');
         Route::post('/store', [CareerController::class, 'store'])->middleware('permission:course.setting.create');
-        Route::put('/update', [CareerController::class, 'update'])->middleware('permission:course.setting.update');
-        Route::delete('/destroy', [CareerController::class, 'destroy'])->middleware('permission:course.setting.update');
+        Route::put('/{career}/update', [CareerController::class, 'update'])->middleware('permission:course.setting.update');
+        Route::delete('/{career}/destroy', [CareerController::class, 'destroy'])->middleware('permission:course.setting.update');
     });
     
     Route::prefix('difficulty')->group(function () {
@@ -198,6 +210,7 @@ Route::middleware('auth:sanctum')->group(function () {
     
     Route::prefix('category')->group(function () {
         Route::get('/index', [CategoryController::class, 'index'])->middleware('permission:course.read');
+        Route::get('/index-admin', [CategoryController::class, 'indexAdmin'])->middleware('permission:course.setting.read.hidden');
         Route::post('/store', [CategoryController::class, 'store'])->middleware('permission:course.setting.create');
         Route::put('/{category}/update', [CategoryController::class, 'update'])->middleware('permission:course.setting.update');
         Route::delete('/{category}/destroy', [CategoryController::class, 'destroy'])->middleware('permission:course.setting.update');

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Validator;
 
 use App\Models\Sede;
 use App\Models\EducationalUnit;
@@ -15,8 +16,7 @@ class SedeController extends Controller
     use AuthorizesRequests;
 
     /**
-     * Listado de sedes visibles para el usuario autenticado.
-     * Aplica filtro por dominio (no admin) y añade nombres de provincia/cantón.
+     * Listado de sedes visibles para el usuario autenticado (no admin).
      */
     public function index(Request $request, EcuadorLocationService $locations): JsonResponse
     {
@@ -64,7 +64,6 @@ class SedeController extends Controller
 
         $sedes = $query->get();
 
-        // Transformar para incluir nombres de provincia/cantón
         $data = $sedes->map(function (Sede $sede) use ($locations) {
             return $this->transformSede($sede, $locations, false);
         });
@@ -75,13 +74,17 @@ class SedeController extends Controller
     }
 
     /**
-     * Listado global de sedes con:
+     * INDEX ADMIN
      * - TODOS los registros
      * - Conteo de usuarios por sede
-     * - Filtros por unidad educativa, provincia y cantón
+     * - Filtros por:
+     *   - unit_name (nombre de la unidad educativa)
+     *   - province_id
+     *   - canton_id
+     *   - educational_level_id (NUEVO, filtra por nivel educativo de la unidad)
      * - Paginación
      */
-    public function indexAll(Request $request, EcuadorLocationService $locations): JsonResponse
+    public function indexAdmin(Request $request, EcuadorLocationService $locations): JsonResponse
     {
         $query = Sede::with([
             'educationalUnit.educationalLevels',
@@ -106,6 +109,15 @@ class SedeController extends Controller
             $query->where('canton_id', $request->input('canton_id'));
         }
 
+        // 🔹 NUEVO: filtro por nivel educativo
+        // Sedes cuya UNIDAD EDUCATIVA tenga ese nivel en educationalLevels
+        if ($request->filled('educational_level_id')) {
+            $levelId = (int) $request->input('educational_level_id');
+            $query->whereHas('educationalUnit.educationalLevels', function ($q) use ($levelId) {
+                $q->where('educational_levels.id', $levelId);
+            });
+        }
+
         // Paginación
         $perPage = (int) $request->input('per_page', 15);
         if ($perPage <= 0) {
@@ -119,11 +131,133 @@ class SedeController extends Controller
             return $this->transformSede($sede, $locations, true);
         });
 
-        // Reemplazamos la colección interna por la transformada
         $paginator->setCollection($transformed);
 
-        // El paginador ya trae meta: current_page, last_page, total, data, etc.
         return response()->json($paginator);
+    }
+
+    /**
+     * STORE
+     * Crear una nueva sede.
+     * Recibe IDs de provincia, cantón y unidad educativa.
+     */
+    public function store(Request $request, EcuadorLocationService $locations): JsonResponse
+    {
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'contry'             => 'required|string|max:255',
+                'province_id'        => 'required|integer',
+                'canton_id'          => 'required|integer',
+                'educational_unit_id'=> 'required|exists:educational_units,id',
+            ],
+            [
+                'contry.required'      => 'El país es obligatorio.',
+                'contry.string'        => 'El país debe ser una cadena de texto.',
+                'contry.max'           => 'El país no debe superar los 255 caracteres.',
+
+                'province_id.required' => 'La provincia es obligatoria.',
+                'province_id.integer'  => 'La provincia debe ser un ID numérico válido.',
+
+                'canton_id.required'   => 'El cantón es obligatorio.',
+                'canton_id.integer'    => 'El cantón debe ser un ID numérico válido.',
+
+                'educational_unit_id.required' => 'La unidad educativa es obligatoria.',
+                'educational_unit_id.exists'   => 'La unidad educativa seleccionada no existe.',
+            ]
+        );
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error de validación',
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
+
+        $sede = Sede::create($validator->validated());
+
+        // Cargamos relaciones para devolver todo completo
+        $sede->load([
+            'educationalUnit.educationalLevels',
+            'careers',
+        ]);
+
+        $data = $this->transformSede($sede, $locations, true);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Sede creada correctamente.',
+            'data'    => $data,
+        ], 201);
+    }
+
+    /**
+     * UPDATE
+     * Actualizar una sede existente.
+     */
+    public function update(Request $request, Sede $sede, EcuadorLocationService $locations): JsonResponse
+    {
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'contry'             => 'required|string|max:255',
+                'province_id'        => 'required|integer',
+                'canton_id'          => 'required|integer',
+                'educational_unit_id'=> 'required|exists:educational_units,id',
+            ],
+            [
+                'contry.required'      => 'El país es obligatorio.',
+                'contry.string'        => 'El país debe ser una cadena de texto.',
+                'contry.max'           => 'El país no debe superar los 255 caracteres.',
+
+                'province_id.required' => 'La provincia es obligatoria.',
+                'province_id.integer'  => 'La provincia debe ser un ID numérico válido.',
+
+                'canton_id.required'   => 'El cantón es obligatorio.',
+                'canton_id.integer'    => 'El cantón debe ser un ID numérico válido.',
+
+                'educational_unit_id.required' => 'La unidad educativa es obligatoria.',
+                'educational_unit_id.exists'   => 'La unidad educativa seleccionada no existe.',
+            ]
+        );
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error de validación',
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
+
+        $sede->update($validator->validated());
+
+        $sede->load([
+            'educationalUnit.educationalLevels',
+            'careers',
+        ]);
+
+        $data = $this->transformSede($sede, $locations, true);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Sede actualizada correctamente.',
+            'data'    => $data,
+        ], 200);
+    }
+
+    /**
+     * DESTROY
+     * Eliminar una sede.
+     */
+    public function destroy(Sede $sede): JsonResponse
+    {
+        $sede->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Sede eliminada correctamente.',
+        ], 200);
     }
 
     /**
@@ -138,14 +272,12 @@ class SedeController extends Controller
         $cantonName   = null;
 
         if ($sede->province_id) {
-            // Buscar nombre de provincia
             $provinces = $locations->getProvinces();
             $province = collect($provinces)->firstWhere('id', (string) $sede->province_id);
             if ($province) {
                 $provinceName = $province['name'];
             }
 
-            // Buscar nombre de cantón si hay canton_id
             if ($sede->canton_id) {
                 $cantons = $locations->getCantons((string) $sede->province_id);
                 $canton  = collect($cantons)->firstWhere('id', (string) $sede->canton_id);
@@ -163,7 +295,6 @@ class SedeController extends Controller
             'canton_id'     => $sede->canton_id,
             'canton_name'   => $cantonName,
 
-            // Relaciones completas
             'educational_unit' => $sede->educationalUnit,
             'careers'          => $sede->careers,
 
@@ -178,3 +309,4 @@ class SedeController extends Controller
         return $base;
     }
 }
+

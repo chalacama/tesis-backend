@@ -63,7 +63,7 @@ class NewContentInCourseNotification extends Notification
             'chapter_title'   => $this->chapter->title,
             'type_content'    => $typeName,
             // Ajusta esta URL a tu ruta en Angular
-            'url'             => "/courses/{$this->course->id}/chapters/{$this->chapter->id}",
+            'url'             => "learning/course/{$this->course->title}/{$this->course->id}/{$this->chapter->title}/{$this->chapter->id}",
             'content_id'      => $this->content->id,
         ];
     }

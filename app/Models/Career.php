@@ -17,10 +17,10 @@ class Career extends Model
     /**
      * Relación uno a muchos con UserInformation.
      */
-    public function userInformations()
+    /* public function userInformations()
     {
         return $this->hasMany(UserInformation::class, 'career_id');
-    }
+    } */
     public function courses()
 {
     return $this->belongsToMany(Course::class, 'career_courses');
@@ -40,6 +40,15 @@ class Career extends Model
     public function careerCourses()
     {
         return $this->hasMany(CareerCourse::class);
+    }
+
+    /**
+     * Relación uno a muchos con EducationalUser.
+     * Nos sirve para contar usuarios asociados a la carrera.
+     */
+    public function educationalUsers()
+    {
+        return $this->hasMany(EducationalUser::class);
     }
 
 }
