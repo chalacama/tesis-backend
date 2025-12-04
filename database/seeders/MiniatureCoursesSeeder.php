@@ -12,10 +12,10 @@ class MiniatureCoursesSeeder extends Seeder
      */
     public function run(): void
     {
-    //     MiniatureCourse::create([
-    //     'course_id' => 1, // Laravel Básico
-    //     'url' => 'https://i.ytimg.com/vi/AE5U8zjkU2s/maxresdefault.jpg', // Coding-related image
-    // ]);
+        MiniatureCourse::create([
+        'course_id' => 1, // Laravel Básico
+        'url' => 'https://i.ytimg.com/vi/AE5U8zjkU2s/maxresdefault.jpg', // Coding-related image
+    ]);
     MiniatureCourse::create([
         'course_id' => 2, // Fundamentos de Diseño Gráfico
         'url' => 'https://edteam-media.s3.amazonaws.com/courses/original/242a3c4d-0182-4164-afc2-4649ce119c5b.jpg', // Design tools

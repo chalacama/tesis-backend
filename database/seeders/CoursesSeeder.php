@@ -34,7 +34,7 @@ class CoursesSeeder extends Seeder
 
     // 3. Marketing Digital Estratégico (Marketing) - Active, Non-Private, Intermediate
     $course = Course::create([
-        'title' => 'Profecional Lineup Valorant ',
+        'title' => 'Marketing Digital Estratégico (Marketing)',
         'description' => 'Dominia el tactical shooter de Riot Games con esta guía completa para jugadores competitivos.',
         'private' => false,
         'enabled' => true,
