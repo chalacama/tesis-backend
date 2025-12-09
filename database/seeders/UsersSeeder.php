@@ -34,33 +34,33 @@ class UsersSeeder extends Seeder
         // Usuarios tutor
         $tutors = [
             [
-                'name' => 'Luis', // id : 2
-                'lastname' => 'Mañeña',
-                'username' => 'bautista69',
-                'email' => 'luis.chalacama@espam.edu.ec',
+                'name' => 'Juan Jandry', // id : 2
+                'lastname' => 'Torres Loor',
+                'username' => 'fuan.torres',
+                'email' => 'fuan.torres@espam.edu.ec',
                 'password' => bcrypt('password123'),
                 'profile_picture_url' => 'https://i.pinimg.com/474x/e8/7c/32/e87c325d2487e441901df6330f2b7ad6.jpg'
             ],
             [
-                'name' => 'Philip', // id : 3
-                'lastname' => 'Chala',
+                'name' => 'Raul Emmon', // id : 3
+                'lastname' => 'Derek Deku',
                 'username' => 'chalacama',
-                'email' => 'chala@espam.edu.ec',
+                'email' => 'rulex34@espam.edu.ec',
                 'password' => bcrypt('password123'),
             ],
             [
-                'name' => 'Jandry', // id : 4
-                'lastname' => 'Torres',
-                'username' => 'minino7',
-                'email' => 'jandryxd@espam.edu.ec',
+                'name' => 'Keylor Jesus', // id : 4
+                'lastname' => 'Vermeo Chichico',
+                'username' => 'keylor.david',
+                'email' => 'keylor.david@espam.edu.ec',
                 'password' => bcrypt('password123'),
                 'profile_picture_url' => 'https://i.pinimg.com/474x/f1/03/e3/f103e316dcd2cab8e3e8481a1f9a21f2.jpg'
             ],
             [
-                'name' => 'Jesus', // id : 5
-                'lastname' => '8poll',
-                'username' => 'jisus69',
-                'email' => 'jesus.39@gmail.com',
+                'name' => 'Gans Kohueshi', // id : 5
+                'lastname' => 'Garcia Lopez',
+                'username' => 'kohu.39',
+                'email' => 'kohu.39@gmail.com',
                 'password' => bcrypt('password123'),
                 'profile_picture_url' => 'https://i.pinimg.com/736x/3d/b7/ae/3db7ae3f2cecd4706c85376d49f6879f.jpg'
             ],
@@ -75,10 +75,10 @@ class UsersSeeder extends Seeder
         // Usuarios student
         $students = [
             [
-                'name' => 'Juan', // id : 6
-                'lastname' => 'Loor',
-                'username' => 'juanp',
-                'email' => 'juan@espam.edu.ec',
+                'name' => 'Elias', // id : 6
+                'lastname' => 'Mañeña',
+                'username' => 'eliasxd35',
+                'email' => 'elias.chala@espam.edu.ec',
                 'password' => bcrypt('password123'),
                 'profile_picture_url' => 'https://i.pinimg.com/736x/83/30/7d/83307da0f2648ecb70a70d585f1f3486.jpg'
             ],

@@ -15,7 +15,51 @@ class CoursesSeeder extends Seeder
         // 1. Laravel Básico (Programación, Tecnología) - Active, Non-Private, Beginner
     $course = Course::create([
         'title' => 'Laravel Básico',
-        'description' => 'Curso introductorio a Laravel para desarrollar aplicaciones web modernas.',
+        'description' => 'Estás listo para llevar tus habilidades de PHP al siguiente nivel? Este curso exclusivo ha sido diseñado meticulosamente para introducirte en el ecosistema de Laravel, el framework más elegante y popular de la actualidad.
+
+A través de este programa de nivel introductorio (Dificultad 1), transformaremos conceptos complejos en prácticas sencillas. No necesitas ser un experto para comenzar; te guiaremos desde la instalación del entorno hasta la creación de tu primera aplicación funcional.
+
+Lo que aprenderás:
+
+🏗️ Arquitectura MVC: Entiende cómo organizar tu código profesionalmente.
+
+🛤️ Ruteo y Controladores: Maneja las peticiones web con fluidez.
+
+🎨 Blade: Crea interfaces dinámicas y atractivas.
+
+🗄️ Eloquent ORM: Gestiona bases de datos sin escribir SQL complejo.
+
+Este es un curso privado y exclusivo, diseñado para garantizar un aprendizaje enfocado y de alta calidad.
+
+🌐 Conéctate con nosotros:
+
+Web: [TuSitioWeb.com]
+
+Instagram: [@TuUsuario]
+
+LinkedIn: [Tu Perfil Profesional]
+
+GitHub: [Tu Repositorio]
+
+Opción 2: Estilo Redes Sociales (Instagram / LinkedIn / Facebook)
+Corto, con emojis y enfocado en generar interés rápido.
+
+Texto del Post:
+
+¡Da el salto al desarrollo profesional! 💻✨
+
+Presentamos nuestro nuevo curso: Laravel Básico. 🐘 Si buscas crear aplicaciones web modernas, escalables y seguras, pero no sabes por dónde empezar, este curso es tu puerta de entrada.
+
+🔹 Nivel: Principiante (¡Empezamos desde cero!) 🔹 Modalidad: Exclusiva / Privada 🔒 🔹 Objetivo: Escribir código limpio y eficiente.
+
+Olvídate del "código espagueti" y aprende a programar con los estándares de la industria. 🚀
+
+👇 ¿Te interesa acceder? Escríbenos o visita el link en la bio 👇
+
+🔗 [Link a tu web o formulario de registro]
+Síguenos para más tips de programación: 📸 IG: @TuMarca 💼 LI: Tu Empresa 🐦 TW: @TuMarca
+
+#Laravel #PHP #WebDevelopment #Coding #Programacion #DevLife #CursoOnline',
         'private' => true,
         'enabled' => true,
         'difficulty_id' => 1,
