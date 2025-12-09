@@ -55,7 +55,8 @@ class StartController extends Controller
         return $owner
             ? [
                 'id' => $owner->id,
-                'name' => $owner->name . ' ' . $owner->lastname,
+                'name' => $owner->name,
+                'lastname' => $owner->lastname,
                 'username' => $owner->username,
                 'profile_picture_url' => $owner->profile_picture_url ?? null
             ]
