@@ -147,9 +147,9 @@ public function store(Request $request, EcuadorLocationService $locations): Json
         $request->all(),
         [
             
-            // 🔹 Ya NO recibimos "contry"
-            'province_id'          => 'required|integer',
-            'canton_id'            => 'required|integer',
+            
+            'province_id'          => 'nullable|integer',
+            'canton_id'            => 'nullable|integer',
             'educational_unit_id'  => 'required|exists:educational_units,id',
 
             // 🔹 OPCIONAL: carreras para la sede
@@ -219,8 +219,8 @@ public function update(Request $request, Sede $sede, EcuadorLocationService $loc
         [
             // 🔹 Ya NO recibimos "contry"
 
-            'province_id'          => 'required|integer',
-            'canton_id'            => 'required|integer',
+            'province_id'          => 'nullable|integer',
+            'canton_id'            => 'nullable|integer',
             'educational_unit_id'  => 'required|exists:educational_units,id',
 
             // 🔹 OPCIONAL: carreras para la sede
