@@ -62,8 +62,8 @@ class StartController extends Controller
             ]
             : [
                 'id' => null,
-                'name' => null,
-                'username' => null,
+                'name' => 'Digi',
+                'username' => 'Mentor',
                 'profile_picture_url' => null
             ];
     }
