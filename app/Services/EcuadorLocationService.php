@@ -15,7 +15,7 @@ class EcuadorLocationService
     private function getFullPath(): string
     {
         // Esto arma: storage_path('app/json/provincias.json')
-        return storage_path('app/' . $this->relativePath);
+        return resource_path('json/provincias.json');
     }
 
     /**
