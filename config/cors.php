@@ -1,27 +1,16 @@
 <?php
 
 return [
-
-    /*
-    |--------------------------------------------------------------------------
-    | Cross-Origin Resource Sharing (CORS) Configuration
-    |--------------------------------------------------------------------------
-    |
-    | Here you may configure your settings for cross-origin resource sharing
-    | or "CORS". This determines what cross-origin operations may execute
-    | in web browsers. You are free to adjust these settings as needed.
-    |
-    | To learn more: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
-    |
-    */
-
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+    // Agregamos 'auth/*' por si acaso tus rutas no empiezan con 'api/'
+    'paths' => ['api/*', 'auth/*', 'sanctum/csrf-cookie'],
 
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
-        'http://localhost:4200',                  // Tu local
-        'https://tesis-frontend-six.vercel.app',  // <--- TU VERCEL (Sin la barra al final)
+        'http://localhost:4200',
+        'https://tesis-frontend-six.vercel.app', // Tu producción
+        // Agrega la URL con el hash por si acaso entras desde ahí
+        'https://tesis-frontend-qsb6yhc8b-chalacamas-projects.vercel.app', 
     ],
 
     'allowed_origins_patterns' => [],
@@ -32,6 +21,6 @@ return [
 
     'max_age' => 0,
 
-    'supports_credentials' => false,
-
+    // IMPORTANTE: Cambia esto a true para permitir logins complejos
+    'supports_credentials' => true, 
 ];
