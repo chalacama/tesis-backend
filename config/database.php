@@ -59,8 +59,9 @@ return [
             'engine' => null,
             // --- ESTA ES LA PARTE IMPORTANTE A CAMBIAR ---
     'options' => extension_loaded('pdo_mysql') ? array_filter([
-        PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
-        PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false, // <--- AGREGA ESTO
+        // Esto busca el archivo dentro de la carpeta /storage/ de tu servidor
+        PDO::MYSQL_ATTR_SSL_CA => base_path('storage/isrgrootx1.pem'),
+        PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => true,
     ]) : [],
         ],
 
