@@ -8,7 +8,7 @@ return [
 
     'allowed_origins' => [
         'http://localhost:4200',
-        'https://tesis-frontend-six.vercel.app', // Tu producción
+        'https://digimentor-espam.vercel.app', // Tu producción
         // Agrega la URL con el hash por si acaso entras desde ahí
         'https://tesis-frontend-qsb6yhc8b-chalacamas-projects.vercel.app', 
     ],
