@@ -453,7 +453,7 @@ public function store(Request $request, Course $course)
     ]);
 
     // 8. Enviar el correo electrónico de invitación
-    Mail::to($invitedEmail)->send(new TutorInvitationEmail($invitation));
+    app(\App\Services\Mail\TutorInvitationMailer::class)->send($invitation);
 
     // 9. Notificación interna con token + course_id + mensaje
     if ($invitedUser) {

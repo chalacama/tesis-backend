@@ -48,6 +48,31 @@ return [
             'timeout' => null,
             'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url(env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
         ],
+        // ✅ Alias explícito para Gmail usando tus variables actuales MAIL_*
+    'gmail' => [
+        'transport' => 'smtp',
+        'scheme' => env('MAIL_SCHEME'),
+        'url' => env('MAIL_URL'),
+        'host' => env('MAIL_HOST', 'smtp.gmail.com'),
+        'port' => env('MAIL_PORT', 587),
+        'username' => env('MAIL_USERNAME'),
+        'password' => env('MAIL_PASSWORD'),
+        'timeout' => null,
+        'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url(env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
+    ],
+
+    // ✅ Nuevo mailer para Outlook / Microsoft 365
+    'outlook' => [
+        'transport' => 'smtp',
+        'scheme' => env('OUTLOOK_MAIL_SCHEME'),
+        'url' => env('OUTLOOK_MAIL_URL'),
+        'host' => env('OUTLOOK_MAIL_HOST', 'smtp.office365.com'),
+        'port' => env('OUTLOOK_MAIL_PORT', 587),
+        'username' => env('OUTLOOK_MAIL_USERNAME'),
+        'password' => env('OUTLOOK_MAIL_PASSWORD'),
+        'timeout' => null,
+        'local_domain' => env('OUTLOOK_MAIL_EHLO_DOMAIN', parse_url(env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
+    ],
 
         'ses' => [
             'transport' => 'ses',
@@ -114,5 +139,9 @@ return [
         'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
         'name' => env('MAIL_FROM_NAME', 'Example'),
     ],
+    'outlook_from' => [
+    'address' => env('OUTLOOK_MAIL_FROM_ADDRESS', env('MAIL_FROM_ADDRESS')),
+    'name'    => env('OUTLOOK_MAIL_FROM_NAME', env('MAIL_FROM_NAME')),
+],
 
 ];
