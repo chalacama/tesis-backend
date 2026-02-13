@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\TutorInvitationEmail;
 use App\Notifications\TutorInvitationNotification;
 use Illuminate\Support\Facades\DB;
-
+use Illuminate\Support\Facades\Log;
 class CourseInvitationController extends Controller
 {
     use AuthorizesRequests;
@@ -392,78 +392,151 @@ public function cancel(Request $request, Course $course, CourseInvitation $invit
 
 
 public function store(Request $request, Course $course)
+
 {
+
     // Verificar autorización usando el Policy (dueño o admin)
+
     $this->authorize('update', $course);
 
+
+
     // 1. Validación básica + que el email exista en users
+
     $request->validate([
+
         'email' => 'required|email|exists:users,email',
+
     ], [
+
         'email.exists' => 'El correo debe pertenecer a un usuario registrado.',
+
     ]);
+
+
 
     $invitedEmail = $request->input('email');
 
+
+
     // 2. Buscar usuario invitado (ya sabemos que existe)
+
     $invitedUser = User::where('email', $invitedEmail)->first();
 
+
+
     // 3. Debe ser tutor o admin
+
     if (!$invitedUser->hasAnyRole(['tutor', 'admin'])) {
+
         return response()->json([
+
             'message' => 'Solo se puede invitar a usuarios con rol tutor o admin.',
+
         ], 422);
+
     }
+
+
 
     // 4. No puede ser ya dueño del curso (ignora archivados gracias a tutors()->wherePivotNull)
+
     $isOwner = $course->owner()
+
         ->where('users.id', $invitedUser->id)
+
         ->exists();
+
+
 
     // 5. No puede ser ya colaborador del curso
+
     $isCollaborator = $course->collaborators()
+
         ->where('users.id', $invitedUser->id)
+
         ->exists();
 
+
+
     if ($isOwner || $isCollaborator) {
+
         return response()->json([
+
             'message' => 'Este usuario ya forma parte del curso como dueño o colaborador.',
+
         ], 422);
+
     }
+
+
 
     // 6. Slot de colaborador: solo 1 colaborador o 1 invitación pendiente
+
     $existingCollaborator = $course->collaborators()->first();
 
+
+
     $pendingInvitation = $course->invitations()
+
         ->where('status', 'pending')
+
         ->first();
 
+
+
     if ($existingCollaborator || $pendingInvitation) {
+
         return response()->json([
+
             'message' => 'Ya existe un colaborador o una invitación pendiente para este curso.',
+
         ], 422);
+
     }
+
+
 
     // 7. Crear la invitación
+
     $invitation = $course->invitations()->create([
+
         'user_id' => $request->user()->id, // quién invita
+
         'email'   => $invitedEmail,
+
         'token'   => Str::random(40) . time(),
+
         'status'  => 'pending',
+
     ]);
 
+
+
     // 8. Enviar el correo electrónico de invitación
-    app(\App\Services\Mail\TutorInvitationMailer::class)->send($invitation);
+
+    Mail::to($invitedEmail)->send(new TutorInvitationEmail($invitation));
+
+
 
     // 9. Notificación interna con token + course_id + mensaje
+
     if ($invitedUser) {
+
         $invitedUser->notify(new TutorInvitationNotification($invitation));
+
     }
 
+
+
     return response()->json([
+
         'message'    => 'Invitación enviada correctamente.',
+
         'invitation' => $invitation,
+
     ], 201);
+
 }
 
 
