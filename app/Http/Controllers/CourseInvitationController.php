@@ -14,6 +14,9 @@ use App\Mail\TutorInvitationEmail;
 use App\Notifications\TutorInvitationNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Models\EducationalUnit;
+use Exception;
+
 class CourseInvitationController extends Controller
 {
     use AuthorizesRequests;
@@ -389,155 +392,188 @@ public function cancel(Request $request, Course $course, CourseInvitation $invit
     ], 200);
 }
 
-
-
 public function store(Request $request, Course $course)
+    {
+        set_time_limit(300);
+        $this->authorize('update', $course);
 
-{
+        // 1. Validaciones (Mantenemos tu lógica)
+        $request->validate([
+            'email' => 'required|email|exists:users,email',
+        ], [
+            'email.exists' => 'El correo debe pertenecer a un usuario registrado.',
+        ]);
 
-    // Verificar autorización usando el Policy (dueño o admin)
+        $invitedEmail = $request->input('email');
+        $invitedUser = User::where('email', $invitedEmail)->first();
 
-    $this->authorize('update', $course);
+        // Validaciones de roles y existencia previa (Mantenemos tu lógica intacta)
+        if (!$invitedUser->hasAnyRole(['tutor', 'admin'])) {
+            return response()->json(['message' => 'Solo se puede invitar a usuarios con rol tutor o admin.'], 422);
+        }
 
+        $isOwner = $course->owner()->where('users.id', $invitedUser->id)->exists();
+        $isCollaborator = $course->collaborators()->where('users.id', $invitedUser->id)->exists();
 
+        if ($isOwner || $isCollaborator) {
+            return response()->json(['message' => 'Este usuario ya forma parte del curso.'], 422);
+        }
 
-    // 1. Validación básica + que el email exista en users
+        $existingCollaborator = $course->collaborators()->first();
+        $pendingInvitation = $course->invitations()->where('status', 'pending')->first();
 
-    $request->validate([
+        if ($existingCollaborator || $pendingInvitation) {
+            return response()->json(['message' => 'Ya existe un colaborador o invitación pendiente.'], 422);
+        }
 
-        'email' => 'required|email|exists:users,email',
+        // 2. CREAR LA INVITACIÓN EN BD
+        $invitation = $course->invitations()->create([
+            'user_id' => $request->user()->id,
+            'email'   => $invitedEmail,
+            'token'   => Str::random(40) . time(),
+            'status'  => 'pending',
+        ]);
 
-    ], [
+        // 3. NOTIFICACIÓN WEB (LO MÁS IMPORTANTE)
+        // La ejecutamos ANTES del correo o independientemente de si falla.
+        if ($invitedUser) {
+            try {
+                $invitedUser->notify(new TutorInvitationNotification($invitation));
+            } catch (Exception $e) {
+                Log::error("Error al crear notificación en base de datos: " . $e->getMessage());
+                // Incluso si falla la notificación, intentamos enviar el correo.
+            }
+        }
 
-        'email.exists' => 'El correo debe pertenecer a un usuario registrado.',
+        // 4. ENVÍO DE CORREO "A PRUEBA DE FALLOS"
+        // Usamos try-catch para que si falla, NO rompa la respuesta al usuario.
+        
+        // Determinamos el dominio
+        $domain = substr(strrchr($invitedEmail, "@"), 1);
+        $isInstitutional = EducationalUnit::where('organization_domain', $domain)->exists();
+        
+        // Configuraciones base para los intentos
+        $gmailConfig = [
+            'mailer' => 'gmail',
+            'from'   => env('GMAIL_FROM_ADDRESS'),
+            'name'   => env('GMAIL_FROM_NAME')
+        ];
+        
+        $outlookConfig = [
+            'mailer' => 'outlook',
+            'from'   => env('OUTLOOK_FROM_ADDRESS'),
+            'name'   => env('OUTLOOK_FROM_NAME')
+        ];
 
-    ]);
+        try {
+            if ($isInstitutional || $domain === 'espam.edu.ec') {
+                // === LÓGICA INSTITUCIONAL (INTENTO DOBLE) ===
+                
+                // Intento 1: Outlook
+                try {
+                    Mail::mailer('outlook')
+                        ->to($invitedEmail)
+                        ->send(new TutorInvitationEmail($invitation, $outlookConfig));
+                    
+                    Log::info("Correo institucional enviado vía Outlook a $invitedEmail");
+                    
+                } catch (Exception $eOutlook) {
+                    Log::error("Fallo envío Outlook a institucional ($invitedEmail): " . $eOutlook->getMessage());
+                    
+                    // Intento 2: Gmail (Fallback inmediato)
+                    try {
+                        Mail::mailer('gmail')
+                            ->to($invitedEmail)
+                            ->send(new TutorInvitationEmail($invitation, $gmailConfig));
+                            
+                        Log::info("Correo institucional enviado vía Gmail (Respaldo) a $invitedEmail");
+                        
+                    } catch (Exception $eGmail) {
+                        Log::error("Fallo CRÍTICO: Ni Outlook ni Gmail funcionaron para $invitedEmail. " . $eGmail->getMessage());
+                        // Aquí no hacemos nada más, el código sigue para retornar éxito al frontend
+                    }
+                }
 
+            } elseif (in_array($domain, ['outlook.com', 'hotmail.com', 'live.com', 'outlook.es'])) {
+                // === LÓGICA OUTLOOK PURO ===
+                Mail::mailer('outlook')
+                    ->to($invitedEmail)
+                    ->send(new TutorInvitationEmail($invitation, $outlookConfig));
+            } else {
+                // === LÓGICA GMAIL (POR DEFECTO PARA GMAIL.COM Y OTROS) ===
+                Mail::mailer('gmail')
+                    ->to($invitedEmail)
+                    ->send(new TutorInvitationEmail($invitation, $gmailConfig));
+            }
 
+        } catch (Exception $e) {
+            // Este catch captura errores de los bloques 'else' (gmail.com o outlook.com puros)
+            // O errores generales no capturados arriba.
+            Log::error("Error general enviando correo a $invitedEmail: " . $e->getMessage());
+            // NO lanzamos el error, permitimos que continúe.
+        }
 
-    $invitedEmail = $request->input('email');
-
-
-
-    // 2. Buscar usuario invitado (ya sabemos que existe)
-
-    $invitedUser = User::where('email', $invitedEmail)->first();
-
-
-
-    // 3. Debe ser tutor o admin
-
-    if (!$invitedUser->hasAnyRole(['tutor', 'admin'])) {
-
+        // 5. RESPUESTA EXITOSA
+        // Al llegar aquí, la notificación en BD ya está creada (paso 3) y el correo se intentó enviar.
         return response()->json([
-
-            'message' => 'Solo se puede invitar a usuarios con rol tutor o admin.',
-
-        ], 422);
-
+            'message'    => 'Invitación generada correctamente.',
+            'invitation' => $invitation,
+        ], 201);
     }
+    
+/**
+     * 🧠 Cerebro de Selección de Correo Inteligente
+     * Decide qué servidor SMTP usar basándose en el dominio del destinatario.
+     */
+private function getSmartMailerAndSender(string $email): array
+    {
+        // 1. Extraer el dominio (ej: gmail.com, espam.edu.ec)
+        $domain = substr(strrchr($email, "@"), 1);
 
+        // 2. Configuración por defecto (usaremos Gmail como respaldo)
+        $mailer = 'gmail';
+        $fromEmail = env('GMAIL_FROM_ADDRESS');
+        $fromName  = env('GMAIL_FROM_NAME');
 
+        // 3. Lógica para GMAIL
+        if ($domain === 'gmail.com') {
+            return [
+                'mailer' => 'gmail',
+                'from'   => env('GMAIL_FROM_ADDRESS'),
+                'name'   => env('GMAIL_FROM_NAME')
+            ];
+        }
 
-    // 4. No puede ser ya dueño del curso (ignora archivados gracias a tutors()->wherePivotNull)
+        // 4. Lógica para OUTLOOK / HOTMAIL / LIVE
+        if (in_array($domain, ['outlook.com', 'hotmail.com', 'live.com', 'outlook.es'])) {
+            return [
+                'mailer' => 'outlook',
+                'from'   => env('OUTLOOK_FROM_ADDRESS'),
+                'name'   => env('OUTLOOK_FROM_NAME')
+            ];
+        }
 
-    $isOwner = $course->owner()
+        // Busca la función getSmartMailerAndSender y cambia el bloque institucional por esto:
 
-        ->where('users.id', $invitedUser->id)
+// 5. Lógica INSTITUCIONAL (Base de Datos)
+$isInstitutional = EducationalUnit::where('organization_domain', $domain)->exists();
 
-        ->exists();
-
-
-
-    // 5. No puede ser ya colaborador del curso
-
-    $isCollaborator = $course->collaborators()
-
-        ->where('users.id', $invitedUser->id)
-
-        ->exists();
-
-
-
-    if ($isOwner || $isCollaborator) {
-
-        return response()->json([
-
-            'message' => 'Este usuario ya forma parte del curso como dueño o colaborador.',
-
-        ], 422);
-
-    }
-
-
-
-    // 6. Slot de colaborador: solo 1 colaborador o 1 invitación pendiente
-
-    $existingCollaborator = $course->collaborators()->first();
-
-
-
-    $pendingInvitation = $course->invitations()
-
-        ->where('status', 'pending')
-
-        ->first();
-
-
-
-    if ($existingCollaborator || $pendingInvitation) {
-
-        return response()->json([
-
-            'message' => 'Ya existe un colaborador o una invitación pendiente para este curso.',
-
-        ], 422);
-
-    }
-
-
-
-    // 7. Crear la invitación
-
-    $invitation = $course->invitations()->create([
-
-        'user_id' => $request->user()->id, // quién invita
-
-        'email'   => $invitedEmail,
-
-        'token'   => Str::random(40) . time(),
-
-        'status'  => 'pending',
-
-    ]);
-
-
-
-    // 8. Enviar el correo electrónico de invitación
-
-    Mail::to($invitedEmail)->send(new TutorInvitationEmail($invitation));
-
-
-
-    // 9. Notificación interna con token + course_id + mensaje
-
-    if ($invitedUser) {
-
-        $invitedUser->notify(new TutorInvitationNotification($invitation));
-
-    }
-
-
-
-    return response()->json([
-
-        'message'    => 'Invitación enviada correctamente.',
-
-        'invitation' => $invitation,
-
-    ], 201);
-
+if ($isInstitutional) {
+    // AHORA SÍ: Usamos Outlook para correos institucionales
+    return [
+        'mailer' => 'outlook', // <--- CAMBIADO A OUTLOOK
+        'from'   => env('OUTLOOK_FROM_ADDRESS'), // Asegura usar el email de outlook
+        'name'   => env('OUTLOOK_FROM_NAME')     // O "DigiMentor para {$domain}" si prefieres
+    ];
 }
+
+        // Retorno por defecto (Gmail)
+        return [
+            'mailer' => $mailer,
+            'from'   => $fromEmail,
+            'name'   => $fromName
+        ];
+    }
 
 
 public function accept(Request $request)

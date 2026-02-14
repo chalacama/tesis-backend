@@ -48,6 +48,39 @@ return [
             'timeout' => null,
             'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url(env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
         ],
+        // 🟢 NUEVO: Configuración para GMAIL
+        'gmail' => [
+            'transport' => 'smtp',
+            'host'       => env('GMAIL_HOST', 'smtp.gmail.com'),
+            'port'       => env('GMAIL_PORT', 587),
+            'encryption' => env('GMAIL_ENCRYPTION', 'tls'),
+            'username'   => env('GMAIL_USERNAME'),
+            'password'   => env('GMAIL_PASSWORD'),
+            'timeout'    => null,
+            'local_domain' => env('MAIL_EHLO_DOMAIN'),
+            // AGREGA ESTO:
+            'from' => [
+                'address' => env('GMAIL_FROM_ADDRESS', 'digimentor.espam@gmail.com'),
+                'name'    => env('GMAIL_FROM_NAME', 'DigiMentor Gmail'),
+            ],
+        ],
+
+        // 🔵 NUEVO: Configuración para OUTLOOK
+        'outlook' => [
+            'transport' => 'smtp',
+            'host'       => env('OUTLOOK_HOST', 'smtp.office365.com'),
+            'port'       => env('OUTLOOK_PORT', 587),
+            'encryption' => env('OUTLOOK_ENCRYPTION', 'tls'),
+            'username'   => env('OUTLOOK_USERNAME'),
+            'password'   => env('OUTLOOK_PASSWORD'),
+            'timeout'    => null,
+            'local_domain' => env('MAIL_EHLO_DOMAIN'),
+            // AGREGA ESTO:
+            'from' => [
+                'address' => env('OUTLOOK_FROM_ADDRESS', 'digimentor.espam@outlook.com'),
+                'name'    => env('OUTLOOK_FROM_NAME', 'DigiMentor Outlook'),
+            ],
+        ],
         
 
         'ses' => [
