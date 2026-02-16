@@ -520,7 +520,83 @@ public function store(Request $request, Course $course)
             'invitation' => $invitation,
         ], 201);
     }
+//     public function store(Request $request, Course $course)
+// {
+//     // Aumentar tiempo de ejecución si es necesario (aunque Resend es muy rápido)
+//     set_time_limit(300);
     
+//     $this->authorize('update', $course);
+
+//     // 1. Validaciones
+//     $request->validate([
+//         'email' => 'required|email|exists:users,email',
+//     ], [
+//         'email.exists' => 'El correo debe pertenecer a un usuario registrado.',
+//     ]);
+
+//     $invitedEmail = $request->input('email');
+//     $invitedUser = User::where('email', $invitedEmail)->first();
+
+//     // Validar roles
+//     if (!$invitedUser->hasAnyRole(['tutor', 'admin'])) {
+//         return response()->json(['message' => 'Solo se puede invitar a usuarios con rol tutor o admin.'], 422);
+//     }
+
+//     // Validar si ya es parte del curso
+//     $isOwner = $course->owner()->where('users.id', $invitedUser->id)->exists();
+//     $isCollaborator = $course->collaborators()->where('users.id', $invitedUser->id)->exists();
+
+//     if ($isOwner || $isCollaborator) {
+//         return response()->json(['message' => 'Este usuario ya forma parte del curso.'], 422);
+//     }
+
+//     // Validar invitaciones pendientes o colaboradores existentes
+//     $existingCollaborator = $course->collaborators()->first();
+//     $pendingInvitation = $course->invitations()->where('status', 'pending')->first();
+
+//     if ($existingCollaborator || $pendingInvitation) {
+//         return response()->json(['message' => 'Ya existe un colaborador o invitación pendiente.'], 422);
+//     }
+
+//     // 2. CREAR LA INVITACIÓN EN BD
+//     $invitation = $course->invitations()->create([
+//         'user_id' => $request->user()->id,
+//         'email'   => $invitedEmail,
+//         'token'   => Str::random(40) . time(),
+//         'status'  => 'pending',
+//     ]);
+
+//     // 3. NOTIFICACIÓN WEB
+//     if ($invitedUser) {
+//         try {
+//             $invitedUser->notify(new TutorInvitationNotification($invitation));
+//         } catch (Exception $e) {
+//             Log::error("Error al crear notificación en base de datos: " . $e->getMessage());
+//         }
+//     }
+
+//     // 4. ENVÍO DE CORREO CON RESEND (Laravel 12 Standard)
+//     try {
+//         // Ya no especificamos 'gmail' u 'outlook'. Usamos el default del .env (MAIL_MAILER=resend)
+//         // Pasamos un array vacío [] como config, para que tu Mailable use los defaults del .env
+//         Mail::to($invitedEmail)->send(new TutorInvitationEmail($invitation, []));
+        
+//         Log::info("Invitación enviada vía RESEND a: $invitedEmail");
+
+//     } catch (Exception $e) {
+//         // Capturamos el error para no romper la experiencia del usuario, pero lo logueamos
+//         Log::error("Error enviando correo con RESEND a $invitedEmail: " . $e->getMessage());
+        
+//         // Opcional: Podrías retornar un warning en el JSON si el correo falló, 
+//         // pero la invitación en BD ya existe.
+//     }
+
+//     // 5. RESPUESTA EXITOSA
+//     return response()->json([
+//         'message'    => 'Invitación generada correctamente.',
+//         'invitation' => $invitation,
+//     ], 201);
+// }
 /**
      * 🧠 Cerebro de Selección de Correo Inteligente
      * Decide qué servidor SMTP usar basándose en el dominio del destinatario.
