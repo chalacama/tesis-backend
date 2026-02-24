@@ -562,10 +562,8 @@ protected function notifyRegisteredUsersCourseUpdated(Course $course, ?User $act
         $student->notify(new CourseUpdatedNotification($course, $actor));
     }
 }
-
-
-    public function generateCode(): JsonResponse
-    {
+public function generateCode(): JsonResponse
+{
 
         $newCode = Course::generateUniqueCode();
 
@@ -574,10 +572,10 @@ protected function notifyRegisteredUsersCourseUpdated(Course $course, ?User $act
             'message' => 'Código del curso generado',
             'code' => $newCode
         ]);
-    }
+}
 
-    public function active(Request $request, Course $course): JsonResponse
-    {
+public function active(Request $request, Course $course): JsonResponse
+{
         $this->authorize('update', $course);
 
         $validated = $request->validate([
@@ -586,12 +584,6 @@ protected function notifyRegisteredUsersCourseUpdated(Course $course, ?User $act
 
         $course->update(['enabled' => $validated['enabled']]);
 
-        Cache::forget('course_show_' . $course->id . '_user_' . Auth::id());
-        for ($i = 1; $i <= 100; $i++) {
-            Cache::forget('courses_index_' . Auth::id() . '_page_' . $i . '_per_10');
-            Cache::forget('courses_index_' . Auth::id() . '_page_' . $i . '_per_' . $request->query('per_page', 10));
-        }
-
         return response()->json([
             'message' => 'Estado del curso actualizado',
             'course' => [
@@ -599,20 +591,50 @@ protected function notifyRegisteredUsersCourseUpdated(Course $course, ?User $act
                 'enabled' => $course->enabled,
             ],
         ]);
-    }
+}
 
     public function archived(Course $course): JsonResponse
-    {
-        $this->authorize('delete', $course);
+{
+    $this->authorize('delete', $course);
 
-        $course->delete();
+    // opcional: apagar el curso al archivarlo
+    $course->enabled = false;
+    $course->save();
 
-        return response()->json(['message' => 'Curso enviado a papelería']);
+    $course->delete();
+
+    return response()->json(['message' => 'Curso enviado a papelería']);
+}
+    public function restore(string $courseId): JsonResponse
+{
+    $course = Course::withTrashed()->findOrFail($courseId);
+
+    $this->authorize('restore', $course);
+
+    if (!$course->trashed()) {
+        return response()->json([
+            'message' => 'El curso no está archivado.'
+        ], 409);
     }
 
-    
-    public function showOwner(string $username): JsonResponse
-    {
+    $course->restore();
+
+    // opcional: al restaurar, lo activas
+    $course->enabled = false;
+    $course->save();
+
+    return response()->json([
+        'message' => 'Curso restaurado (inactivo).',
+        'course' => [
+            'id' => $course->id,
+            'enabled' => $course->enabled,
+            'deleted_at' => $course->deleted_at,
+        ],
+    ]);
+}
+
+public function showOwner(string $username): JsonResponse
+{
         $targetUser = User::where('username', $username)
         ->with([
             'educationalUser.career',
@@ -647,7 +669,121 @@ protected function notifyRegisteredUsersCourseUpdated(Course $course, ?User $act
             'role' => $targetUser->getRoleNames()[0]
         ]
         ]);
+}
+
+public function forceDestroy(string $courseId): JsonResponse
+{
+    set_time_limit(300);
+
+    $course = Course::withTrashed()->findOrFail($courseId);
+
+    $this->authorize('forceDelete', $course);
+
+    // Seguridad: primero debe estar en papelería
+    if (!$course->trashed()) {
+        return response()->json([
+            'message' => 'Para eliminar permanentemente primero archiva el curso (papelería).'
+        ], 409);
     }
 
-    
+    // 1) Obtener SOLO capítulos que realmente tienen contenido de tipo "archivo"
+    // (para no llamar a Cloudinary por cada capítulo innecesariamente)
+    $chapterIdsWithFiles = DB::table('modules')
+        ->join('chapters', 'chapters.module_id', '=', 'modules.id')
+        ->join('learning_contents', 'learning_contents.chapter_id', '=', 'chapters.id')
+        ->join('type_learning_contents', 'type_learning_contents.id', '=', 'learning_contents.type_content_id')
+        ->where('modules.course_id', $course->id)
+        ->whereRaw('LOWER(TRIM(type_learning_contents.name)) = ?', ['archivo'])
+        ->pluck('chapters.id')
+        ->unique()
+        ->values()
+        ->all();
+
+    try {
+        DB::beginTransaction();
+
+        // 2) Limpieza de pivotes (por si NO hay cascade en pivotes)
+        $course->categories()->detach();
+        $course->careers()->detach();
+        $course->tutors()->detach();
+
+        // 3) Limpieza de tablas directas (por si alguna NO está en cascade)
+        // (si tu BD ya tiene cascade, esto no estorba; evita errores por FK)
+        $course->miniature()?->delete();
+        $course->ratingCourses()?->delete();
+        $course->registrations()?->delete();
+        $course->savedCourses()?->delete();
+        $course->invitations()?->delete();
+
+        // Comentarios polimórficos (no siempre hay FK)
+        DB::table('comments')
+            ->where('commentable_type', Course::class)
+            ->where('commentable_id', $course->id)
+            ->delete();
+
+        // 4) Eliminar curso permanente (tu cascade debe eliminar modules->chapters->learning_contents...)
+        $course->forceDelete();
+
+        DB::commit();
+
+    } catch (\Throwable $e) {
+        DB::rollBack();
+
+        Log::error('Error force deleting course (DB)', [
+            'course_id' => $courseId,
+            'error' => $e->getMessage(),
+        ]);
+
+        return response()->json([
+            'message' => 'No se pudo eliminar permanentemente el curso (DB).',
+            'error'   => config('app.debug') ? $e->getMessage() : 'Error interno'
+        ], 500);
+    }
+
+    // 5) Fuera de la transacción: borrar assets en Cloudinary (best-effort)
+    // Si falla Cloudinary, NO revertimos DB (ya fue eliminado). Solo log.
+    try {
+        $this->deleteCourseCloudinaryAssetsByConvention($courseId, $chapterIdsWithFiles);
+    } catch (\Throwable $e) {
+        Log::warning('Force delete: Cloudinary cleanup failed', [
+            'course_id' => $courseId,
+            'error' => $e->getMessage(),
+        ]);
+    }
+
+    return response()->json([
+        'message' => 'Curso eliminado permanentemente.'
+    ], 200);
+}
+private function deleteCourseCloudinaryAssetsByConvention(string $courseId, array $chapterIdsWithFiles): void
+{
+    $cloudinary = new Cloudinary(config('cloudinary.cloud_url'));
+
+    // A) Miniatura: folder miniatures + public_id curso/{id}
+    // => publicId completo: miniatures/curso/{id}
+    $this->destroyCloudinaryAnyType($cloudinary, "miniatures/curso/{$courseId}");
+
+    // B) Archivos de capítulos: folder archives + public_id chapter/{chapterId}
+    // => publicId completo: archives/chapter/{chapterId}
+    foreach ($chapterIdsWithFiles as $chapterId) {
+        $this->destroyCloudinaryAnyType($cloudinary, "archives/chapter/{$chapterId}");
+    }
+}
+
+private function destroyCloudinaryAnyType(Cloudinary $cloudinary, string $publicId): void
+{
+    // Tus uploads son resource_type=auto.
+    // Para borrar sin adivinar, intentamos en image/video/raw (best-effort).
+    foreach (['image', 'video', 'raw'] as $type) {
+        try {
+            $cloudinary->uploadApi()->destroy($publicId, [
+                'resource_type' => $type,
+                'invalidate'    => true,
+            ]);
+        } catch (\Throwable $e) {
+            // seguimos al siguiente type
+        }
+    }
+}
+
 }

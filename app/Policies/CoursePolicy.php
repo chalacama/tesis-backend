@@ -87,30 +87,36 @@ class CoursePolicy
     {
         return $this->owns($user, $course);
     }
-    /**
-     * Determina si el usuario puede eliminar un curso específico.
-     */
+    // ARCHIVAR (soft delete)
     public function delete(User $user, Course $course): bool
     {
-    // Solo el dueño puede eliminar
-    return $this->owns($user, $course);
-    }   
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, Module $module): bool
-    {
-        return false;
+        return $this->owns($user, $course);
     }
-    public function restore(User $user, Module $module): bool
+
+    // RESTAURAR (activar desde papelería)
+    public function restore(User $user, Course $course): bool
     {
-        return false;
+        return $this->owns($user, $course);
+    }
+
+    // ELIMINAR PERMANENTE
+    public function forceDelete(User $user, Course $course): bool
+    {
+        return $this->owns($user, $course);
     }
     public function leave(User $user, Course $course): bool
 {
     // Puede salir si es dueño o colaborador del curso
-    return $this->owns($user, $course) || $this->collaborator($user, $course);
+    return $this->isCourseTutor($user, $course);
 }
-
+/**
+     * Determina si el usuario es dueño O colaborador del curso.
+*/
+public function isCourseTutor(User $user, Course $course): bool
+{
+        return $course->tutors()
+            ->where('users.id', $user->id)
+            ->exists();
+}
     
 }

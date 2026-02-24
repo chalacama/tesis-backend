@@ -45,7 +45,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/index', [CourseController::class, 'index'])->middleware('permission:course.read.hidden');
         Route::put('/{course}/active', [CourseController::class, 'active'])->middleware('permission:course.update');
         Route::get('/generate-code', [CourseController::class, 'generateCode'])->middleware('permission:course.update');
-        /* Route::get('/@{username}', [CourseController::class, 'showOwner'])->middleware('permission:course.read.hidden'); */
+        Route::patch('/{courseId}/restore', [CourseController::class, 'restore'])->middleware('permission:course.archived'); // o crea course.restore si quieres
+        Route::delete('/{courseId}/force-delete', [CourseController::class, 'forceDestroy'])->middleware('permission:course.archived'); // o crea course.forceDelete
     });
 
     Route::prefix('studio')->group(function () {
