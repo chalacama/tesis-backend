@@ -96,8 +96,8 @@ public function update(Request $request, Chapter $chapter): JsonResponse
                     $upload = $cloudinary->uploadApi()->upload(
                         $file->getRealPath(),
                         [
-                            'folder'          => 'archives',
-                            'public_id'       => "chapter/{$chapter->id}",
+                            'folder'          => 'chapters',
+                            'public_id'       => "{$chapter->id}",
                             'overwrite'       => true,
                             'resource_type'   => 'auto', // soporta image/video/pdf
                             'use_filename'    => true,
