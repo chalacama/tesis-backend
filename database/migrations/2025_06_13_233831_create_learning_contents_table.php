@@ -14,12 +14,15 @@ return new class extends Migration
         Schema::create('learning_contents', function (Blueprint $table) {
             $table->id();
             $table->string('url');
+            $table->decimal('size_mb', 6, 6)->nullable();
+            $table->integer('duration_seconds')->nullable();
             $table->unsignedBigInteger('type_content_id');
             $table->unsignedBigInteger('chapter_id')->unique(); // uno a uno
+            $table->unsignedBigInteger('format_id');
             $table->timestamps();
             $table->foreign('type_content_id')->references('id')->on('type_learning_contents')->onDelete('cascade');
             $table->foreign('chapter_id')->references('id')->on('chapters')->onDelete('restrict');
-            
+            $table->foreign('format_id')->references('id')->on('formats')->onDelete('restrict');
             
         });
     }

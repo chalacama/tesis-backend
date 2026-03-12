@@ -13,9 +13,7 @@ class TypeLearningContent extends Model
 
     protected $fillable = [
         'name',
-        'max_size_mb',
-        'min_duration_seconds',
-        'max_duration_seconds',
+        'enabled',
     ];
 
     /**
@@ -32,5 +30,13 @@ class TypeLearningContent extends Model
     public function scopeActive($query)
     {
         return $query->whereNull('deleted_at');
+    }
+
+    /**
+     * Un tipo tiene muchos formatos (Ej: archive tiene pdf, mp4, etc).
+     */
+    public function formats()
+    {
+        return $this->hasMany(Format::class, 'type_learning_content_id');
     }
 }

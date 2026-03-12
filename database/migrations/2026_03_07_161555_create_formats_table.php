@@ -11,10 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('type_learning_contents', function (Blueprint $table) {
+        Schema::create('formats', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->decimal('max_size_mb', 6, 6)->nullable();
+            $table->integer('min_duration_seconds')->nullable();
+            $table->integer('max_duration_seconds')->nullable();
             $table->boolean('enabled')->default(false);
+            $table->unsignedBigInteger('type_learning_content_id')->unique();
+            $table->foreign('type_learning_content_id')->references('id')->on('type_learning_contents')->onDelete('cascade');
             $table->timestamps();
             $table->softDeletes();
         });
@@ -25,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('type_learning_contents');
+        Schema::dropIfExists('formats');
     }
 };

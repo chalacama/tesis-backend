@@ -13,8 +13,11 @@ class LearningContent extends Model
     
     protected $fillable = [
         'url',
+        'size_mb',
+        'duration_seconds',
         'type_content_id',
-        'chapter_id'
+        'chapter_id',
+        'format_id'
     ];
 
     /**
@@ -41,5 +44,12 @@ class LearningContent extends Model
         return $this->hasMany(ContentView::class);
     }
     
+    /**
+     * Relación: un contenido tiene un formato específico.
+     */
+    public function format()
+    {
+        return $this->belongsTo(Format::class, 'format_id');
+    }
 
 }

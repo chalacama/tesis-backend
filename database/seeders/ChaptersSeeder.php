@@ -44,6 +44,13 @@ Chapter::create([
     'module_id' => 4,
     'order' => 4,
 ]);
-    
-    }
+
+Chapter::create([
+    'title' => 'Archivo editable ',
+    'description' => 'Word editable',
+    'module_id' => 2,
+    'order' => 1,
+]);
+
+}
 }
