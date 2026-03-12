@@ -16,7 +16,7 @@ class LearningContentsSeeder extends Seeder
             'url' => 'https://res.cloudinary.com/dvvqko1vv/video/upload/v1764845297/archives/chapter/1.mp4',
             'type_content_id' => 2,
             'chapter_id' => 1,
-            'format_id' => 2, // mp4
+            'format_id' => 3, // mp4
             'size_mb' => 500.00,
             'duration_seconds' => 126,
         ]);
@@ -32,7 +32,7 @@ class LearningContentsSeeder extends Seeder
             'url' => 'https://res.cloudinary.com/dvvqko1vv/image/upload/v1764846842/archives/chapter/3.pdf',
             'type_content_id' => 2,
             'chapter_id' => 3,
-            'format_id' => 3, // pdf
+            'format_id' => 2, // pdf
             'size_mb' => 3.84,
             'duration_seconds' => null,
         ]);
@@ -40,7 +40,7 @@ class LearningContentsSeeder extends Seeder
             'url' => 'https://res.cloudinary.com/dvvqko1vv/raw/upload/v1763338367/archives/chapter/4.tmp',
             'type_content_id' => 2,
             'chapter_id' => 6,
-            'format_id' => 4, // word
+            'format_id' => 5, // word
             'size_mb' => 0.0366,
             'duration_seconds' => null,
         ]);

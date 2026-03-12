@@ -54,7 +54,7 @@ use App\Models\CompletedChapter;
 use App\Models\LearningContent;
 use App\Models\ContentView;
 use App\Models\TypeLearningContent;
-
+use App\Models\Format;
 
 class WatchingController extends Controller
 {
@@ -78,11 +78,15 @@ class WatchingController extends Controller
                              ->withMax('questions', 'updated_at') // alias: questions_max_updated_at
                              ->with([
                                 'test:id,chapter_id,split',
-                                 'learningContent' => function ($lq) {
-                                     $lq->select('id', 'chapter_id', 'url', 'type_content_id', 'updated_at')
-                                        ->with(['typeLearningContent:id,name']);
-                                 },
-                                 'completedChapters' => function ($ccq) use ($userId) {
+                                'learningContent' => function ($lq) {
+                                     // Seleccionamos size_mb, duration_seconds y format_id
+                                    $lq->select('id', 'chapter_id', 'url', 'type_content_id', 'format_id', 'size_mb', 'duration_seconds', 'updated_at')
+                                    ->with([
+                                        'typeLearningContent:id,name',
+                                        'format:id,name' // Cargamos la relación del formato
+                                    ]);
+                                },
+                                'completedChapters' => function ($ccq) use ($userId) {
                                     if ($userId) {
                                     $ccq->select('id', 'chapter_id', 'user_id', 'created_at')
                                     ->where('user_id', $userId)
@@ -269,49 +273,64 @@ class WatchingController extends Controller
 
     /**
      * Devuelve metadatos del contenido de aprendizaje sin exponer la URL.
-     * - type: 'youtube' | 'archivo'
-     * - format: extensión (solo si type == 'archivo', p.ej. 'mp4', 'pdf'); en otros casos null
+     * Ahora usa la relación Format y formatea la duración.
      */
     private function formatLearningMeta($learningContent): ?array
-{
-    if (
-        !$learningContent ||
-        !$learningContent->relationLoaded('typeLearningContent')
-    ) {
-        return null;
+    {
+        if (!$learningContent) {
+            return null;
+        }
+
+        // Tipo de contenido (ej: 'link', 'archive')
+        $typeName = $learningContent->relationLoaded('typeLearningContent') 
+            ? strtolower($learningContent->typeLearningContent->name ?? '') 
+            : null;
+
+        // Nombre del formato (ej: 'youtube', 'mp4', 'pdf')
+        $formatName = $learningContent->relationLoaded('format') 
+            ? strtolower($learningContent->format->name ?? '') 
+            : null;
+
+        // Formatear duración estilo YouTube
+        $formattedDuration = null;
+        if ($learningContent->duration_seconds !== null) {
+            $formattedDuration = $this->formatDuration($learningContent->duration_seconds);
+        }
+
+        // Tamaño en MB (lo casteamos a float para evitar strings)
+        $sizeMb = $learningContent->size_mb !== null 
+            ? (float) $learningContent->size_mb 
+            : null;
+
+        return [
+            'type'             => $typeName,
+            'format'           => $formatName,
+            'size_mb'          => $sizeMb,
+            'duration_seconds' => $learningContent->duration_seconds, // Opcional: mantener el original
+            'duration_formatted'=> $formattedDuration,
+        ];
     }
-
-    $typeName = strtolower($learningContent->typeLearningContent->name ?? '');
-
-    $format = null;
-
-    if ($typeName === 'archivo') {
-        // Para archivos, intentamos detectar la extensión real desde la URL
-        $format = $this->detectArchiveFormat($learningContent->url);
-    } elseif ($typeName === 'youtube') {
-        // Para youtube, forzamos 'mp4' por defecto
-        $format = 'mp4';
-    }
-
-    return [
-        'type'   => $typeName,
-        'format' => $format,
-    ];
-}
 
     /**
-     * Detecta la extensión del recurso (mp4, pdf, etc.) a partir de la URL.
-     * No expone la URL, solo la usa para inferir formato.
+     * Convierte segundos a formato YouTube (ej: 1:05:30 o 45:12 o 0:35)
      */
-    private function detectArchiveFormat(?string $url): ?string
+    private function formatDuration(int $totalSeconds): string
     {
-        if (!$url) return null;
+        $hours = floor($totalSeconds / 3600);
+        $minutes = floor(($totalSeconds % 3600) / 60);
+        $seconds = $totalSeconds % 60;
 
-        $path = parse_url($url, PHP_URL_PATH);
-        if (!$path) return null;
+        // Formatear segundos siempre a 2 dígitos (ej: 05 en lugar de 5)
+        $secondsStr = str_pad($seconds, 2, '0', STR_PAD_LEFT);
 
-        $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
-        return $ext ?: null;
+        if ($hours > 0) {
+            // Si hay horas, los minutos deben tener 2 dígitos (ej: 1:05:30)
+            $minutesStr = str_pad($minutes, 2, '0', STR_PAD_LEFT);
+            return "{$hours}:{$minutesStr}:{$secondsStr}";
+        }
+
+        // Si no hay horas, formato m:ss (ej: 45:12, 0:35)
+        return "{$minutes}:{$secondsStr}";
     }
     
     public function showDetail(Course $course)
@@ -376,10 +395,15 @@ class WatchingController extends Controller
     }
     public function showContent(Chapter $chapter)
     {
-        // Cargamos módulo (para course_id), contenido y tipo del contenido
+        // Cargamos módulo (para course_id), contenido, el tipo de contenido y AHORA el formato
         $chapter->loadMissing([
             'module:id,course_id',
-            'learningContent.typeLearningContent:id,name',
+            'learningContent' => function ($lq) {
+                $lq->with([
+                    'typeLearningContent:id,name',
+                    'format:id,name' // <-- Agregamos la carga del formato aquí
+                ]);
+            },
         ])->loadCount([
             'questions',       // para has_questions
             'likeChapters',    // para likes_total
@@ -387,15 +411,8 @@ class WatchingController extends Controller
 
         $course = Course::query()->findOrFail($chapter->module->course_id);
 
-        // Autorización y estado del curso
-        
-        
-
         $userId = auth()->id();
         $this->authorize('viewChapter', $chapter);
-        
-
-        
 
         // ¿El usuario guardó el curso?
         $isSaved = $userId
@@ -432,14 +449,24 @@ class WatchingController extends Controller
             ->select('users.id', 'users.name', 'users.lastname', 'users.profile_picture_url', 'users.username')
             ->first();
 
-        // Meta del learning content (tipo y formato si es archivo)
+        // Meta del learning content (Usando la misma función que actualizamos antes)
         $learningMeta = $this->formatLearningMeta($chapter->learningContent);
+
+        // Preparamos el array de learning content base
+        $learningContentData = null;
+        if ($chapter->learningContent) {
+            $learningContentData = $chapter->learningContent->toArray();
+            
+            // Casteamos el tamaño a float en la respuesta principal si es necesario
+            if (isset($learningContentData['size_mb']) && $learningContentData['size_mb'] !== null) {
+                $learningContentData['size_mb'] = (float) $learningContentData['size_mb'];
+            }
+        }
 
         return response()->json([
             'ok'          => true,
             'user_state'  => [
                 'is_saved'      => (bool) $isSaved,
-                
                 'liked_chapter' => (bool) $userLiked,
                 'has_questions' => (bool) $hasQuestions,
             ],
@@ -451,7 +478,7 @@ class WatchingController extends Controller
                 'module_id'   => (int) $chapter->module_id,
             ],
             'course'      => [
-                'title' => $course->title, // SOLO título
+                'title'   => $course->title, // SOLO título
                 'private' => $course->private,
             ],
             'owner'       => $owner ? [
@@ -461,10 +488,13 @@ class WatchingController extends Controller
                 'is_owner'             => true,
                 'profile_picture_url'  => $owner->profile_picture_url ?: null,
             ] : null,
-            'learning_content' => $chapter->learningContent
-                ? $chapter->learningContent->toArray()
-                : null,
-            'learning_meta' => $learningMeta,   // <-- tipo y formato (si aplica)
+            
+            // El contenido crudo (con el size_mb casteado a float)
+            'learning_content' => $learningContentData,
+            
+            // La meta con el formato limpio y la duración estilo YouTube
+            'learning_meta'    => $learningMeta,  
+            
             'last_view'     => $lastView,
             'likes_total'   => $likesTotal,
         ], 200);
@@ -550,17 +580,17 @@ class WatchingController extends Controller
             return response()->json(['error' => 'Ocurrió un error con la API de YouTube: ' . $e->getMessage()], 500);
         }
     }
-    private function formatDuration($seconds)
-{
-    $minutes = floor($seconds / 60);
-    $seconds = $seconds % 60;
+//     private function formatDuration($seconds)
+// {
+//     $minutes = floor($seconds / 60);
+//     $seconds = $seconds % 60;
 
-    if ($minutes > 0) {
-        return $minutes . ' min ' . $seconds . ' s';
-    } else {
-        return $seconds . ' s';
-    }
-}
+//     if ($minutes > 0) {
+//         return $minutes . ' min ' . $seconds . ' s';
+//     } else {
+//         return $seconds . ' s';
+//     }
+// }
     public function showYt(Request $request)
     {
         $request->validate([
