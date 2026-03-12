@@ -14,12 +14,16 @@ return new class extends Migration
         Schema::create('formats', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->decimal('max_size_mb', 6, 6)->nullable();
+            // Cambiado a 8, 4 para soportar 800 y 0.0366
+            $table->decimal('max_size_mb', 8, 4)->nullable();
             $table->integer('min_duration_seconds')->nullable();
             $table->integer('max_duration_seconds')->nullable();
             $table->boolean('enabled')->default(false);
-            $table->unsignedBigInteger('type_learning_content_id')->unique();
+            
+            // ¡ELIMINADO el ->unique() de aquí abajo!
+            $table->unsignedBigInteger('type_learning_content_id'); 
             $table->foreign('type_learning_content_id')->references('id')->on('type_learning_contents')->onDelete('cascade');
+            
             $table->timestamps();
             $table->softDeletes();
         });
