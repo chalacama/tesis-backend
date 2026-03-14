@@ -458,7 +458,7 @@ class CourseController extends Controller
                     $file->getRealPath(),
                     [
                         'folder'        => "miniatures",
-                        'public_id'     => "curso/{$course->id}",
+                        'public_id'     => "curso-{$course->id}",
                         'overwrite'     => true,
                         'resource_type' => 'image',
                         'transformation' => [

@@ -13,17 +13,23 @@ return new class extends Migration
     {
         Schema::create('formats', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            // Cambiado a 8, 4 para soportar 800 y 0.0366
-            $table->decimal('max_size_mb', 8, 4)->nullable();
-            $table->integer('min_duration_seconds')->nullable();
-            $table->integer('max_duration_seconds')->nullable();
+            $table->text('url')->nullable();
+        
+            // RECOMENDADO: Guardar siempre en Bytes como entero sin signo.
+            // Ej: 800 MB = 838860800 bytes | 0.0366 MB = 38377 bytes
+            $table->unsignedBigInteger('max_size_bytes')->nullable();
+        
+            // RECOMENDADO: Enteros sin signo (unsigned) para evitar duraciones negativas
+            $table->unsignedInteger('min_duration_seconds')->nullable();
+            $table->unsignedInteger('max_duration_seconds')->nullable();
+        
             $table->boolean('enabled')->default(false);
-            
-            // ¡ELIMINADO el ->unique() de aquí abajo!
-            $table->unsignedBigInteger('type_learning_content_id'); 
-            $table->foreign('type_learning_content_id')->references('id')->on('type_learning_contents')->onDelete('cascade');
-            
+        
+            // FORMA MODERNA: Sintaxis más limpia de Laravel para llaves foráneas
+            $table->foreignId('type_learning_content_id')
+              ->constrained('type_learning_contents')
+              ->cascadeOnDelete();
+        
             $table->timestamps();
             $table->softDeletes();
         });

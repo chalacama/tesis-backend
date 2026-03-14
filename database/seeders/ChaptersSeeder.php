@@ -44,13 +44,44 @@ Chapter::create([
     'module_id' => 4,
     'order' => 4,
 ]);
-
+// id 6, 7, 8, 9, 10, 11 ,12
 Chapter::create([
-    'title' => 'Archivo editable ',
+    'title' => 'Imagen de referencia',
+    'description' => 'Imagen de referencia para el proyecto',
+    'module_id' => 2,
+    'order' => 5,
+]);
+Chapter::create([
+    'title' => 'Archivo editable word ',
     'description' => 'Word editable',
     'module_id' => 2,
     'order' => 1,
 ]);
+Chapter::create([
+    'title' => 'Archivo editable pptx',
+    'description' => 'PowerPoint editable',
+    'module_id' => 2,
+    'order' => 2,
+]);
+Chapter::create([
+    'title' => 'Archivo editable excel',
+    'description' => 'Excel editable',
+    'module_id' => 2,
+    'order' => 3,
+]);
+Chapter::create([
+    'title' => 'Archivo comprimido',
+    'description' => 'Archivo comprimido con recursos adicionales',
+    'module_id' => 2,
+    'order' => 4,
+]);
+Chapter::create([
+    'title' => 'Audio de referencia',
+    'description' => 'Audio de referencia para el proyecto',
+    'module_id' => 2,
+    'order' => 6,
+]);
+
 
 }
 }

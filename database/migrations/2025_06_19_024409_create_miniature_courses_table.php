@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('miniature_courses', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('course_id')->unique(); // Unique to enforce one-to-one
-            $table->string('url');
+            $table->text('url')->nullable();
             $table->timestamps();
             
             $table->foreign('course_id')->references('id')->on('courses')->onDelete('cascade');

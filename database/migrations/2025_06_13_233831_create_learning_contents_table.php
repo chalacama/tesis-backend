@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('learning_contents', function (Blueprint $table) {
             $table->id();
-            $table->string('url');
+            $table->text('url')->nullable();
             // Cambiado a 8, 4 aquí también
-            $table->decimal('size_mb', 8, 4)->nullable(); 
-            $table->integer('duration_seconds')->nullable();
+            $table->unsignedBigInteger('size_bytes')->nullable(); 
+            $table->unsignedInteger('duration_seconds')->nullable();
             $table->unsignedBigInteger('type_content_id');
             $table->unsignedBigInteger('chapter_id')->unique(); // Este sí lleva unique (1 a 1)
             $table->unsignedBigInteger('format_id');

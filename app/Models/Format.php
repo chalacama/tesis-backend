@@ -11,7 +11,7 @@ class Format extends Model
 
     protected $fillable = [
         'name',
-        'max_size_mb',
+        'max_size_bytes',
         'min_duration_seconds',
         'max_duration_seconds',
         'enabled',

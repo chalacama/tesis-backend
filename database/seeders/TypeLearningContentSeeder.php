@@ -22,7 +22,7 @@ class TypeLearningContentSeeder extends Seeder
         // Formato para Link
         $typeLink->formats()->create([
             'name' => 'youtube',
-            'max_size_mb' => null,
+            'max_size_bytes' => null,
             'min_duration_seconds' => null,
             'max_duration_seconds' => null,
             'enabled' => true,
@@ -35,7 +35,20 @@ class TypeLearningContentSeeder extends Seeder
         ]);
 
         // Formatos para Archive
-        $archiveFormats = ['pdf', 'mp4', 'mp3', 'docx', 'pptx', 'xlsx', 'zip', 'rar'];
+        $archiveFormats = [
+        'pdf', //1
+        'mp4', //2
+        'mp3', //3
+        'docx', //4
+        'pptx', //5
+        'xlsx', //6
+        'zip', //7
+        'rar' , //8
+        'txt', //9
+        'jpg' , //10
+        'png', //11
+        'jpeg', //12
+        'gif']; //13
 
         foreach ($archiveFormats as $formatName) {
             // Solo mp4 y mp3 tendrían límites de duración lógicos
@@ -43,7 +56,7 @@ class TypeLearningContentSeeder extends Seeder
 
             $typeArchive->formats()->create([
                 'name' => $formatName,
-                'max_size_mb' => 800.00,
+                'max_size_bytes' => 800.001 * 1024 * 1024,
                 'min_duration_seconds' => $isMedia ? 120 : null,
                 'max_duration_seconds' => $isMedia ? 480 : null,
                 'enabled' => true,

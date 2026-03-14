@@ -13,7 +13,7 @@ class LearningContent extends Model
     
     protected $fillable = [
         'url',
-        'size_mb',
+        'size_bytes',
         'duration_seconds',
         'type_content_id',
         'chapter_id',
