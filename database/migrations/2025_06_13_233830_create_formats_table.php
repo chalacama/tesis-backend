@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('formats', function (Blueprint $table) {
             $table->id();
-            $table->text('url')->nullable();
+            $table->string('name');
         
             // RECOMENDADO: Guardar siempre en Bytes como entero sin signo.
             // Ej: 800 MB = 838860800 bytes | 0.0366 MB = 38377 bytes
