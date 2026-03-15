@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
-
+use Illuminate\Support\Number;
 use Exception;
 use Google_Client;
 use DateInterval;
@@ -73,14 +73,14 @@ class WatchingController extends Controller
                   ->with([
                       'chapters' => function ($cq) use ($userId) {
                           $cq->orderBy('order')
-                             ->select('id', 'title', 'description', 'order', 'module_id', 'updated_at', 'created_at')
+                             ->select('id', 'title', 'order', 'module_id', 'updated_at', 'created_at')
                              ->withCount('questions')
                              ->withMax('questions', 'updated_at') // alias: questions_max_updated_at
                              ->with([
                                 'test:id,chapter_id,split',
                                 'learningContent' => function ($lq) {
                                      // Seleccionamos size_mb, duration_seconds y format_id
-                                    $lq->select('id', 'chapter_id', 'url', 'type_content_id', 'format_id', 'size_mb', 'duration_seconds', 'updated_at')
+                                    $lq->select('id', 'chapter_id', 'url', 'type_content_id', 'format_id', 'size_bytes', 'duration_seconds', 'updated_at')
                                     ->with([
                                         'typeLearningContent:id,name',
                                         'format:id,name' // Cargamos la relación del formato
@@ -145,7 +145,6 @@ class WatchingController extends Controller
                             return [
                                 'id'              => $c->id,
                                 'title'           => $c->title,
-                                'description'     => $c->description,
                                 'order'           => $c->order,
                                 'updated_at'      => $c->updated_at,
                                 'created_at'      => $c->created_at,
@@ -271,45 +270,69 @@ class WatchingController extends Controller
     ];
 }
 
-    /**
-     * Devuelve metadatos del contenido de aprendizaje sin exponer la URL.
-     * Ahora usa la relación Format y formatea la duración.
-     */
-    private function formatLearningMeta($learningContent): ?array
-    {
-        if (!$learningContent) {
-            return null;
-        }
-
-        // Tipo de contenido (ej: 'link', 'archive')
-        $typeName = $learningContent->relationLoaded('typeLearningContent') 
-            ? strtolower($learningContent->typeLearningContent->name ?? '') 
-            : null;
-
-        // Nombre del formato (ej: 'youtube', 'mp4', 'pdf')
-        $formatName = $learningContent->relationLoaded('format') 
-            ? strtolower($learningContent->format->name ?? '') 
-            : null;
-
-        // Formatear duración estilo YouTube
-        $formattedDuration = null;
-        if ($learningContent->duration_seconds !== null) {
-            $formattedDuration = $this->formatDuration($learningContent->duration_seconds);
-        }
-
-        // Tamaño en MB (lo casteamos a float para evitar strings)
-        $sizeMb = $learningContent->size_mb !== null 
-            ? (float) $learningContent->size_mb 
-            : null;
-
-        return [
-            'type'             => $typeName,
-            'format'           => $formatName,
-            'size_mb'          => $sizeMb,
-            'duration_seconds' => $learningContent->duration_seconds, // Opcional: mantener el original
-            'duration_formatted'=> $formattedDuration,
-        ];
+/**
+ * Convierte los bytes en una cadena legible al estilo Windows (sin depender de intl).
+ */
+private function formatFileSize(?int $bytes): ?string
+{
+    if ($bytes === null || $bytes === 0) {
+        return null;
     }
+
+    $units = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    
+    // Calculamos a qué unidad pertenece (0 = Bytes, 1 = KB, 2 = MB, etc.)
+    $base = log($bytes, 1024);
+    $unitIndex = floor($base);
+
+    // Si por alguna razón el índice es mayor al arreglo, lo limitamos al máximo
+    $unitIndex = min($unitIndex, count($units) - 1);
+
+    // Calculamos el valor final
+    $size = round(pow(1024, $base - floor($base)), 2);
+
+    // Formateamos para que use la coma para decimales (opcional, estilo español)
+    $formattedSize = number_format($size, $unitIndex > 0 ? 2 : 0, ',', '.');
+
+    return $formattedSize . ' ' . $units[$unitIndex];
+}
+    /**
+ * Devuelve metadatos del contenido de aprendizaje sin exponer la URL.
+ * Ahora usa la relación Format, formatea la duración y el tamaño dinámico.
+ */
+private function formatLearningMeta($learningContent): ?array
+{
+    if (!$learningContent) {
+        return null;
+    }
+
+    // Tipo de contenido (ej: 'link', 'archive')
+    $typeName = $learningContent->relationLoaded('typeLearningContent') 
+        ? strtolower($learningContent->typeLearningContent->name ?? '') 
+        : null;
+
+    // Nombre del formato (ej: 'youtube', 'mp4', 'pdf')
+    $formatName = $learningContent->relationLoaded('format') 
+        ? strtolower($learningContent->format->name ?? '') 
+        : null;
+
+    // Formatear duración estilo YouTube
+    $formattedDuration = null;
+    if ($learningContent->duration_seconds !== null) {
+        $formattedDuration = $this->formatDuration($learningContent->duration_seconds);
+    }
+
+    // NUEVO: Tamaño dinámico (MB, KB, Bytes)
+    $formattedSize = $this->formatFileSize($learningContent->size_bytes);
+
+    return [
+        'type'               => $typeName,
+        'format'             => $formatName,
+        'size'               => $formattedSize, // <-- Cambiado de size_mb a size
+        'duration_seconds'   => $learningContent->duration_seconds,
+        'duration_formatted' => $formattedDuration,
+    ];
+}
 
     /**
      * Convierte segundos a formato YouTube (ej: 1:05:30 o 45:12 o 0:35)

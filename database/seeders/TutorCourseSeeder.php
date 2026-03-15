@@ -64,5 +64,52 @@ class TutorCourseSeeder extends Seeder
     // 15. Cocina Internacional (Owner: User 5, Collaborator: User 4)
     TutorCourse::create(['course_id' => 15, 'user_id' => 5, 'is_owner' => true]);
     TutorCourse::create(['course_id' => 15, 'user_id' => 4, 'is_owner' => false]);
+
+            // --- Cursos sin dueño asignados al Admin (User 1) ---
+
+        // 16. Pintura al Óleo (Owner: User 1 - Admin)
+        TutorCourse::create(['course_id' => 16, 'user_id' => 1, 'is_owner' => true]);
+
+        // 17. Sostenibilidad Empresarial (Owner: User 1 - Admin)
+        TutorCourse::create(['course_id' => 17, 'user_id' => 1, 'is_owner' => true]);
+
+        // 18. Liderazgo Efectivo (Owner: User 1 - Admin)
+        TutorCourse::create(['course_id' => 18, 'user_id' => 1, 'is_owner' => true]);
+
+        // 19. Ingeniería de Software (Owner: User 1 - Admin)
+        TutorCourse::create(['course_id' => 19, 'user_id' => 1, 'is_owner' => true]);
+
+        // 20. Fundamentos de Biología (Owner: User 1 - Admin)
+        TutorCourse::create(['course_id' => 20, 'user_id' => 1, 'is_owner' => true]);
+
+        // 21. JavaScript Avanzado (Owner: User 1 - Admin)
+        TutorCourse::create(['course_id' => 21, 'user_id' => 1, 'is_owner' => true]);
+
+        // 22. Diseño UX/UI (Owner: User 1 - Admin)
+        TutorCourse::create(['course_id' => 22, 'user_id' => 1, 'is_owner' => true]);
+
+        // 23. Publicidad en Redes Sociales (Owner: User 1 - Admin)
+        TutorCourse::create(['course_id' => 23, 'user_id' => 1, 'is_owner' => true]);
+
+        // 24. Gestión de Startups (Owner: User 1 - Admin)
+        TutorCourse::create(['course_id' => 24, 'user_id' => 1, 'is_owner' => true]);
+
+        // 25. Análisis de Big Data (Owner: User 1 - Admin)
+        TutorCourse::create(['course_id' => 25, 'user_id' => 1, 'is_owner' => true]);
+
+        // 26. Fotografía de Retrato (Owner: User 1 - Admin)
+        TutorCourse::create(['course_id' => 26, 'user_id' => 1, 'is_owner' => true]);
+
+        // 27. Producción de Podcasts (Owner: User 1 - Admin)
+        TutorCourse::create(['course_id' => 27, 'user_id' => 1, 'is_owner' => true]);
+
+        // 28. Nutrición Básica (Owner: User 1 - Admin)
+        TutorCourse::create(['course_id' => 28, 'user_id' => 1, 'is_owner' => true]);
+
+        // 29. Teoría Musical (Owner: User 1 - Admin)
+        TutorCourse::create(['course_id' => 29, 'user_id' => 1, 'is_owner' => true]);
+
+        // 30. Física Básica (Owner: User 1 - Admin)
+        TutorCourse::create(['course_id' => 30, 'user_id' => 1, 'is_owner' => true]);
     }
 }

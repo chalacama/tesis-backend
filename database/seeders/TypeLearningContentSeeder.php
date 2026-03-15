@@ -36,19 +36,19 @@ class TypeLearningContentSeeder extends Seeder
 
         // Formatos para Archive
         $archiveFormats = [
-        'pdf', //1
-        'mp4', //2
-        'mp3', //3
-        'docx', //4
-        'pptx', //5
-        'xlsx', //6
-        'zip', //7
-        'rar' , //8
-        'txt', //9
-        'jpg' , //10
-        'png', //11
-        'jpeg', //12
-        'gif']; //13
+        'pdf', //2
+        'mp4', //3
+        'mp3', //4
+        'docx', //5
+        'pptx', //6
+        'xlsx', //7
+        'zip', //8
+        'rar' , //9
+        'txt', //10
+        'jpg' , //11
+        'png', //12
+        'jpeg', //13
+        'gif']; //14
 
         foreach ($archiveFormats as $formatName) {
             // Solo mp4 y mp3 tendrían límites de duración lógicos

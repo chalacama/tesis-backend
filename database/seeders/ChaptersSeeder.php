@@ -44,7 +44,7 @@ Chapter::create([
     'module_id' => 4,
     'order' => 4,
 ]);
-// id 6, 7, 8, 9, 10, 11 ,12
+// id 6, 7, 8, 9, 10, 11
 Chapter::create([
     'title' => 'Imagen de referencia',
     'description' => 'Imagen de referencia para el proyecto',
@@ -78,6 +78,13 @@ Chapter::create([
 Chapter::create([
     'title' => 'Audio de referencia',
     'description' => 'Audio de referencia para el proyecto',
+    'module_id' => 2,
+    'order' => 6,
+]);
+// id 12
+Chapter::create([
+    'title' => 'Archivo editable tmp word',
+    'description' => 'Word editable en formato temporal',
     'module_id' => 2,
     'order' => 6,
 ]);
