@@ -13,7 +13,8 @@ return new class extends Migration
     {
         Schema::create('learning_contents', function (Blueprint $table) {
             $table->id();
-            $table->text('url')->nullable();
+            $table->string('name')->nullable();
+            $table->text('url');
             // Cambiado a 8, 4 aquí también
             $table->unsignedBigInteger('size_bytes')->nullable(); 
             $table->unsignedInteger('duration_seconds')->nullable();

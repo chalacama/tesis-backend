@@ -29,6 +29,7 @@ class LearningContentsSeeder extends Seeder
         // 'jpeg', //13
         // 'gif', //14
         LearningContent::create([
+            'name' => '1.mp4',
             'url' => 'https://res.cloudinary.com/dvvqko1vv/video/upload/v1764845297/archives/chapter/1.mp4',
             'type_content_id' => 2,
             'chapter_id' => 1,
@@ -45,6 +46,7 @@ class LearningContentsSeeder extends Seeder
             'size_bytes' => null,
         ]);
         LearningContent::create([
+            'name' => '3.pdf',
             'url' => 'https://res.cloudinary.com/dvvqko1vv/image/upload/v1764846842/archives/chapter/3.pdf',
             'type_content_id' => 2,
             'chapter_id' => 3,
@@ -53,6 +55,7 @@ class LearningContentsSeeder extends Seeder
             'duration_seconds' => null,
         ]);
         LearningContent::create([
+            'name' => '4',
             'url' => 'https://res.cloudinary.com/dvvqko1vv/raw/upload/v1763338367/archives/chapter/4.tmp',
             'type_content_id' => 2,
             'chapter_id' => 12,
@@ -62,6 +65,7 @@ class LearningContentsSeeder extends Seeder
         ]);
 
         LearningContent::create([
+            'name' => 'image_2e40c2_le5t6k.png',
             'url' => 'https://res.cloudinary.com/dvvqko1vv/image/upload/v1773456447/image_2e40c2_le5t6k.png',
             'type_content_id' => 2,
             'chapter_id' => 6,
@@ -71,6 +75,7 @@ class LearningContentsSeeder extends Seeder
         ]);
         // ✅ CORRECTO: chapter 7 = word → docx
         LearningContent::create([
+            'name' => 'ARTICULO_129_-_CHALA_1_lhqwv2.docx',
             'url' => 'https://res.cloudinary.com/dvvqko1vv/raw/upload/v1773475782/ARTICULO_129_-_CHALA_1_lhqwv2.docx',
             'type_content_id' => 2,
             'chapter_id' => 7,   // Archivo editable word
@@ -79,6 +84,7 @@ class LearningContentsSeeder extends Seeder
             'duration_seconds' => null,
         ]);
         LearningContent::create([
+            'name' => 'FORMATO_PRESENTACIO_N_TIC_tpg6mu.pptx',
             'url' => 'https://res.cloudinary.com/dvvqko1vv/raw/upload/v1773476522/FORMATO_PRESENTACIO%CC%81N_TIC_tpg6mu.pptx',
             'type_content_id' => 2,
             'chapter_id' => 8,   // Archivo editable pptx
@@ -87,6 +93,7 @@ class LearningContentsSeeder extends Seeder
             'duration_seconds' => null,
         ]);
         LearningContent::create([
+            'name' => 'Tabla_de_correciones_tesis_h8bzx2.xlsx',
             'url' => 'https://res.cloudinary.com/dvvqko1vv/raw/upload/v1773458690/Tabla_de_correciones_tesis_h8bzx2.xlsx',
             'type_content_id' => 2,
             'chapter_id' => 9,   // Archivo editable excel
@@ -95,6 +102,7 @@ class LearningContentsSeeder extends Seeder
             'duration_seconds' => null,
         ]);
         LearningContent::create([
+            'name' => 'gravestone-forge-1.20.1-1.0.35.zip',
             'url' => 'https://res.cloudinary.com/dvvqko1vv/raw/upload/v1773458582/gravestone-forge-1.20.1-1.0.35_dh9jzk.zip',
             'type_content_id' => 2,
             'chapter_id' => 10,  // Archivo comprimido
@@ -103,6 +111,7 @@ class LearningContentsSeeder extends Seeder
             'duration_seconds' => null,
         ]);
         LearningContent::create([
+            'name' => 'ssstik.io_1768127717922.mp3',
             'url' => 'https://res.cloudinary.com/dvvqko1vv/video/upload/v1773476999/ssstik.io_1768127717922_e2j49d.mp3',
             'type_content_id' => 2,
             'chapter_id' => 11,

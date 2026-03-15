@@ -472,19 +472,26 @@ private function formatLearningMeta($learningContent): ?array
             ->select('users.id', 'users.name', 'users.lastname', 'users.profile_picture_url', 'users.username')
             ->first();
 
-        // Meta del learning content (Usando la misma función que actualizamos antes)
-        $learningMeta = $this->formatLearningMeta($chapter->learningContent);
+        // Meta del learning content (Usando tu función que ya formatea el tamaño)
+    $learningMeta = $this->formatLearningMeta($chapter->learningContent);
 
-        // Preparamos el array de learning content base
-        $learningContentData = null;
-        if ($chapter->learningContent) {
-            $learningContentData = $chapter->learningContent->toArray();
-            
-            // Casteamos el tamaño a float en la respuesta principal si es necesario
-            if (isset($learningContentData['size_mb']) && $learningContentData['size_mb'] !== null) {
-                $learningContentData['size_mb'] = (float) $learningContentData['size_mb'];
-            }
-        }
+    // Preparamos el array de learning content base
+    $learningContentData = null;
+    if ($chapter->learningContent) {
+        $learningContentData = [
+            'id' => $chapter->learningContent->id,
+            'name' => $chapter->learningContent->name, // <-- Agregamos el name aquí
+            'url' => $chapter->learningContent->url,
+            'type_content_id' => $chapter->learningContent->type_content_id,
+            'chapter_id' => $chapter->learningContent->chapter_id,
+            'format_id' => $chapter->learningContent->format_id,
+            // Usamos la misma lógica que en formatLearningMeta para la respuesta cruda
+            'size' => $this->formatFileSize($chapter->learningContent->size_bytes), 
+            'duration_seconds' => $chapter->learningContent->duration_seconds,
+            'created_at' => $chapter->learningContent->created_at,
+            'updated_at' => $chapter->learningContent->updated_at,
+        ];
+    }
 
         return response()->json([
             'ok'          => true,
