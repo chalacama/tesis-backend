@@ -117,7 +117,7 @@ class LearningContentsSeeder extends Seeder
             'chapter_id' => 11,
             'format_id' => 4, // mp3
             'size_bytes' => 535450, //535.450 bytes
-            'duration_seconds' => null,
+            'duration_seconds' => 33,
         ]);
     }
 }

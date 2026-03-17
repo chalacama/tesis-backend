@@ -3,25 +3,19 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Chapter;
 use App\Models\LearningContent;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Validator;
-use App\Models\Registration;
-use App\Models\User;
-use App\Models\Course;
-use App\Models\TypeLearningContent;
-use App\Models\Module;
-use App\Models\MiniatureCourse;
-use App\Models\TutorCourse;
 use App\Models\ContentView;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+
 class ContentViewController extends Controller
 {
     use AuthorizesRequests;
-    
-    public function update(Request $request,LearningContent $learningContent)
+
+    // Formatos de video y audio que admiten tracking de segundos
+    private const VIDEO_FORMATS = ['mp4', 'webm', 'ogg', 'mov', 'm4v', 'avi', 'mkv'];
+    private const AUDIO_FORMATS = ['mp3'];
+
+    public function update(Request $request, LearningContent $learningContent)
     {
         $data = $request->validate([
             'second_seen' => ['required', 'integer', 'min:0'],
@@ -32,59 +26,51 @@ class ContentViewController extends Controller
             return response()->json(['ok' => false, 'message' => 'No autenticado.'], 401);
         }
 
-        // Cargar lo necesario para validar reglas
+        // Cargamos type, format y la cadena chapter → module → course
         $learningContent->loadMissing([
             'typeLearningContent:id,name',
+            'format:id,name',               // <-- NUEVO: relación al formato
             'chapter:id,module_id,order',
             'chapter.module:id,course_id',
             'chapter.module.course:id,enabled',
         ]);
 
-        $course  = $learningContent->chapter->module->course;
         $chapter = $learningContent->chapter;
 
-        // Política y curso activo
         $this->authorize('viewChapter', $chapter);
-        
 
-        // Solo permitimos progreso para Youtube o archivo de video
-        $typeName = strtolower($learningContent->typeLearningContent->name ?? '');
-        $isYouTube = $typeName === 'youtube';
-        $isArchivo = in_array($typeName, ['archivo', 'archive', 'file'], true);
+        // ── Determinar si este contenido admite tracking de segundos ──────────
+        $typeName   = strtolower($learningContent->typeLearningContent->name ?? '');
+        $formatName = strtolower($learningContent->format->name ?? '');
 
-        if (!$isYouTube && !$isArchivo) {
+        $allowed = match(true) {
+            // link/youtube  →  video de YouTube
+            $typeName === 'link'    && $formatName === 'youtube'                    => true,
+            // archive/mp4…  →  video subido
+            $typeName === 'archive' && in_array($formatName, self::VIDEO_FORMATS)   => true,
+            // archive/mp3   →  audio subido (NUEVO)
+            $typeName === 'archive' && in_array($formatName, self::AUDIO_FORMATS)   => true,
+            default                                                                  => false,
+        };
+
+        if (!$allowed) {
             return response()->json([
-                'ok' => false,
-                'message' => 'Este contenido no admite registro de progreso.',
+                'ok'      => false,
+                'message' => 'Este contenido no admite registro de progreso por segundos.',
             ], 422);
         }
 
-        // Si es archivo, verificar que sea realmente video por extensión
-        if ($isArchivo) {
-            $ext = $this->detectArchiveFormat($learningContent->url);
-            $videoExts = ['mp4', 'webm', 'ogg', 'mov', 'm4v', 'avi', 'mkv'];
-            if (!$ext || !in_array($ext, $videoExts, true)) {
-                return response()->json([
-                    'ok' => false,
-                    'message' => 'El contenido de archivo no es un video soportado.',
-                ], 422);
-            }
-        }
-
-        // Upsert de progreso (idempotente).
-        // Sugerencia: guardamos el máximo para no “retroceder” progreso.
+        // ── Upsert: siempre guardamos el máximo (no retrocedemos progreso) ─────
         $incoming = (int) $data['second_seen'];
 
         $view = ContentView::firstOrNew([
-            'user_id'              => $userId,
-            'learning_content_id'  => $learningContent->id,
+            'user_id'             => $userId,
+            'learning_content_id' => $learningContent->id,
         ]);
 
-        if ($view->exists) {
-            $view->second_seen = max((int) $view->second_seen, $incoming);
-        } else {
-            $view->second_seen = $incoming;
-        }
+        $view->second_seen = $view->exists
+            ? max((int) $view->second_seen, $incoming)
+            : $incoming;
 
         $view->save();
 
@@ -92,21 +78,6 @@ class ContentViewController extends Controller
             'ok'          => true,
             'second_seen' => (int) $view->second_seen,
             'updated_at'  => optional($view->updated_at)->toISOString(),
-        ], 200);
+        ]);
     }
-
-    /**
-     * Detecta extensión del recurso (mp4, pdf, etc.) a partir de la URL.
-     * No expone la URL, solo la usa para inferir formato.
-     */
-    private function detectArchiveFormat(?string $url): ?string
-    {
-        if (!$url) return null;
-        $path = parse_url($url, PHP_URL_PATH);
-        if (!$path) return null;
-        $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
-        return $ext ?: null;
-        // Nota: si usas una CDN sin extensión visible, considera persistir el formato al subir.
-    }
-
 }
