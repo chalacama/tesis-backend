@@ -20,17 +20,22 @@ class ModulesSeeder extends Seeder
     ]);
     Module::create([
         'name' => 'Desarrollo api rest',
-        'order' => 1,
+        'order' => 2,
         'course_id' => 1,
     ]);
     Module::create([
-        'name' => 'Seeders y Multimedia',
-        'order' => 1,
+        'name' => 'google Drive',
+        'order' => 3,
         'course_id' => 1,
     ]);
     Module::create([
         'name' => 'Evaluación',
-        'order' => 1,
+        'order' => 5,
+        'course_id' => 1,
+    ]);
+    Module::create([
+        'name' => 'OneDrive',
+        'order' => 4,
         'course_id' => 1,
     ]);
     
