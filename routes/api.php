@@ -21,7 +21,27 @@ use App\Http\Controllers\{
 Route::get('/user', function (Request $request) {
     return $request->user()?->load('roles'); // Carga los roles si el usuario existe
 })->middleware('auth:sanctum');
-
+Route::get('/prueba-google', function () {
+    try {
+        // Guardamos el resultado de la subida en una variable ($exito será true o false)
+        $exito = Storage::disk('gcs')->put('hola-mundo.txt', '¡Hola! Este archivo viene desde mi Laravel local.');
+        
+        if (!$exito) {
+            throw new \Exception('Laravel devolvió "false". No se pudo subir el archivo.');
+        }
+        
+        return response()->json([
+            'status' => '¡ÉXITO REAL!',
+            'mensaje' => 'El archivo se subió correctamente a Google Cloud Storage.'
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'ERROR',
+            'mensaje' => $e->getMessage()
+        ]);
+    }
+});
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/google/callback', [AuthController::class, 'handleGoogleCallback']);

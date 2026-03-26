@@ -59,6 +59,20 @@ return [
             'throw' => false,
             'report' => false,
         ],
+        'gcs' => [
+            'driver' => 'gcs',
+            'key_file_path' => env('GOOGLE_CLOUD_KEY_FILE', storage_path('google-credentials.json')),
+            'project_id' => env('GOOGLE_CLOUD_PROJECT_ID'),
+            'bucket' => env('GOOGLE_CLOUD_STORAGE_BUCKET'),
+            'path_prefix' => '', 
+            
+            // --- LA MAGIA ESTÁ AQUÍ ---
+            'visibility' => 'noPredefinedVisibility',
+            'visibility_handler' => \League\Flysystem\GoogleCloudStorage\UniformBucketLevelAccessVisibility::class,
+            // --------------------------
+            
+            'throw' => true,
+        ],
 
     ],
 
