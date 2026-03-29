@@ -11,13 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('miniature_courses', function (Blueprint $table) {
+        Schema::create('type_figures', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('course_id')->unique(); // Unique to enforce one-to-one
-            $table->text('url')->nullable();
+            $table->string('name');
+            $table->unsignedBigInteger('max_size_bytes')->nullable();
+            $table->boolean('enabled')->default(false);
             $table->timestamps();
-            
-            $table->foreign('course_id')->references('id')->on('courses')->onDelete('cascade');
         });
     }
 
@@ -26,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('miniature_courses');
+        Schema::dropIfExists('type_figures');
     }
 };

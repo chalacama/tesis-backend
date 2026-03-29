@@ -8,10 +8,10 @@ use App\Models\LearningContent;
 /**
  * Referencia de format_id (ver TypeLearningContentSeeder):
  *
- *  1  youtube          |  10 googledrive.mp4   |  18 onedrive.mp4
- *  2  pdf              |  11 googledrive.mp3   |  19 onedrive.mp3
- *  3  mp4              |  12 googledrive.pdf   |  20 onedrive.pdf
- *  4  mp3              |  13 googledrive.docx  |  21 onedrive.docx
+ *  1  youtube          |  10 googledrive.video |  18 onedrive.video 
+ *  2  pdf              |  11 googledrive.audio |  19 onedrive.audio
+ *  3  video            |  12 googledrive.pdf   |  20 onedrive.pdf
+ *  4  audio            |  13 googledrive.docx  |  21 onedrive.docx
  *  5  docx             |  14 googledrive.pptx  |  22 onedrive.pptx
  *  6  pptx             |  15 googledrive.xlsx  |  23 onedrive.xlsx
  *  7  xlsx             |  16 googledrive.zip   |  24 onedrive.zip
@@ -30,23 +30,23 @@ class LearningContentsSeeder extends Seeder
 
         // Chapter 1 — mp4 (Cloudinary)
         LearningContent::create([
-            'name'             => '1.mp4',
-            'url'              => 'https://res.cloudinary.com/dvvqko1vv/video/upload/v1764845297/archives/chapter/1.mp4',
+            'name'             => 'Welcome to Laravel.mp4',
+            'url'              => 'https://storage.googleapis.com/mi-app-storage/courses/1/chapters/content/Welcome%20to%20Laravel.mp4',
             'type_content_id'  => 2,
             'chapter_id'       => 1,
-            'format_id'        => 3,       // mp4
-            'size_bytes'       => 5188650,
+            'format_id'        => 3,       // video
+            'size_bytes'       => 134217728, // 13 MB
             'duration_seconds' => 126,
         ]);
 
         // Chapter 3 — pdf (Cloudinary)
         LearningContent::create([
-            'name'             => '3.pdf',
-            'url'              => 'https://res.cloudinary.com/dvvqko1vv/image/upload/v1764846842/archives/chapter/3.pdf',
+            'name'             => 'Configuraciones-Laravel.pdf',
+            'url'              => 'https://storage.googleapis.com/mi-app-storage/courses/1/chapters/3/content/Configuraciones-Laravel.pdf',
             'type_content_id'  => 2,
             'chapter_id'       => 3,
             'format_id'        => 2,       // pdf
-            'size_bytes'       => 4035040,
+            'size_bytes'       => 4035040, //4 MB
             'duration_seconds' => null,
         ]);
 
@@ -141,7 +141,7 @@ class LearningContentsSeeder extends Seeder
             'url'              => 'https://drive.google.com/file/d/1iD9qwCh6svXdTYLa90k6CBg9wO057D7g/preview',
             'type_content_id'  => 1,
             'chapter_id'       => 13,
-            'format_id'        => 10,      // googledrive.mp4
+            'format_id'        => 10,      // googledrive.video
             'size_bytes'       => null,
             'duration_seconds' => 20,
         ]);
@@ -152,7 +152,7 @@ class LearningContentsSeeder extends Seeder
             'url'              => 'https://drive.google.com/file/d/1tUk0nKWxKIgDUTS89H9WSF6F5MBn5ej3/preview',
             'type_content_id'  => 1,
             'chapter_id'       => 14,
-            'format_id'        => 11,      // googledrive.mp3
+            'format_id'        => 11,      // googledrive.audio
             'size_bytes'       => null,
             'duration_seconds' => 284,
         ]);
@@ -233,7 +233,7 @@ class LearningContentsSeeder extends Seeder
             'url'              => 'https://1drv.ms/v/c/904b18bca3295b5a/IQSDt_a5n0PKTok5yJiIZqEUAR1cKIpBLb5f_l-6bvM8eLs?width=1280&height=720',
             'type_content_id'  => 1,
             'chapter_id'       => 21,
-            'format_id'        => 18,      // onedrive.mp4
+            'format_id'        => 18,      // onedrive.video
             'size_bytes'       => null,
             'duration_seconds' => 280,
         ]);
@@ -244,7 +244,7 @@ class LearningContentsSeeder extends Seeder
             'url'              => 'https://1drv.ms/u/c/904b18bca3295b5a/IQRvJW0pKq50SKH3liUoJsTqAeHWBsqeGQF0Obi9Q0zMqFw',
             'type_content_id'  => 1,
             'chapter_id'       => 22,
-            'format_id'        => 19,      // onedrive.mp3
+            'format_id'        => 19,      // onedrive.audio
             'size_bytes'       => null,
             'duration_seconds' => 244,
         ]);

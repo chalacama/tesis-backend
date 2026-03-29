@@ -42,12 +42,12 @@ Chapter::create([
     'title' => 'Examen final del curso',
     'description' => 'Test del modulo 1',
     'module_id' => 4,
-    'order' => 4,
+    'order' => 1,
 ]);
 // id 6, 7, 8, 9, 10, 11
 Chapter::create([
-    'title' => 'Imagen de referencia',
-    'description' => 'Imagen de referencia para el proyecto',
+    'title' => 'Archivo de prueba',
+    'description' => 'Archivo de prueba para el proyecto',
     'module_id' => 2,
     'order' => 5,
 ]);

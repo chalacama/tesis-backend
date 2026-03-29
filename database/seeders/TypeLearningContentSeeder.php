@@ -10,16 +10,16 @@ use App\Models\TypeLearningContent;
  *
  * ── LINK (type_id: 1) ─────────────────────────────────────────────────────
  *   1  → youtube
- *  10  → googledrive.mp4
- *  11  → googledrive.mp3
+ *  10  → googledrive.video
+ *  11  → googledrive.audio
  *  12  → googledrive.pdf
  *  13  → googledrive.docx
  *  14  → googledrive.pptx
  *  15  → googledrive.xlsx
  *  16  → googledrive.zip
  *  17  → googledrive.txt
- *  18  → onedrive.mp4
- *  19  → onedrive.mp3
+ *  18  → onedrive.video
+ *  19  → onedrive.audio
  *  20  → onedrive.pdf
  *  21  → onedrive.docx
  *  22  → onedrive.pptx
@@ -29,8 +29,8 @@ use App\Models\TypeLearningContent;
  *
  * ── ARCHIVE (type_id: 2) ──────────────────────────────────────────────────
  *   2  → pdf
- *   3  → mp4
- *   4  → mp3
+ *   3  → video
+ *   4  → audio
  *   5  → docx
  *   6  → pptx
  *   7  → xlsx
@@ -68,8 +68,8 @@ class TypeLearningContentSeeder extends Seeder
         $archiveFormats = [
             // name    min_sec  max_sec
             ['pdf',   null,    null ],  // ID 2
-            ['mp4',   10,      480  ],  // ID 3
-            ['mp3',   10,      480  ],  // ID 4
+            ['video',   10,      480  ],  // ID 3
+            ['audio',   10,      480  ],  // ID 4
             ['docx',  null,    null ],  // ID 5
             ['pptx',  null,    null ],  // ID 6
             ['xlsx',  null,    null ],  // ID 7
@@ -90,8 +90,8 @@ class TypeLearningContentSeeder extends Seeder
         // ── Formatos LINK adicionales (IDs 10 → 25) ───────────────────────
         // Google Drive  (IDs 10 – 17)
         $googleDriveFormats = [
-            'googledrive.mp4',   // ID 10
-            'googledrive.mp3',   // ID 11
+            'googledrive.video',   // ID 10
+            'googledrive.audio',   // ID 11
             'googledrive.pdf',   // ID 12
             'googledrive.docx',  // ID 13
             'googledrive.pptx',  // ID 14
@@ -112,8 +112,8 @@ class TypeLearningContentSeeder extends Seeder
 
         // OneDrive (IDs 18 – 25)
         $onedriveFormats = [
-            'onedrive.mp4',   // ID 18
-            'onedrive.mp3',   // ID 19
+            'onedrive.video',   // ID 18
+            'onedrive.audio',   // ID 19
             'onedrive.pdf',   // ID 20
             'onedrive.docx',  // ID 21
             'onedrive.pptx',  // ID 22

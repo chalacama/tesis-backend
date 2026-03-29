@@ -73,7 +73,7 @@ class DatabaseSeeder extends Seeder
         $this->call(LikeChaptersSeeder::class);
         
         $this->call(SavedCoursesSeeder::class);
-        
+        $this->call(TypeThumbnailSeeder::class);
         $this->call(MiniatureCoursesSeeder::class);
         
         $this->call(UserCategoryInterestSeeder::class);

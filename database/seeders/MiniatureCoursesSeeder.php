@@ -15,6 +15,11 @@ class MiniatureCoursesSeeder extends Seeder
         MiniatureCourse::create([
         'course_id' => 1, // Laravel Básico
         'url' => 'https://i.ytimg.com/vi/AE5U8zjkU2s/maxresdefault.jpg', // Coding-related image
+        'name' => 'Miniatura del curso Laravel Básico',
+        'size_bytes' => 204800, // Ejemplo de tamaño en bytes
+        'width' => 1280, // Ancho en píxeles
+        'height' => 720, // Alto en píxeles
+        'type_thumbnail_id' => 1, // "link.image"
     ]);
     MiniatureCourse::create([
         'course_id' => 2, // Fundamentos de Diseño Gráfico
@@ -92,46 +97,6 @@ class MiniatureCoursesSeeder extends Seeder
         'course_id' => 20, // Fundamentos de Biología
         'url' => 'https://0.academia-photos.com/attachment_thumbnails/56639375/mini_magick20190111-16815-1e1y9de.png', // Biology
     ]);
-    // MiniatureCourse::create([
-    //     'course_id' => 21, // JavaScript Avanzado
-    //     'url' => 'https://images.unsplash.com/photo-1516321310762-479e750e7e2b?q=80&w=800&auto=format&fit=crop', // Coding
-    // ]);
-    // MiniatureCourse::create([
-    //     'course_id' => 22, // Diseño UX/UI
-    //     'url' => 'https://images.unsplash.com/photo-1516321497487-e288fb19713f?q=80&w=800&auto=format&fit=crop', // UX/UI design
-    // ]);
-    // MiniatureCourse::create([
-    //     'course_id' => 23, // Publicidad en Redes Sociales
-    //     'url' => 'https://images.unsplash.com/photo-1551288049-b1f3a78a4c4b?q=80&w=800&auto=format&fit=crop', // Social media marketing
-    // ]);
-    // MiniatureCourse::create([
-    //     'course_id' => 24, // Gestión de Startups
-    //     'url' => 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?q=80&w=800&auto=format&fit=crop', // Startups
-    // ]);
-    // MiniatureCourse::create([
-    //     'course_id' => 25, // Análisis de Big Data
-    //     'url' => 'https://images.unsplash.com/photo-1551288049-b1f3a78a4c4b?q=80&w=800&auto=format&fit=crop', // Big data
-    // ]);
-    // MiniatureCourse::create([
-    //     'course_id' => 26, // Fotografía de Retrato
-    //     'url' => 'https://images.unsplash.com/photo-1516321497487-e288fb19713f?q=80&w=800&auto=format&fit=crop', // Portrait photography
-    // ]);
-    // MiniatureCourse::create([
-    //     'course_id' => 27, // Producción de Podcasts
-    //     'url' => 'https://images.unsplash.com/photo-1511671786161-2e6b8b6e6a6e?q=80&w=800&auto=format&fit=crop', // Podcast production
-    // ]);
-    // MiniatureCourse::create([
-    //     'course_id' => 28, // Nutrición Básica
-    //     'url' => 'https://images.unsplash.com/photo-1512058564366-18510be2db19?q=80&w=800&auto=format&fit=crop', // Nutrition
-    // ]);
-    // MiniatureCourse::create([
-    //     'course_id' => 29, // Teoría Musical
-    //     'url' => 'https://images.unsplash.com/photo-1511671786161-2e6b8b6e6a6e?q=80&w=800&auto=format&fit=crop', // Music theory
-    // ]);
-    // MiniatureCourse::create([
-    //     'course_id' => 30, // Física Básica
-    //     'url' => 'https://images.unsplash.com/photo-1507668077129-5e793b1b7d00?q=80&w=800&auto=format&fit=crop', // Physics
-    // ]);
         
     }
 }
