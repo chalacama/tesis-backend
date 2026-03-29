@@ -28,7 +28,7 @@ class LearningContentsSeeder extends Seeder
         // ARCHIVE (type_content_id: 2) — capítulos 1 – 12
         // ────────────────────────────────────────────────────────────────────
 
-        // Chapter 1 — mp4 (Cloudinary)
+        // Chapter 1 — mp4 (cloud.google)
         LearningContent::create([
             'name'             => 'Welcome to Laravel.mp4',
             'url'              => 'https://storage.googleapis.com/mi-app-storage/courses/1/chapters/content/Welcome%20to%20Laravel.mp4',
@@ -39,7 +39,7 @@ class LearningContentsSeeder extends Seeder
             'duration_seconds' => 126,
         ]);
 
-        // Chapter 3 — pdf (Cloudinary)
+        // Chapter 3 — pdf (cloud.google)
         LearningContent::create([
             'name'             => 'Configuraciones-Laravel.pdf',
             'url'              => 'https://storage.googleapis.com/mi-app-storage/courses/1/chapters/3/content/Configuraciones-Laravel.pdf',
@@ -50,69 +50,69 @@ class LearningContentsSeeder extends Seeder
             'duration_seconds' => null,
         ]);
 
-        // Chapter 7 — docx (Cloudinary raw)
+        // Chapter 7 — docx (cloud.google)
         LearningContent::create([
-            'name'             => 'ARTICULO_129_-_CHALA_1_lhqwv2.docx',
-            'url'              => 'https://res.cloudinary.com/dvvqko1vv/raw/upload/v1773475782/ARTICULO_129_-_CHALA_1_lhqwv2.docx',
+            'name'             => 'Rutas-basicas-en-Laravel.docx',
+            'url'              => 'https://storage.googleapis.com/mi-app-storage/courses/1/chapters/7/content/Rutas-basicas-en-Laravel.docx',
             'type_content_id'  => 2,
             'chapter_id'       => 7,
             'format_id'        => 5,       // docx
-            'size_bytes'       => 87856,
+            'size_bytes'       => 1958400, //1.5 MB
             'duration_seconds' => null,
         ]);
 
-        // Chapter 8 — pptx (Cloudinary raw)
+        // Chapter 8 — pptx (cloud.google)
         LearningContent::create([
-            'name'             => 'FORMATO_PRESENTACIO_N_TIC_tpg6mu.pptx',
-            'url'              => 'https://res.cloudinary.com/dvvqko1vv/raw/upload/v1773476522/FORMATO_PRESENTACIO%CC%81N_TIC_tpg6mu.pptx',
+            'name'             => 'Controladores_en_Laravel.pptx',
+            'url'              => 'https://storage.googleapis.com/mi-app-storage/courses/1/chapters/8/content/Controladores-en-Laravel.pptx',
             'type_content_id'  => 2,
             'chapter_id'       => 8,
             'format_id'        => 6,       // pptx
-            'size_bytes'       => 78140,
+            'size_bytes'       => 5652480, //5.4 MB
             'duration_seconds' => null,
         ]);
 
-        // Chapter 9 — xlsx (Cloudinary raw)
+        // Chapter 9 — xlsx (cloud.google)
         LearningContent::create([
-            'name'             => 'Tabla_de_correciones_tesis_h8bzx2.xlsx',
-            'url'              => 'https://res.cloudinary.com/dvvqko1vv/raw/upload/v1773458690/Tabla_de_correciones_tesis_h8bzx2.xlsx',
+            'name'             => 'Recursos_Practicos_Rutas_Controladores_Laravel.xlsx',
+            'url'              => 'https://storage.googleapis.com/mi-app-storage/courses/1/chapters/9/content/Recursos_Practicos_Rutas_Controladores_Laravel.xlsx',
             'type_content_id'  => 2,
             'chapter_id'       => 9,
             'format_id'        => 7,       // xlsx
-            'size_bytes'       => 45906,
+            'size_bytes'       => 15700, //15.7 KB
             'duration_seconds' => null,
         ]);
 
-        // Chapter 10 — zip (Cloudinary raw)
+        // Chapter 10 — zip (cloud.google)
         LearningContent::create([
-            'name'             => 'gravestone-forge-1.20.1-1.0.35.zip',
-            'url'              => 'https://res.cloudinary.com/dvvqko1vv/raw/upload/v1773458582/gravestone-forge-1.20.1-1.0.35_dh9jzk.zip',
+            'name'             => 'Recursos_Adicionales_Laravel.zip',
+            'url'              => 'https://storage.googleapis.com/mi-app-storage/courses/1/chapters/10/content/Recursos_Adicionales_Laravel.zip',
             'type_content_id'  => 2,
             'chapter_id'       => 10,
             'format_id'        => 8,       // zip
-            'size_bytes'       => 289748,
+            'size_bytes'       => 131344, //127.7 KB
             'duration_seconds' => null,
         ]);
 
-        // Chapter 11 — mp3 (Cloudinary video)
+        // Chapter 11 — mp3 (cloud.google)
         LearningContent::create([
-            'name'             => 'ssstik.io_1768127717922.mp3',
-            'url'              => 'https://res.cloudinary.com/dvvqko1vv/video/upload/v1773476999/ssstik.io_1768127717922_e2j49d.mp3',
+            'name'             => 'Controladores-en-Laravel-desde-cero.mp3',
+            'url'              => 'https://storage.googleapis.com/mi-app-storage/courses/1/chapters/11/content/Controladores-en-Laravel-desde-cero.mp3',
             'type_content_id'  => 2,
             'chapter_id'       => 11,
             'format_id'        => 4,       // mp3
-            'size_bytes'       => 535450,
-            'duration_seconds' => 33,
+            'size_bytes'       => 15400000, //15.4 MB
+            'duration_seconds' => 385, //6:25
         ]);
 
-        // Chapter 12 — txt (Cloudinary raw)
+        // Chapter 12 — txt (cloud.google)
         LearningContent::create([
-            'name'             => 'Explanation.txt',
-            'url'              => 'https://res.cloudinary.com/dvvqko1vv/raw/upload/v1773958110/Explanation_bhvyig.txt',
+            'name'             => 'Notas_Referencias_Rutas_Controladores_Laravel.txt',
+            'url'              => 'https://storage.googleapis.com/mi-app-storage/courses/1/chapters/12/content/Notas_Referencias_Rutas_Controladores_Laravel.txt',
             'type_content_id'  => 2,
             'chapter_id'       => 12,
             'format_id'        => 9,       // txt
-            'size_bytes'       => 5283,
+            'size_bytes'       => 2300, //2.3 KB
             'duration_seconds' => null,
         ]);
 

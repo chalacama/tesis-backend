@@ -47,31 +47,31 @@ Chapter::create([
 // id 6, 7, 8, 9, 10, 11
 Chapter::create([
     'title' => 'Archivo de prueba',
-    'description' => 'Archivo de prueba para el proyecto',
+    'description' => 'Archivo de prueba para el curso',
     'module_id' => 2,
     'order' => 5,
 ]);
 Chapter::create([
-    'title' => 'Archivo editable word ',
-    'description' => 'Word editable',
+    'title' => 'Rutas Básicas en Laravel',
+    'description' => 'Aprende a definir y gestionar las rutas en Laravel 12, el corazón de todas las peticiones HTTP de tu aplicación. Dominarás rutas GET, POST, parámetros, rutas nombradas y grupos de rutas.',
     'module_id' => 2,
     'order' => 1,
 ]);
 Chapter::create([
-    'title' => 'Archivo editable pptx',
-    'description' => 'PowerPoint editable',
+    'title' => 'Controladores en Laravel',
+    'description' => 'Aprende a crear y utilizar Controladores, la forma profesional de organizar la lógica de tu aplicación. Pasaremos de rutas con closures a controladores limpios y reutilizables.',
     'module_id' => 2,
     'order' => 2,
 ]);
 Chapter::create([
-    'title' => 'Archivo editable excel',
-    'description' => 'Excel editable',
+    'title' => 'Recursos Prácticos',
+    'description' => 'Descarga y edita el archivo Excel con tablas de referencia reales del curso: rutas, controladores, comandos Artisan y datos de ejemplo para tu proyecto. Material 100% práctico y editable.',
     'module_id' => 2,
     'order' => 3,
 ]);
 Chapter::create([
-    'title' => 'Archivo comprimido',
-    'description' => 'Archivo comprimido con recursos adicionales',
+    'title' => 'Recursos Adicionales - Paquete Comprimido',
+    'description' => 'Descarga el archivo ZIP con todos los recursos prácticos del módulo: proyecto base completo, plantillas de controladores, rutas listas para copiar, seeders de ejemplo, vistas Blade y archivos adicionales. Descomprímelo y úsalo directamente en tu proyecto Laravel.',
     'module_id' => 2,
     'order' => 4,
 ]);

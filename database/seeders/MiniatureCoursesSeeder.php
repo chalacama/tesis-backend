@@ -14,12 +14,13 @@ class MiniatureCoursesSeeder extends Seeder
     {
         MiniatureCourse::create([
         'course_id' => 1, // Laravel Básico
-        'url' => 'https://i.ytimg.com/vi/AE5U8zjkU2s/maxresdefault.jpg', // Coding-related image
+        'url' => 'https://storage.googleapis.com/mi-app-storage/courses/1/thumbnail/laravel-basico.jpg', // Coding-related image
         'name' => 'Miniatura del curso Laravel Básico',
         'size_bytes' => 204800, // Ejemplo de tamaño en bytes
         'width' => 1280, // Ancho en píxeles
         'height' => 720, // Alto en píxeles
-        'type_thumbnail_id' => 1, // "link.image"
+        'aspect_ratio' => '16:9', // Relación de aspecto
+        'type_thumbnail_id' => 2, // "archive.image"
     ]);
     MiniatureCourse::create([
         'course_id' => 2, // Fundamentos de Diseño Gráfico
