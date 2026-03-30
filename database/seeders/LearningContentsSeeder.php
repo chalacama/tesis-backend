@@ -31,7 +31,7 @@ class LearningContentsSeeder extends Seeder
         // Chapter 1 — mp4 (cloud.google)
         LearningContent::create([
             'name'             => 'Welcome to Laravel.mp4',
-            'url'              => 'https://storage.googleapis.com/mi-app-storage/courses/1/chapters/content/Welcome%20to%20Laravel.mp4',
+            'url'              => 'https://storage.googleapis.com/mi-app-storage/courses/1/chapters/1/content/Welcome%20to%20Laravel.mp4',
             'type_content_id'  => 2,
             'chapter_id'       => 1,
             'format_id'        => 3,       // video

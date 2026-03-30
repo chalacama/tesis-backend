@@ -17,7 +17,7 @@ return new class extends Migration
             $table->text('url');
             // Cambiado a 8, 4 aquí también
             $table->unsignedBigInteger('size_bytes')->nullable(); 
-            $table->unsignedInteger('duration_seconds')->nullable();
+            $table->unsignedBigInteger('duration_seconds')->nullable();
             $table->unsignedBigInteger('type_content_id');
             $table->unsignedBigInteger('chapter_id')->unique(); // Este sí lleva unique (1 a 1)
             $table->unsignedBigInteger('format_id');

@@ -12,8 +12,8 @@ class ContentViewController extends Controller
     use AuthorizesRequests;
 
     // Formatos de video y audio que admiten tracking de segundos
-    private const VIDEO_FORMATS = ['mp4', 'webm', 'ogg', 'mov', 'm4v', 'avi', 'mkv'];
-    private const AUDIO_FORMATS = ['mp3'];
+    private const VIDEO_FORMATS = ['video', 'google.video', 'onedrive.video', 'youtube'];
+    private const AUDIO_FORMATS = ['audio', 'googledrive.audio', 'onedrive.audio'];
 
     public function update(Request $request, LearningContent $learningContent)
     {
@@ -45,12 +45,12 @@ class ContentViewController extends Controller
 
         $allowed = match(true) {
             // link/youtube  →  video de YouTube
-            $typeName === 'link'    && $formatName === 'youtube'                    => true,
+            $typeName === 'link'    &&  in_array($formatName, self::VIDEO_FORMATS)  => true,
             // archive/mp4…  →  video subido
             $typeName === 'archive' && in_array($formatName, self::VIDEO_FORMATS)   => true,
             // archive/mp3   →  audio subido (NUEVO)
             $typeName === 'archive' && in_array($formatName, self::AUDIO_FORMATS)   => true,
-            default                                                                  => false,
+            default                                                                 => false,
         };
 
         if (!$allowed) {
@@ -61,7 +61,7 @@ class ContentViewController extends Controller
         }
 
         // ── Upsert: siempre guardamos el máximo (no retrocedemos progreso) ─────
-        $incoming = (int) $data['second_seen'];
+        $incoming = $data['second_seen'];
 
         $view = ContentView::firstOrNew([
             'user_id'             => $userId,
@@ -69,14 +69,14 @@ class ContentViewController extends Controller
         ]);
 
         $view->second_seen = $view->exists
-            ? max((int) $view->second_seen, $incoming)
+            ? max($view->second_seen, $incoming)
             : $incoming;
 
         $view->save();
 
         return response()->json([
             'ok'          => true,
-            'second_seen' => (int) $view->second_seen,
+            'second_seen' => $view->second_seen,
             'updated_at'  => optional($view->updated_at)->toISOString(),
         ]);
     }

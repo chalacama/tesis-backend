@@ -461,7 +461,7 @@ private function formatLearningMeta($learningContent): ?array
 
             if ($lastViewModel) {
                 $lastView = [
-                    'second_seen' => (int) $lastViewModel->second_seen,
+                    'second_seen' => $lastViewModel->second_seen,
                     'updated_at'  => optional($lastViewModel->updated_at)->toISOString(),
                 ];
             }

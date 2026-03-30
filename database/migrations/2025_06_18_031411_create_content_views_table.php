@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('learning_content_id');
-            $table->string('second_seen')->nullable()->default(0);
+            $table->unsignedBigInteger('second_seen')->nullable()->default(0);
             $table->decimal('progress', 5, 2)->default(0);
             $table->timestamp('completed_at')->nullable();
             $table->timestamps();
