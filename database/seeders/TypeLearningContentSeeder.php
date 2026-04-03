@@ -16,7 +16,7 @@ use App\Models\TypeLearningContent;
  *  13  → googledrive.docx
  *  14  → googledrive.pptx
  *  15  → googledrive.xlsx
- *  16  → googledrive.zip
+ *  16  → googledrive.compressed
  *  17  → googledrive.txt
  *  18  → onedrive.video
  *  19  → onedrive.audio
@@ -24,8 +24,10 @@ use App\Models\TypeLearningContent;
  *  21  → onedrive.docx
  *  22  → onedrive.pptx
  *  23  → onedrive.xlsx
- *  24  → onedrive.zip
+ *  24  → onedrive.compressed
  *  25  → onedrive.txt
+ *  26  → googledrive.other
+ *  27  → onedrive.other
  *
  * ── ARCHIVE (type_id: 2) ──────────────────────────────────────────────────
  *   2  → pdf
@@ -34,7 +36,7 @@ use App\Models\TypeLearningContent;
  *   5  → docx
  *   6  → pptx
  *   7  → xlsx
- *   8  → zip
+ *   8  → compressed
  *   9  → txt
  */
 class TypeLearningContentSeeder extends Seeder
@@ -73,7 +75,7 @@ class TypeLearningContentSeeder extends Seeder
             ['docx',  null,    null ],  // ID 5
             ['pptx',  null,    null ],  // ID 6
             ['xlsx',  null,    null ],  // ID 7
-            ['zip',   null,    null ],  // ID 8
+            ['compressed',   null,    null ],  // ID 8
             ['txt',   null,    null ],  // ID 9
         ];
 
@@ -96,7 +98,7 @@ class TypeLearningContentSeeder extends Seeder
             'googledrive.docx',  // ID 13
             'googledrive.pptx',  // ID 14
             'googledrive.xlsx',  // ID 15
-            'googledrive.zip',   // ID 16
+            'googledrive.compressed',   // ID 16
             'googledrive.txt',   // ID 17
         ];
 
@@ -118,11 +120,27 @@ class TypeLearningContentSeeder extends Seeder
             'onedrive.docx',  // ID 21
             'onedrive.pptx',  // ID 22
             'onedrive.xlsx',  // ID 23
-            'onedrive.zip',   // ID 24
+            'onedrive.compressed',   // ID 24
             'onedrive.txt',   // ID 25
         ];
 
         foreach ($onedriveFormats as $formatName) {
+            $typeLink->formats()->create([
+                'name'                 => $formatName,
+                'max_size_bytes'       => null,
+                'min_duration_seconds' => null,
+                'max_duration_seconds' => null,
+                'enabled'              => true,
+            ]);
+        }
+        // ── Formatos 'Other' al final para conservar IDs 1-25 ─────────────
+        // (IDs 26 - 27)
+        $otherFormats = [
+            'googledrive.other', // ID 26
+            'onedrive.other',    // ID 27
+        ];
+
+        foreach ($otherFormats as $formatName) {
             $typeLink->formats()->create([
                 'name'                 => $formatName,
                 'max_size_bytes'       => null,

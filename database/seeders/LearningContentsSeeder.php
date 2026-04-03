@@ -14,9 +14,10 @@ use App\Models\LearningContent;
  *  4  audio            |  13 googledrive.docx  |  21 onedrive.docx
  *  5  docx             |  14 googledrive.pptx  |  22 onedrive.pptx
  *  6  pptx             |  15 googledrive.xlsx  |  23 onedrive.xlsx
- *  7  xlsx             |  16 googledrive.zip   |  24 onedrive.zip
- *  8  zip              |  17 googledrive.txt   |  25 onedrive.txt
+ *  7  xlsx             |  16 googledrive.compressed|  24 onedrive.compressed
+ *  8  compressed       |  17 googledrive.txt   |  25 onedrive.txt
  *  9  txt
+ * 
  *
  * type_content_id:  1 = link  |  2 = archive
  */
@@ -138,7 +139,8 @@ class LearningContentsSeeder extends Seeder
         // Chapter 13 — googledrive.mp4
         LearningContent::create([
             'name'             => 'eez-ppyu-pti (2021-07-03 at 11:38 GMT-7).mp4',
-            'url'              => 'https://drive.google.com/file/d/1iD9qwCh6svXdTYLa90k6CBg9wO057D7g/preview',
+            'url'              => 'https://drive.google.com/file/d/1iD9qwCh6svXdTYLa90k6CBg9wO057D7g/view?usp=sharing',
+            'url_insert'      => 'https://drive.google.com/file/d/1iD9qwCh6svXdTYLa90k6CBg9wO057D7g/preview',
             'type_content_id'  => 1,
             'chapter_id'       => 13,
             'format_id'        => 10,      // googledrive.video
@@ -149,7 +151,8 @@ class LearningContentsSeeder extends Seeder
         // Chapter 14 — googledrive.mp3
         LearningContent::create([
             'name'             => 'Software Público Ecuatoriano_ Derivados y Privacidad.wav',
-            'url'              => 'https://drive.google.com/file/d/1tUk0nKWxKIgDUTS89H9WSF6F5MBn5ej3/preview',
+            'url'              => 'https://drive.google.com/file/d/1tUk0nKWxKIgDUTS89H9WSF6F5MBn5ej3/view?usp=sharing',
+            'url_insert'      => 'https://drive.google.com/file/d/1tUk0nKWxKIgDUTS89H9WSF6F5MBn5ej3/preview',
             'type_content_id'  => 1,
             'chapter_id'       => 14,
             'format_id'        => 11,      // googledrive.audio
@@ -160,7 +163,8 @@ class LearningContentsSeeder extends Seeder
         // Chapter 15 — googledrive.pdf
         LearningContent::create([
             'name'             => '02- Circuitos Lógicos - Algebra de Boole - Síntesis de Funciones Lógicas.pdf',
-            'url'              => 'https://drive.google.com/file/d/16Z-LnREYVdMrleCOkp0v0pxaPq2KLISM/preview',
+            'url'              => 'https://drive.google.com/file/d/16Z-LnREYVdMrleCOkp0v0pxaPq2KLISM/view?usp=sharing',
+            'url_insert'      => 'https://drive.google.com/file/d/16Z-LnREYVdMrleCOkp0v0pxaPq2KLISM/preview',
             'type_content_id'  => 1,
             'chapter_id'       => 15,
             'format_id'        => 12,      // googledrive.pdf
@@ -171,7 +175,8 @@ class LearningContentsSeeder extends Seeder
         // Chapter 16 — googledrive.docx
         LearningContent::create([
             'name'             => 'UNIDAD 3 - ACTIVIDAD FORMATIVA.docx',
-            'url'              => 'https://docs.google.com/document/d/1lYULSjsdqUunNAGAvaGcqen2bMkL4V23s9Szf1pCCZ0/preview',
+            'url'              => 'https://docs.google.com/document/d/1lYULSjsdqUunNAGAvaGcqen2bMkL4V23s9Szf1pCCZ0/edit?usp=sharing',
+            'url_insert'      => 'https://docs.google.com/document/d/1lYULSjsdqUunNAGAvaGcqen2bMkL4V23s9Szf1pCCZ0/preview',
             'type_content_id'  => 1,
             'chapter_id'       => 16,
             'format_id'        => 13,      // googledrive.docx
@@ -181,8 +186,9 @@ class LearningContentsSeeder extends Seeder
 
         // Chapter 17 — googledrive.pptx
         LearningContent::create([
-            'name'             => 'CC-0405 Estadística - Capítulo 2 - Probabilidad',
-            'url'              => 'https://docs.google.com/presentation/d/1_sd9Pfi1LCHpC-Kx8qRlChyNpdzDwRXQndFCPect_Bk/preview',
+            'name'             => 'CC-0405 Estadística - Capítulo 2 - Probabilidad.pptx',
+            'url'              => 'https://docs.google.com/presentation/d/1_sd9Pfi1LCHpC-Kx8qRlChyNpdzDwRXQndFCPect_Bk/edit?usp=sharing',
+            'url_insert'      => 'https://docs.google.com/presentation/d/1_sd9Pfi1LCHpC-Kx8qRlChyNpdzDwRXQndFCPect_Bk/preview',
             'type_content_id'  => 1,
             'chapter_id'       => 17,
             'format_id'        => 14,      // googledrive.pptx
@@ -192,8 +198,9 @@ class LearningContentsSeeder extends Seeder
 
         // Chapter 18 — googledrive.xlsx
         LearningContent::create([
-            'name'             => 'CC-0405 Estadística - Capítulo 2 - Probabilidad (xlsx)',
-            'url'              => 'https://docs.google.com/spreadsheets/d/1_sd9Pfi1LCHpC-Kx8qRlChyNpdzDwRXQndFCPect_Bk/preview',
+            'name'             => 'Tabla funcionalidades, descripción y actores.xlsx',
+            'url'              => 'https://docs.google.com/spreadsheets/d/15ytCVD7FscAaJ7b1qdYCyoZ7wb8iohPr/edit?usp=sharing&ouid=102681640906660210317&rtpof=true&sd=true',
+            'url_insert'      => 'https://docs.google.com/spreadsheets/d/15ytCVD7FscAaJ7b1qdYCyoZ7wb8iohPr/preview',
             'type_content_id'  => 1,
             'chapter_id'       => 18,
             'format_id'        => 15,      // googledrive.xlsx
@@ -204,7 +211,8 @@ class LearningContentsSeeder extends Seeder
         // Chapter 19 — googledrive.zip
         LearningContent::create([
             'name'             => 'mods fabric 1.21.11.zip',
-            'url'              => 'https://drive.google.com/file/d/11eC07_vBHYM9R5soLn3xG5IaBhFaog-p/preview',
+            'url'              => 'https://drive.google.com/file/d/11eC07_vBHYM9R5soLn3xG5IaBhFaog-p/view?usp=sharing',
+            'url_insert'      => 'https://drive.google.com/file/d/11eC07_vBHYM9R5soLn3xG5IaBhFaog-p/preview',
             'type_content_id'  => 1,
             'chapter_id'       => 19,
             'format_id'        => 16,      // googledrive.zip
@@ -215,7 +223,8 @@ class LearningContentsSeeder extends Seeder
         // Chapter 20 — googledrive.txt
         LearningContent::create([
             'name'             => 'latest-error.txt',
-            'url'              => 'https://drive.google.com/file/d/1RuS1-ZlHjjbpyAI1qq1pd2-OGKFr7uQi/preview',
+            'url'              => 'https://drive.google.com/file/d/1RuS1-ZlHjjbpyAI1qq1pd2-OGKFr7uQi/view?usp=sharing',
+            'url_insert'      => 'https://drive.google.com/file/d/1RuS1-ZlHjjbpyAI1qq1pd2-OGKFr7uQi/preview',
             'type_content_id'  => 1,
             'chapter_id'       => 20,
             'format_id'        => 17,      // googledrive.txt
@@ -230,7 +239,8 @@ class LearningContentsSeeder extends Seeder
         // Chapter 21 — onedrive.mp4
         LearningContent::create([
             'name'             => 'S03E08.2025 Latino - 2.mp4',
-            'url'              => 'https://1drv.ms/v/c/904b18bca3295b5a/IQSDt_a5n0PKTok5yJiIZqEUAR1cKIpBLb5f_l-6bvM8eLs?width=1280&height=720',
+            'url'              => 'https://1drv.ms/v/c/904b18bca3295b5a/IQCDt_a5n0PKTok5yJiIZqEUAU8jt1PMaOZ8w2pl8Fc5ua8?e=89IXgd',
+            'url_insert'      => 'https://1drv.ms/v/c/904b18bca3295b5a/IQSDDt_a5n0PKTok5yJiIZqEUAR1cKIpBLb5f_l-6bvM8eLs?width=1280&height=720',
             'type_content_id'  => 1,
             'chapter_id'       => 21,
             'format_id'        => 18,      // onedrive.video
@@ -240,8 +250,9 @@ class LearningContentsSeeder extends Seeder
 
         // Chapter 22 — onedrive.mp3
         LearningContent::create([
-            'name'             => 'VFwmKL5OL-Q_mp3',
-            'url'              => 'https://1drv.ms/u/c/904b18bca3295b5a/IQRvJW0pKq50SKH3liUoJsTqAeHWBsqeGQF0Obi9Q0zMqFw',
+            'name'             => 'VFwmKL5OL-Q_mp3.mp3',
+            'url'              => 'https://1drv.ms/u/c/904b18bca3295b5a/IQBvJW0pKq50SKH3liUoJsTqARmJTBiQFZwnEV8vk8RJumo?e=LSMFan',
+            'url_insert'      => 'https://1drv.ms/u/c/904b18bca3295b5a/IQSvJW0pKq50SKH3liUoJsTqAeHWBsqeGQF0Obi9Q0zMqFw',
             'type_content_id'  => 1,
             'chapter_id'       => 22,
             'format_id'        => 19,      // onedrive.audio
@@ -249,10 +260,11 @@ class LearningContentsSeeder extends Seeder
             'duration_seconds' => 244,
         ]);
 
-        // Chapter 23 — onedrive.pdf
+        // Chapter 23 — onedrive.pdf https://1drv.ms/b/c/904b18bca3295b5a/IQCJeRgwxcZJSYyiaesNy4zAAaLYQjRMz0gmUMIZ9weF6no?e=d4YOaq
         LearningContent::create([
             'name'             => 'entregables_objetivo_1-2.pdf',
-            'url'              => 'https://1drv.ms/b/c/904b18bca3295b5a/IQSJeRgwxcZJSYyiaesNy4zAASH1T5amUKDJnOL0STZgsC8',
+            'url'              => 'https://1drv.ms/b/c/904b18bca3295b5a/IQCJeRgwxcZJSYyiaesNy4zAAaLYQjRMz0gmUMIZ9weF6no?e=d4YOaq',
+            'url_insert'      => 'https://1drv.ms/b/c/904b18bca3295b5a/IQSJeRgwxcZJSYyiaesNy4zAASH1T5amUKDJnOL0STZgsC8',
             'type_content_id'  => 1,
             'chapter_id'       => 23,
             'format_id'        => 20,      // onedrive.pdf
@@ -261,9 +273,11 @@ class LearningContentsSeeder extends Seeder
         ]);
 
         // Chapter 24 — onedrive.docx
+        
         LearningContent::create([
             'name'             => 'INFORME TÉCNICO.docx',
-            'url'              => 'https://1drv.ms/w/c/904b18bca3295b5a/IQSfrOCS6eX4TouGBMiEGGRVARlUjroz94tIVBi-hMYwjGw',
+            'url'              => 'https://1drv.ms/w/c/904b18bca3295b5a/IQDVve-KZONUTKL82gRi68c9ARljZuYCyYUYSJJ5MPbj2jY?e=u6gW6D',
+            'url_insert'      => 'https://1drv.ms/w/c/904b18bca3295b5a/IQSfrOCS6eX4TouGBMiEGGRVARlUjroz94tIVBi-hMYwjGw',
             'type_content_id'  => 1,
             'chapter_id'       => 24,
             'format_id'        => 21,      // onedrive.docx
@@ -274,7 +288,8 @@ class LearningContentsSeeder extends Seeder
         // Chapter 25 — onedrive.pptx
         LearningContent::create([
             'name'             => 'Influencia-de-la-Exclusion-Social-en-la-Adiccion-a-Redes-Sociales-en-Adolescentes.pptx',
-            'url'              => 'https://1drv.ms/p/c/904b18bca3295b5a/IQT8TVCNorU6TKcgoTLGjpslAV7meOP2xhlApk75AH98wYg',
+            'url'              => 'https://1drv.ms/p/c/904b18bca3295b5a/IQD8TVCNorU6TKcgoTLGjpslAXu17o5lClIOEfh0Mvb--0Y?e=WKpFNe',
+            'url_insert'      => 'https://1drv.ms/p/c/904b18bca3295b5a/IQS8TVCNorU6TKcgoTLGjpslAV7meOP2xhlApk75AH98wYg',   
             'type_content_id'  => 1,
             'chapter_id'       => 25,
             'format_id'        => 22,      // onedrive.pptx
@@ -285,7 +300,8 @@ class LearningContentsSeeder extends Seeder
         // Chapter 26 — onedrive.xlsx
         LearningContent::create([
             'name'             => 'Cambios produ.xlsx',
-            'url'              => 'https://1drv.ms/x/c/904b18bca3295b5a/IQQ8iBR4rj4PRYH23GQXPaIaARqAQxVgd6804H6l4MTD2cc',
+            'url'              => 'https://1drv.ms/x/c/904b18bca3295b5a/IQA8iBR4rj4PRYH23GQXPaIaAY0_fLkS6qduCBkDz9O8ab8?e=YshXSl',
+            'url_insert'      => 'https://1drv.ms/x/c/904b18bca3295b5a/IQS8iBR4rj4PRYH23GQXPaIaARqAQxVgd6804H6l4MTD2cc',
             'type_content_id'  => 1,
             'chapter_id'       => 26,
             'format_id'        => 23,      // onedrive.xlsx
@@ -295,8 +311,9 @@ class LearningContentsSeeder extends Seeder
 
         // Chapter 27 — onedrive.zip
         LearningContent::create([
-            'name'             => 'illustration.zip',
-            'url'              => 'https://1drv.ms/u/c/904b18bca3295b5a/IQSNA4euPrWqT5RZ3o7JdlHeAZMIdFqalyFdOxrawRQA2Mg',
+            'name'             => 'illustration.rar',
+            'url'              => 'https://1drv.ms/u/c/904b18bca3295b5a/IQCNA4euPrWqT5RZ3o7JdlHeAcZU2cfRF_vIwWWw7u62tZA?e=tBne8j',
+            'url_insert'      => 'https://1drv.ms/u/c/904b18bca3295b5a/IQSNA4euPrWqT5RZ3o7JdlHeAZMIdFqalyFdOxrawRQA2Mg',
             'type_content_id'  => 1,
             'chapter_id'       => 27,
             'format_id'        => 24,      // onedrive.zip
@@ -307,7 +324,8 @@ class LearningContentsSeeder extends Seeder
         // Chapter 28 — onedrive.txt
         LearningContent::create([
             'name'             => 'hola.txt',
-            'url'              => 'https://1drv.ms/t/c/904b18bca3295b5a/IQQOcBtaAyM_QraDEdmtgRxbAazhTrwF2c1GC5Bj4Bb-Who',
+            'url'              => 'https://1drv.ms/t/c/904b18bca3295b5a/IQAOcBtaAyM_QraDEdmtgRxbAaQPMchU4nj8lSvxq9mab5k?e=uBXP4J',
+            'url_insert'      => 'https://1drv.ms/t/c/904b18bca3295b5a/IQSOkBtaAyM_QraDEdmtgRxbAazhTrwF2c1GC5Bj4Bb-Who',
             'type_content_id'  => 1,
             'chapter_id'       => 28,
             'format_id'        => 25,      // onedrive.txt

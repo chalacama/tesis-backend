@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name')->nullable();
             $table->text('url');
+            $table->text('url_insert')->nullable();
             // Cambiado a 8, 4 aquí también
             $table->unsignedBigInteger('size_bytes')->nullable(); 
             $table->unsignedBigInteger('duration_seconds')->nullable();
