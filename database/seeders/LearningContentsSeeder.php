@@ -240,7 +240,7 @@ class LearningContentsSeeder extends Seeder
         LearningContent::create([
             'name'             => 'S03E08.2025 Latino - 2.mp4',
             'url'              => 'https://1drv.ms/v/c/904b18bca3295b5a/IQCDt_a5n0PKTok5yJiIZqEUAU8jt1PMaOZ8w2pl8Fc5ua8?e=89IXgd',
-            'url_insert'      => 'https://1drv.ms/v/c/904b18bca3295b5a/IQSDDt_a5n0PKTok5yJiIZqEUAR1cKIpBLb5f_l-6bvM8eLs?width=1280&height=720',
+            'url_insert'      => 'https://1drv.ms/v/c/904b18bca3295b5a/IQSDt_a5n0PKTok5yJiIZqEUAR1cKIpBLb5f_l-6bvM8eLs?width=1280&height=720',
             'type_content_id'  => 1,
             'chapter_id'       => 21,
             'format_id'        => 18,      // onedrive.video
@@ -252,7 +252,7 @@ class LearningContentsSeeder extends Seeder
         LearningContent::create([
             'name'             => 'VFwmKL5OL-Q_mp3.mp3',
             'url'              => 'https://1drv.ms/u/c/904b18bca3295b5a/IQBvJW0pKq50SKH3liUoJsTqARmJTBiQFZwnEV8vk8RJumo?e=LSMFan',
-            'url_insert'      => 'https://1drv.ms/u/c/904b18bca3295b5a/IQSvJW0pKq50SKH3liUoJsTqAeHWBsqeGQF0Obi9Q0zMqFw',
+            'url_insert'      => 'https://1drv.ms/u/c/904b18bca3295b5a/IQRvJW0pKq50SKH3liUoJsTqAeHWBsqeGQF0Obi9Q0zMqFw',
             'type_content_id'  => 1,
             'chapter_id'       => 22,
             'format_id'        => 19,      // onedrive.audio
@@ -286,10 +286,11 @@ class LearningContentsSeeder extends Seeder
         ]);
 
         // Chapter 25 — onedrive.pptx
+        //https://1drv.ms/p/c/904b18bca3295b5a/IQT8TVCNorU6TKcgoTLGjpslAV7meOP2xhlApk75AH98wYg
         LearningContent::create([
             'name'             => 'Influencia-de-la-Exclusion-Social-en-la-Adiccion-a-Redes-Sociales-en-Adolescentes.pptx',
             'url'              => 'https://1drv.ms/p/c/904b18bca3295b5a/IQD8TVCNorU6TKcgoTLGjpslAXu17o5lClIOEfh0Mvb--0Y?e=WKpFNe',
-            'url_insert'      => 'https://1drv.ms/p/c/904b18bca3295b5a/IQS8TVCNorU6TKcgoTLGjpslAV7meOP2xhlApk75AH98wYg',   
+            'url_insert'      => 'https://1drv.ms/p/c/904b18bca3295b5a/IQT8TVCNorU6TKcgoTLGjpslAV7meOP2xhlApk75AH98wYg',   
             'type_content_id'  => 1,
             'chapter_id'       => 25,
             'format_id'        => 22,      // onedrive.pptx
@@ -298,10 +299,11 @@ class LearningContentsSeeder extends Seeder
         ]);
 
         // Chapter 26 — onedrive.xlsx
+
         LearningContent::create([
             'name'             => 'Cambios produ.xlsx',
             'url'              => 'https://1drv.ms/x/c/904b18bca3295b5a/IQA8iBR4rj4PRYH23GQXPaIaAY0_fLkS6qduCBkDz9O8ab8?e=YshXSl',
-            'url_insert'      => 'https://1drv.ms/x/c/904b18bca3295b5a/IQS8iBR4rj4PRYH23GQXPaIaARqAQxVgd6804H6l4MTD2cc',
+            'url_insert'      => 'https://1drv.ms/x/c/904b18bca3295b5a/IQQ8iBR4rj4PRYH23GQXPaIaARqAQxVgd6804H6l4MTD2cc',
             'type_content_id'  => 1,
             'chapter_id'       => 26,
             'format_id'        => 23,      // onedrive.xlsx

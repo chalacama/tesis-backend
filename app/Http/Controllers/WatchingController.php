@@ -482,6 +482,7 @@ private function formatLearningMeta($learningContent): ?array
             'id' => $chapter->learningContent->id,
             'name' => $chapter->learningContent->name, // <-- Agregamos el name aquí
             'url' => $chapter->learningContent->url,
+            'url_insert' => $chapter->learningContent->url_insert,
             'type_content_id' => $chapter->learningContent->type_content_id,
             'chapter_id' => $chapter->learningContent->chapter_id,
             'format_id' => $chapter->learningContent->format_id,
