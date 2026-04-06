@@ -10,23 +10,19 @@ use App\Models\Course;
 use App\Models\Registration;
 use App\Models\User;
 use App\Notifications\NewContentInCourseNotification;
-use Cloudinary\Cloudinary;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use ProtoneMedia\LaravelFFMpeg\Support\FFMpeg;
 
 class LearningContentController extends Controller
 {
     use AuthorizesRequests;
-
-    // Cloudinary resource_type por familia de formato
-    private const CLOUDINARY_VIDEO = ['mp4', 'webm', 'ogg', 'mov', 'm4v', 'avi', 'mkv', 'mp3', 'wav', 'aac', 'flac'];
-    private const CLOUDINARY_IMAGE = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'];
-    // todo lo demás → 'raw' (pdf, docx, xlsx, pptx, zip, rar, txt …)
 
     // ── show ────────────────────────────────────────────────────────────────
     public function show(Chapter $chapter): JsonResponse
@@ -93,6 +89,7 @@ class LearningContentController extends Controller
                 $newName     = $data['name'] ?? null;
                 $newSize     = null;
                 $newDuration = null;
+                $newUrlInsert = null;
 
                 $existing = LearningContent::where('chapter_id', $chapter->id)
                     ->with(['typeLearningContent:id,name', 'format:id,name'])
@@ -101,7 +98,7 @@ class LearningContentController extends Controller
                 // ── Eliminar contenido si no hay ni fichero ni URL ──────────
                 if (! $hasNewFile && $newUrl === null) {
                     if ($existing) {
-                        $this->maybeDeleteFromCloudinary($chapter, $existing);
+                        $this->maybeDeleteFromGCS($existing);
                         $existing->delete();
                     }
                     $learningContent = null;
@@ -109,39 +106,40 @@ class LearningContentController extends Controller
                     return;
                 }
 
-                // ── Subir a Cloudinary (solo tipo archive con fichero) ──────
+                // ── Subir a GCS (solo tipo archive con fichero) ──────
                 if ($hasNewFile) {
                     $file         = $request->file('file');
                     $newName      = $newName ?? $file->getClientOriginalName();
                     $newSize      = $file->getSize();
-                    $resourceType = $this->cloudinaryResourceType($format->name);
+                    $extension    = $file->getClientOriginalExtension();
+                    $path         = 'chapters/' . $chapter->id . '.' . $extension;
 
-                    // Borrar anterior si cambia resource_type
-                    if ($existing) {
-                        $this->maybeDeleteFromCloudinary($chapter, $existing, $resourceType);
+                    // Borrar anterior si existe
+                    if ($existing && $existing->url_insert) {
+                        Storage::disk('gcs')->delete($existing->url_insert);
                     }
 
-                    $cloudinary = new Cloudinary(config('cloudinary.cloud_url'));
-                    $upload = $cloudinary->uploadApi()->upload(
-                        $file->getRealPath(),
-                        [
-                            'folder'        => 'chapters',
-                            'public_id'     => (string) $chapter->id,
-                            'overwrite'     => true,
-                            'resource_type' => $resourceType,
-                            'invalidate'    => true,
-                        ]
-                    );
+                    // Subir a GCS
+                    Storage::disk('gcs')->put($path, file_get_contents($file->getRealPath()));
+                    $newUrl = Storage::disk('gcs')->url($path);
+                    $newUrlInsert = $path;
 
-                    $newUrl = $upload['secure_url'] ?? $upload['url'] ?? null;
-
-                    // Duración solo para video/audio (viene en la respuesta de Cloudinary)
-                    if (isset($upload['duration']) && is_numeric($upload['duration'])) {
-                        $newDuration = (int) round((float) $upload['duration']);
+                    // Duración solo para video/audio usando FFmpeg
+                    $formatName = strtolower($format->name);
+                    if (in_array($formatName, ['mp4', 'webm', 'ogg', 'mov', 'm4v', 'avi', 'mkv', 'mp3', 'wav', 'aac', 'flac'])) {
+                        try {
+                            $media = FFMpeg::fromDisk('local')->open($file->getRealPath());
+                            $newDuration = (int) round($media->getDurationInSeconds());
+                        } catch (\Throwable $e) {
+                            Log::warning('FFmpeg duration extraction failed', [
+                                'chapter_id' => $chapter->id,
+                                'error' => $e->getMessage(),
+                            ]);
+                        }
                     }
 
-                    // Validar duración server-side (belt-and-suspenders, cliente ya validó)
-                    $this->validateDuration($cloudinary, $chapter, $format, $resourceType, $newDuration);
+                    // Validar duración
+                    $this->validateDuration($format, $newDuration);
                 }
 
                 // ── Crear o actualizar ──────────────────────────────────────
@@ -149,6 +147,7 @@ class LearningContentController extends Controller
                     'type_content_id'  => $type->id,
                     'format_id'        => $format->id,
                     'url'              => $newUrl,
+                    'url_insert'       => $newUrlInsert,
                     'name'             => $newName,
                     'size_bytes'       => $newSize,
                     'duration_seconds' => $newDuration,
@@ -262,58 +261,33 @@ class LearningContentController extends Controller
     }
 
     /**
-     * Borra el asset de Cloudinary del contenido anterior cuando es necesario.
-     * Solo actúa si el contenido previo era de tipo archive (tiene archivo físico).
-     *
-     * @param  string|null  $incomingResourceType  Si coincide con el antiguo, Cloudinary
-     *                                              lo sobreescribirá solo (overwrite=true).
+     * Borra el asset de GCS del contenido anterior.
+     * Solo actúa si el contenido previo era de tipo archive (tiene url_insert).
      */
-    private function maybeDeleteFromCloudinary(
-        Chapter $chapter,
-        LearningContent $existing,
-        ?string $incomingResourceType = null
-    ): void {
-        $oldTypeName = strtolower($existing->typeLearningContent?->name ?? '');
-        if ($oldTypeName !== 'archive' || ! $existing->url) return;
-
-        $oldResourceType = $this->cloudinaryResourceType($existing->format?->name ?? '');
-
-        // Mismo resource_type → Cloudinary lo sobreescribe con overwrite:true, no borrar
-        if ($incomingResourceType !== null && $incomingResourceType === $oldResourceType) return;
+    private function maybeDeleteFromGCS(LearningContent $existing): void
+    {
+        if (! $existing->url_insert) return;
 
         try {
-            (new Cloudinary(config('cloudinary.cloud_url')))
-                ->uploadApi()
-                ->destroy("chapters/{$chapter->id}", [
-                    'resource_type' => $oldResourceType,
-                    'invalidate'    => true,
-                ]);
+            Storage::disk('gcs')->delete($existing->url_insert);
         } catch (\Throwable $e) {
-            Log::warning('Cloudinary delete failed', [
-                'chapter_id' => $chapter->id,
-                'error'      => $e->getMessage(),
+            Log::warning('GCS delete failed', [
+                'learning_content_id' => $existing->id,
+                'error' => $e->getMessage(),
             ]);
         }
     }
 
     /**
      * Valida la duración contra los límites del formato.
-     * Si falla, intenta eliminar el archivo ya subido y lanza ValidationException.
      */
-    private function validateDuration(
-        Cloudinary $cloudinary,
-        Chapter $chapter,
-        Format $format,
-        string $resourceType,
-        ?int $duration
-    ): void {
+    private function validateDuration(Format $format, ?int $duration): void
+    {
         if (! $format->min_duration_seconds && ! $format->max_duration_seconds) return;
 
         if ($duration === null) {
-            Log::warning('No se pudo obtener duración del archivo', [
-                'chapter_id' => $chapter->id, 'format' => $format->name,
-            ]);
-            return; // El cliente ya validó; no bloqueamos si Cloudinary no devuelve duración
+            Log::warning('No se pudo obtener duración del archivo', ['format' => $format->name]);
+            return;
         }
 
         $error = null;
@@ -324,12 +298,6 @@ class LearningContentController extends Controller
         }
 
         if ($error) {
-            try {
-                $cloudinary->uploadApi()->destroy("chapters/{$chapter->id}", [
-                    'resource_type' => $resourceType, 'invalidate' => true,
-                ]);
-            } catch (\Throwable) {}
-
             throw ValidationException::withMessages(['file' => [$error]]);
         }
     }
