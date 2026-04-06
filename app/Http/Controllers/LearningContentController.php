@@ -69,9 +69,11 @@ class LearningContentController extends Controller
         // 2. Validar el resto con el límite de tamaño dinámico del formato
         $maxKb = $format->max_size_bytes ? (int) ceil($format->max_size_bytes / 1024) : 921_600;
         $data  = $request->validate([
-            'url'  => ['nullable', 'string', 'max:2048'],
-            'file' => ['nullable', 'file', "max:{$maxKb}"],
-            'name' => ['nullable', 'string', 'max:255'],
+            'url'       => ['nullable', 'string', 'max:2048'],
+            'url_insert' => ['nullable', 'string', 'max:2048'],
+            'file'      => ['nullable', 'file', "max:{$maxKb}"],
+            'name'      => ['nullable', 'string', 'max:255'],
+            'duration_seconds' => ['nullable', 'integer', 'min:0'],
         ]);
 
         $isNewContent    = false;
@@ -79,20 +81,20 @@ class LearningContentController extends Controller
 
         try {
             DB::transaction(function () use (
-                $request, $chapter, $data, $ids, $format,
+                $request, $chapter, $course, $data, $ids, $format,
                 &$isNewContent, &$learningContent
             ) {
                 $type        = TypeLearningContent::findOrFail($ids['type_content_id']);
                 $typeName    = strtolower(trim($type->name));
                 $hasNewFile  = $request->hasFile('file') && $request->file('file')->isValid();
                 $newUrl      = (isset($data['url']) && trim($data['url']) !== '') ? trim($data['url']) : null;
-                $newName     = $data['name'] ?? null;
+                $newUrlInsert = (isset($data['url_insert']) && trim($data['url_insert']) !== '') ? trim($data['url_insert']) : null;
+                $newName     = null;
                 $newSize     = null;
-                $newDuration = null;
-                $newUrlInsert = null;
+                $newDuration = isset($data['duration_seconds']) ? (int) $data['duration_seconds'] : null;
 
                 $existing = LearningContent::where('chapter_id', $chapter->id)
-                    ->with(['typeLearningContent:id,name', 'format:id,name'])
+                    ->with(['typeLearningContent:id,name', 'format:id,name,min_duration_seconds,max_duration_seconds,max_size_bytes'])
                     ->first();
 
                 // ── Eliminar contenido si no hay ni fichero ni URL ──────────
@@ -109,22 +111,28 @@ class LearningContentController extends Controller
                 // ── Subir a GCS (solo tipo archive con fichero) ──────
                 if ($hasNewFile) {
                     $file         = $request->file('file');
-                    $newName      = $newName ?? $file->getClientOriginalName();
+                    $newName      = $file->getClientOriginalName();
                     $newSize      = $file->getSize();
-                    $extension    = $file->getClientOriginalExtension();
-                    $path         = 'chapters/' . $chapter->id . '.' . $extension;
+                    
+                    // Validar tamaño
+                    if ($format->max_size_bytes && $newSize > $format->max_size_bytes) {
+                        throw ValidationException::withMessages([
+                            'file' => ["El archivo excede el tamaño máximo de " . ($format->max_size_bytes / 1024 / 1024) . " MB"],
+                        ]);
+                    }
 
-                    // Borrar anterior si existe
+                    // Borrar archivo anterior si existe
                     if ($existing && $existing->url_insert) {
                         Storage::disk('gcs')->delete($existing->url_insert);
                     }
 
-                    // Subir a GCS
-                    Storage::disk('gcs')->put($path, file_get_contents($file->getRealPath()));
-                    $newUrl = Storage::disk('gcs')->url($path);
-                    $newUrlInsert = $path;
+                    // Construir ruta en GCS: courses/{course_id}/chapters/{chapter_id}/content/{filename}
+                    $gcsPath = "courses/{$course->id}/chapters/{$chapter->id}/content/{$newName}";
+                    Storage::disk('gcs')->put($gcsPath, file_get_contents($file->getRealPath()));
+                    $newUrl = Storage::disk('gcs')->url($gcsPath);
+                    $newUrlInsert = $gcsPath;
 
-                    // Duración solo para video/audio usando FFmpeg
+                    // Extraer duración para video/audio usando FFmpeg
                     $formatName = strtolower($format->name);
                     if (in_array($formatName, ['mp4', 'webm', 'ogg', 'mov', 'm4v', 'avi', 'mkv', 'mp3', 'wav', 'aac', 'flac'])) {
                         try {
@@ -137,10 +145,13 @@ class LearningContentController extends Controller
                             ]);
                         }
                     }
-
-                    // Validar duración
-                    $this->validateDuration($format, $newDuration);
+                } else {
+                    // Para LINK: conservar el nombre si viene en el request, si no usar el anterior
+                    $newName = $data['name'] ?? $existing?->name;
                 }
+
+                // ── Validar duración ──────────────────────────────────────
+                $this->validateDuration($format, $newDuration);
 
                 // ── Crear o actualizar ──────────────────────────────────────
                 $fields = [
@@ -232,6 +243,7 @@ class LearningContentController extends Controller
             'id'               => $lc->id,
             'name'             => $lc->name,
             'url'              => $lc->url,
+            'url_insert'       => $lc->url_insert,
             'size_bytes'       => $lc->size_bytes,
             'duration_seconds' => $lc->duration_seconds,
             'type_content_id'  => $lc->type_content_id,
@@ -249,15 +261,6 @@ class LearningContentController extends Controller
                 'max_duration_seconds' => $lc->format->max_duration_seconds,
             ] : null,
         ];
-    }
-
-    /** Devuelve el resource_type de Cloudinary según el nombre del formato. */
-    private function cloudinaryResourceType(string $formatName): string
-    {
-        $name = strtolower(trim($formatName));
-        if (in_array($name, self::CLOUDINARY_VIDEO, true)) return 'video';
-        if (in_array($name, self::CLOUDINARY_IMAGE, true)) return 'image';
-        return 'raw';
     }
 
     /**
