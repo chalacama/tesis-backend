@@ -69,11 +69,12 @@ class LearningContentController extends Controller
         // 2. Validar el resto con el límite de tamaño dinámico del formato
         $maxKb = $format->max_size_bytes ? (int) ceil($format->max_size_bytes / 1024) : 921_600;
         $data  = $request->validate([
-            'url'       => ['nullable', 'string', 'max:2048'],
-            'url_insert' => ['nullable', 'string', 'max:2048'],
-            'file'      => ['nullable', 'file', "max:{$maxKb}"],
-            'name'      => ['nullable', 'string', 'max:255'],
+            'url'             => ['nullable', 'string', 'max:2048'],
+            'url_insert'      => ['nullable', 'string', 'max:2048'],
+            'file'            => ['nullable', 'file', "max:{$maxKb}"],
+            'name'            => ['nullable', 'string', 'max:255'],
             'duration_seconds' => ['nullable', 'integer', 'min:0'],
+            'size_bytes'      => ['nullable', 'integer', 'min:0'],
         ]);
 
         $isNewContent    = false;
@@ -84,14 +85,14 @@ class LearningContentController extends Controller
                 $request, $chapter, $course, $data, $ids, $format,
                 &$isNewContent, &$learningContent
             ) {
-                $type        = TypeLearningContent::findOrFail($ids['type_content_id']);
-                $typeName    = strtolower(trim($type->name));
-                $hasNewFile  = $request->hasFile('file') && $request->file('file')->isValid();
-                $newUrl      = (isset($data['url']) && trim($data['url']) !== '') ? trim($data['url']) : null;
+                $type         = TypeLearningContent::findOrFail($ids['type_content_id']);
+                $typeName     = strtolower(trim($type->name));
+                $hasNewFile   = $request->hasFile('file') && $request->file('file')->isValid();
+                $newUrl       = (isset($data['url']) && trim($data['url']) !== '') ? trim($data['url']) : null;
                 $newUrlInsert = (isset($data['url_insert']) && trim($data['url_insert']) !== '') ? trim($data['url_insert']) : null;
-                $newName     = null;
-                $newSize     = null;
-                $newDuration = isset($data['duration_seconds']) ? (int) $data['duration_seconds'] : null;
+                $newName      = null;
+                $newSize      = isset($data['size_bytes']) ? (int) $data['size_bytes'] : null;
+                $newDuration  = isset($data['duration_seconds']) ? (int) $data['duration_seconds'] : null;
 
                 $existing = LearningContent::where('chapter_id', $chapter->id)
                     ->with(['typeLearningContent:id,name', 'format:id,name,min_duration_seconds,max_duration_seconds,max_size_bytes'])
@@ -131,23 +132,40 @@ class LearningContentController extends Controller
                     Storage::disk('gcs')->put($gcsPath, file_get_contents($file->getRealPath()));
                     $newUrl = Storage::disk('gcs')->url($gcsPath);
                     $newUrlInsert = $gcsPath;
+                    $newSize = $file->getSize();
 
-                    // Extraer duración para video/audio usando FFmpeg
-                    $formatName = strtolower($format->name);
-                    if (in_array($formatName, ['mp4', 'webm', 'ogg', 'mov', 'm4v', 'avi', 'mkv', 'mp3', 'wav', 'aac', 'flac'])) {
-                        try {
-                            $media = FFMpeg::fromDisk('local')->open($file->getRealPath());
-                            $newDuration = (int) round($media->getDurationInSeconds());
-                        } catch (\Throwable $e) {
-                            Log::warning('FFmpeg duration extraction failed', [
-                                'chapter_id' => $chapter->id,
-                                'error' => $e->getMessage(),
-                            ]);
+                    // Extraer duración sólo si el request no la trae y el formato es media
+                    if ($newDuration === null && $this->isDurationRequired($format, $typeName)) {
+                        $formatName = strtolower($format->name);
+                        if (in_array($formatName, ['mp4', 'webm', 'ogg', 'mov', 'm4v', 'avi', 'mkv', 'mp3', 'wav', 'aac', 'flac'], true)) {
+                            try {
+                                $media = FFMpeg::fromDisk('local')->open($file->getRealPath());
+                                $newDuration = (int) round($media->getDurationInSeconds());
+                            } catch (\Throwable $e) {
+                                Log::warning('FFmpeg duration extraction failed', [
+                                    'chapter_id' => $chapter->id,
+                                    'error' => $e->getMessage(),
+                                ]);
+                            }
                         }
                     }
                 } else {
-                    // Para LINK: conservar el nombre si viene en el request, si no usar el anterior
                     $newName = $data['name'] ?? $existing?->name;
+                    $newUrlInsert = $newUrlInsert ?? $existing?->url_insert;
+                    $newSize = $newSize ?? $existing?->size_bytes;
+                    $newDuration = $newDuration ?? $existing?->duration_seconds;
+                }
+
+                if ($typeName === 'link' && $this->isLinkSizeRequired($format) && $newSize === null) {
+                    throw ValidationException::withMessages([
+                        'size_bytes' => ['El tamaño es obligatorio para este formato de link.'],
+                    ]);
+                }
+
+                if ($this->isDurationRequired($format, $typeName) && $newDuration === null) {
+                    throw ValidationException::withMessages([
+                        'duration_seconds' => ['La duración es obligatoria para este formato.'],
+                    ]);
                 }
 
                 // ── Validar duración ──────────────────────────────────────
@@ -303,6 +321,41 @@ class LearningContentController extends Controller
         if ($error) {
             throw ValidationException::withMessages(['file' => [$error]]);
         }
+    }
+
+    private function isLinkSizeRequired(Format $format): bool
+    {
+        $name = strtolower($format->name);
+
+        if ($name === 'youtube') {
+            return false;
+        }
+
+        return ! in_array($name, [
+            'googledrive.video',
+            'googledrive.audio',
+            'onedrive.video',
+            'onedrive.audio',
+        ], true);
+    }
+
+    private function isDurationRequired(Format $format, string $typeName): bool
+    {
+        if ($typeName === 'archive') {
+            return in_array(strtolower($format->name), ['video', 'audio'], true);
+        }
+
+        if ($typeName === 'link') {
+            return in_array(strtolower($format->name), [
+                'youtube',
+                'googledrive.video',
+                'googledrive.audio',
+                'onedrive.video',
+                'onedrive.audio',
+            ], true);
+        }
+
+        return false;
     }
 
     private function notifyRegisteredUsers(
