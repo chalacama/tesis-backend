@@ -98,6 +98,15 @@ class LearningContentController extends Controller
                     ->with(['typeLearningContent:id,name', 'format:id,name,min_duration_seconds,max_duration_seconds,max_size_bytes'])
                     ->first();
 
+                // Detectar cambio de tipo de contenido
+                $isChangingType = $existing && $existing->type_content_id !== $ids['type_content_id'];
+                $oldTypeName = $existing ? strtolower(trim($existing->typeLearningContent->name)) : null;
+
+                // Si cambiamos de archive a link sin nuevo archivo, eliminar archivo antiguo de GCS
+                if ($isChangingType && $oldTypeName === 'archive' && $typeName === 'link' && !$hasNewFile && $existing->url_insert) {
+                    $this->maybeDeleteFromGCS($existing);
+                }
+
                 // ── Eliminar contenido si no hay ni fichero ni URL ──────────
                 if (! $hasNewFile && $newUrl === null) {
                     if ($existing) {
@@ -150,10 +159,12 @@ class LearningContentController extends Controller
                         }
                     }
                 } else {
-                    $newName = $data['name'] ?? $existing?->name;
-                    $newUrlInsert = $newUrlInsert ?? $existing?->url_insert;
-                    $newSize = $newSize ?? $existing?->size_bytes;
-                    $newDuration = $newDuration ?? $existing?->duration_seconds;
+                    // No heredar valores de $existing si cambiamos de tipo o formato
+                    // Limpiar campos que ya no se requieren
+                    $newName = $data['name'] ?? null;
+                    $newUrlInsert = null;  // Para links, no hay archivo físico
+                    $newSize = $data['size_bytes'] ?? null;
+                    $newDuration = $data['duration_seconds'] ?? null;
                 }
 
                 if ($typeName === 'link' && $this->isLinkSizeRequired($format) && $newSize === null) {
