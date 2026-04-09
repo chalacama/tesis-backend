@@ -162,7 +162,7 @@ class LearningContentController extends Controller
                     // No heredar valores de $existing si cambiamos de tipo o formato
                     // Limpiar campos que ya no se requieren
                     $newName = $data['name'] ?? null;
-                    $newUrlInsert = null;  // Para links, no hay archivo físico
+                    $newUrlInsert = $newUrlInsert ?? null;  // Mantener el valor del request si existe
                     $newSize = $data['size_bytes'] ?? null;
                     $newDuration = $data['duration_seconds'] ?? null;
                 }
