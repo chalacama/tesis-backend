@@ -131,6 +131,17 @@ class LearningContentController extends Controller
                         ]);
                     }
 
+                    // ── Validar duración ANTES de subir a GCS ──────────────────
+                    // El frontend es responsable de enviar la duración.
+                    if ($this->isDurationRequired($format, $typeName) && $newDuration === null) {
+                        throw ValidationException::withMessages([
+                            'duration_seconds' => ['La duración es obligatoria para este formato.'],
+                        ]);
+                    }
+
+                    // Validar duración contra los límites del formato
+                    $this->validateDuration($format, $newDuration);
+
                     // Borrar archivo anterior si existe
                     if ($existing && $existing->url_insert) {
                         Storage::disk('gcs')->delete($existing->url_insert);
@@ -142,22 +153,6 @@ class LearningContentController extends Controller
                     $newUrl = Storage::disk('gcs')->url($gcsPath);
                     $newUrlInsert = $gcsPath;
                     $newSize = $file->getSize();
-
-                    // Extraer duración sólo si el request no la trae y el formato es media
-                    if ($newDuration === null && $this->isDurationRequired($format, $typeName)) {
-                        $formatName = strtolower($format->name);
-                        if (in_array($formatName, ['mp4', 'webm', 'ogg', 'mov', 'm4v', 'avi', 'mkv', 'mp3', 'wav', 'aac', 'flac'], true)) {
-                            try {
-                                $media = FFMpeg::fromDisk('local')->open($file->getRealPath());
-                                $newDuration = (int) round($media->getDurationInSeconds());
-                            } catch (\Throwable $e) {
-                                Log::warning('FFmpeg duration extraction failed', [
-                                    'chapter_id' => $chapter->id,
-                                    'error' => $e->getMessage(),
-                                ]);
-                            }
-                        }
-                    }
                 } else {
                     // No heredar valores de $existing si cambiamos de tipo o formato
                     // Limpiar campos que ya no se requieren
