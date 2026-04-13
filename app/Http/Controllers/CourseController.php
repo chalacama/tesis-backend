@@ -311,9 +311,6 @@ class CourseController extends Controller
         'difficulty:id,name',
         ]);
 
-        // Obtenemos todos los tipos de miniatura para el frontend
-       /*  $typeThumbnails = TypeThumbnail::all(); */
-
         return response()->json([
         'message' => 'Curso encontrado',
         'course'  => $course
