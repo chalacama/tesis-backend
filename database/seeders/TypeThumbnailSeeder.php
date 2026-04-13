@@ -13,8 +13,8 @@ class TypeThumbnailSeeder extends Seeder
     public function run(): void
     {
         $types = [
-            ['name' => 'link.image', 'max_size_bytes' => null, 'width' => 300, 'height' => 200, 'aspect_ratio' => null, 'enabled' => true],
-            ['name' => 'archive.image', 'max_size_bytes' => null, 'width' => 1200, 'height' => 400, 'aspect_ratio' => '16:9', 'enabled' => true],
+            ['name' => 'link.image', 'max_size_bytes' => null, 'width' => null, 'height' => null, 'aspect_ratio' => null, 'enabled' => true],
+            ['name' => 'archive.image', 'max_size_bytes' => 4000000, 'width' => null, 'height' => null, 'aspect_ratio' => null, 'enabled' => true],
         ];
 
         foreach ($types as $type) {

@@ -15,6 +15,7 @@ use Illuminate\Support\Str;
 use App\Models\User;
 use Carbon\Carbon;
 use App\Models\MiniatureCourse;
+use App\Models\TypeThumbnail;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
 use Cloudinary\Cloudinary;
@@ -304,11 +305,14 @@ class CourseController extends Controller
         $this->authorize('viewHidden', $course);
 
         $course->load([
-        'miniature:id,course_id,url',
+        'miniature:id,course_id,url,width,height,aspect_ratio,size_bytes,type_thumbnail_id',
         'careers:id,name',
         'categories:id,name',
         'difficulty:id,name',
         ]);
+
+        // Obtenemos todos los tipos de miniatura para el frontend
+       /*  $typeThumbnails = TypeThumbnail::all(); */
 
         return response()->json([
         'message' => 'Curso encontrado',
@@ -319,12 +323,22 @@ class CourseController extends Controller
     public int $maxCategories = 4;
     public int $maxCareers    = 2;
 
-    /** Config de imagen */
-    public array $allowedImageExtensions = ['jpg','png','webp'];
-    public int   $maxImageSizeMb = 20;
     public function update(Request $request, Course $course): JsonResponse
 {
     $this->authorize('update', $course);
+
+    // Validación preliminar del tipo de miniatura
+    $typeThumbnail = null;
+    if ($request->has('type_thumbnail_id')) {
+        $typeThumbnail = \App\Models\TypeThumbnail::where('id', $request->input('type_thumbnail_id'))
+            ->where('enabled', true)
+            ->first();
+        if (!$typeThumbnail) {
+            throw ValidationException::withMessages([
+                'type_thumbnail_id' => 'Tipo de miniatura inválido o deshabilitado.'
+            ]);
+        }
+    }
 
     $validated = $request->validate([
         // Campos base
@@ -347,12 +361,16 @@ class CourseController extends Controller
         'careers'      => 'sometimes|array',
         'careers.*'    => 'integer|exists:careers,id',
 
+        // Miniatura
+        'type_thumbnail_id' => 'sometimes|integer|exists:type_thumbnails,id',
+        'url_miniature'     => 'sometimes|nullable|url',
+
         // Miniatura (archivo) -> multipart/form-data
         'miniature'    => [
             'sometimes',
-            'file', // 👈 ya no nullable, si viene debe ser archivo
-            'mimes:' . implode(',', $this->allowedImageExtensions),
-            'max:' . ($this->maxImageSizeMb * 1024), // en KB
+            'file',
+            'mimes:jpg,png,webp',
+            $typeThumbnail && $typeThumbnail->max_size_bytes ? 'max:' . ($typeThumbnail->max_size_bytes / 1024) : '',
         ],
 
         // Flag explícito para eliminar miniatura
@@ -448,56 +466,80 @@ class CourseController extends Controller
                 $wasUpdated = true;
             }
 
-            // 4) Miniatura (archivo -> Cloudinary)
-            if ($request->hasFile('miniature')) {
-                // OPCIÓN 2: actualizar miniatura
-                $file = $request->file('miniature');
-
-                $cloudinary = new Cloudinary(config('cloudinary.cloud_url'));
-                $upload = $cloudinary->uploadApi()->upload(
-                    $file->getRealPath(),
-                    [
-                        'folder'        => "miniatures",
-                        'public_id'     => "curso-{$course->id}",
-                        'overwrite'     => true,
-                        'resource_type' => 'image',
-                        'transformation' => [
-                            ['quality' => 'auto:good'],
-                            ['fetch_format' => 'auto'],
-                        ],
-                    ]
-                );
-
-                $secureUrl = $upload['secure_url'] ?? null;
-                if ($secureUrl) {
-                    $course->miniature()->updateOrCreate([], ['url' => $secureUrl]);
-                    $wasUpdated = true;
-                } else {
-                    throw new \RuntimeException('No se pudo obtener la URL de Cloudinary.');
-                }
-
-            } elseif ($removeMiniature) {
-                // OPCIÓN 3: quitar miniatura (sin subir nueva)
+            // 4) Miniatura
+            $miniatureChanged = false;
+            if ($removeMiniature) {
                 $miniature = $course->miniature;
-
                 if ($miniature) {
-                    try {
-                        // Intentar borrar también en Cloudinary
-                        $cloudinary = new Cloudinary(config('cloudinary.cloud_url'));
-                        // Mismo public_id que usamos al subir
-                        $cloudinary->uploadApi()->destroy("miniatures/curso/{$course->id}");
-                    } catch (\Throwable $e) {
-                        Log::warning('No se pudo borrar miniatura de Cloudinary', [
-                            'course_id' => $course->id,
-                            'error'     => $e->getMessage(),
-                        ]);
+                    // Si era archive.image, eliminar archivo de GCS
+                    if ($miniature->typeThumbnail && $miniature->typeThumbnail->name === 'archive.image') {
+                        Storage::disk('gcs')->delete($miniature->url);
                     }
-
-                    $course->miniature()->delete();
-                    $wasUpdated = true;
+                    $miniature->delete();
+                    $miniatureChanged = true;
                 }
+            } elseif ($request->hasFile('miniature')) {
+                // Subir nuevo archivo (debe ser archive.image)
+                if (!$typeThumbnail || $typeThumbnail->name !== 'archive.image') {
+                    throw new \Exception('Para subir un archivo, type_thumbnail_id debe ser de tipo archive.image.');
+                }
+                $file = $request->file('miniature');
+                $ext = $file->getClientOriginalExtension();
+                $name = 'thumbnail_' . time() . '.' . $ext;
+                $path = "courses/{$course->id}/thumbnail/{$name}";
+                // Subir a GCS
+                Storage::disk('gcs')->put($path, file_get_contents($file->getRealPath()));
+                // Extraer metadatos
+                $sizeBytes = $file->getSize();
+                $imageInfo = getimagesize($file->getRealPath());
+                $width = $imageInfo[0] ?? null;
+                $height = $imageInfo[1] ?? null;
+                $aspectRatio = null;
+                if ($width && $height) {
+                    $gcd = gmp_gcd($width, $height);
+                    $aspectRatio = ($width / $gcd) . ':' . ($height / $gcd);
+                }
+                // Eliminar archivo anterior si existía y era archive.image
+                $existingMiniature = $course->miniature;
+                if ($existingMiniature && $existingMiniature->typeThumbnail && $existingMiniature->typeThumbnail->name === 'archive.image') {
+                    Storage::disk('gcs')->delete($existingMiniature->url);
+                }
+                // Crear o actualizar
+                $course->miniature()->updateOrCreate([], [
+                    'url' => $path,
+                    'name' => $name,
+                    'size_bytes' => $sizeBytes,
+                    'width' => $width,
+                    'height' => $height,
+                    'aspect_ratio' => $aspectRatio,
+                    'type_thumbnail_id' => $typeThumbnail->id,
+                ]);
+                $miniatureChanged = true;
+            } elseif ($request->has('url_miniature')) {
+                // Guardar URL (debe ser link.image)
+                if (!$typeThumbnail || $typeThumbnail->name !== 'link.image') {
+                    throw new \Exception('Para guardar una URL, type_thumbnail_id debe ser de tipo link.image.');
+                }
+                $url = $request->input('url_miniature');
+                // Eliminar archivo anterior si era archive.image
+                $existingMiniature = $course->miniature;
+                if ($existingMiniature && $existingMiniature->typeThumbnail && $existingMiniature->typeThumbnail->name === 'archive.image') {
+                    Storage::disk('gcs')->delete($existingMiniature->url);
+                }
+                // Crear o actualizar
+                $course->miniature()->updateOrCreate([], [
+                    'url' => $url,
+                    'name' => null,
+                    'size_bytes' => null,
+                    'width' => null,
+                    'height' => null,
+                    'aspect_ratio' => null,
+                    'type_thumbnail_id' => $typeThumbnail->id,
+                ]);
+                $miniatureChanged = true;
             }
-            // OPCIÓN 1: no enviar ni miniature ni remove_miniature -> no se toca la miniatura
+            // Si no se envía nada, no se toca la miniatura
+            $wasUpdated = $wasUpdated || $miniatureChanged;
         });
 
         // 🔔 Si realmente hubo cambios, notificar a los estudiantes registrados
