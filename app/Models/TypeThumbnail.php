@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 class TypeThumbnail extends Model
 {
-    use HasFactory , SoftDeletes;
+    use HasFactory ;
     protected $fillable = [
         'name',
         'max_size_bytes',

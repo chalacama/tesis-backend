@@ -433,7 +433,7 @@ class CourseController extends Controller
     try {
         $wasUpdated = false;
 
-        DB::transaction(function () use ($request, $course, $validated, $normCategories, $normCareers, $removeMiniature, &$wasUpdated) {
+        DB::transaction(function () use ($request, $course, $validated, $normCategories, $normCareers, $removeMiniature, $typeThumbnail, &$wasUpdated) {
 
             // 1) Actualizar campos base enviados
             $toUpdate = collect($validated)->only([
@@ -465,12 +465,17 @@ class CourseController extends Controller
 
             // 4) Miniatura
             $miniatureChanged = false;
+            $bucket = config('filesystems.disks.gcs.bucket');
+            $gcsBaseUrl = "https://storage.googleapis.com/{$bucket}/";
+
             if ($removeMiniature) {
                 $miniature = $course->miniature;
                 if ($miniature) {
                     // Si era archive.image, eliminar archivo de GCS
                     if ($miniature->typeThumbnail && $miniature->typeThumbnail->name === 'archive.image') {
-                        Storage::disk('gcs')->delete($miniature->url);
+                        // Extraemos la ruta relativa para que el delete() funcione
+                        $relativePath = str_replace($gcsBaseUrl, '', $miniature->url);
+                        Storage::disk('gcs')->delete($relativePath);
                     }
                     $miniature->delete();
                     $miniatureChanged = true;
@@ -480,12 +485,21 @@ class CourseController extends Controller
                 if (!$typeThumbnail || $typeThumbnail->name !== 'archive.image') {
                     throw new \Exception('Para subir un archivo, type_thumbnail_id debe ser de tipo archive.image.');
                 }
+                
                 $file = $request->file('miniature');
-                $ext = $file->getClientOriginalExtension();
-                $name = 'thumbnail_' . time() . '.' . $ext;
-                $path = "courses/{$course->id}/thumbnail/{$name}";
-                // Subir a GCS
+                
+                // 1. Obtenemos el nombre real exacto ("ff-jojos-visa.png")
+                $originalName = $file->getClientOriginalName(); 
+                
+                // 2. Ruta relativa para GCS
+                $path = "courses/{$course->id}/thumbnail/{$originalName}";
+                
+                // 3. Generamos la URL completa para guardar en la BD
+                $absoluteUrl = $gcsBaseUrl . $path;
+                
+                // Subir a GCS usando la ruta relativa
                 Storage::disk('gcs')->put($path, file_get_contents($file->getRealPath()));
+                
                 // Extraer metadatos
                 $sizeBytes = $file->getSize();
                 $imageInfo = getimagesize($file->getRealPath());
@@ -493,44 +507,33 @@ class CourseController extends Controller
                 $height = $imageInfo[1] ?? null;
                 $aspectRatio = null;
                 if ($width && $height) {
-                    $gcd = gmp_gcd($width, $height);
+                    $a = $width;
+                    $b = $height;
+                    while ($b != 0) {
+                        $temp = $b;
+                        $b = $a % $b;
+                        $a = $temp;
+                    }
+                    $gcd = $a;
                     $aspectRatio = ($width / $gcd) . ':' . ($height / $gcd);
                 }
+                
                 // Eliminar archivo anterior si existía y era archive.image
                 $existingMiniature = $course->miniature;
                 if ($existingMiniature && $existingMiniature->typeThumbnail && $existingMiniature->typeThumbnail->name === 'archive.image') {
-                    Storage::disk('gcs')->delete($existingMiniature->url);
+                    // Extraemos la ruta relativa para que el delete() funcione
+                    $relativePath = str_replace($gcsBaseUrl, '', $existingMiniature->url);
+                    Storage::disk('gcs')->delete($relativePath);
                 }
-                // Crear o actualizar
+                
+                // Crear o actualizar en la BD con la URL COMPLETA
                 $course->miniature()->updateOrCreate([], [
-                    'url' => $path,
-                    'name' => $name,
+                    'url' => $absoluteUrl,          // <-- AHORA GUARDA LA URL COMPLETA EN LA BD
+                    'name' => $originalName,        // Guarda el nombre real
                     'size_bytes' => $sizeBytes,
                     'width' => $width,
                     'height' => $height,
                     'aspect_ratio' => $aspectRatio,
-                    'type_thumbnail_id' => $typeThumbnail->id,
-                ]);
-                $miniatureChanged = true;
-            } elseif ($request->has('url_miniature')) {
-                // Guardar URL (debe ser link.image)
-                if (!$typeThumbnail || $typeThumbnail->name !== 'link.image') {
-                    throw new \Exception('Para guardar una URL, type_thumbnail_id debe ser de tipo link.image.');
-                }
-                $url = $request->input('url_miniature');
-                // Eliminar archivo anterior si era archive.image
-                $existingMiniature = $course->miniature;
-                if ($existingMiniature && $existingMiniature->typeThumbnail && $existingMiniature->typeThumbnail->name === 'archive.image') {
-                    Storage::disk('gcs')->delete($existingMiniature->url);
-                }
-                // Crear o actualizar
-                $course->miniature()->updateOrCreate([], [
-                    'url' => $url,
-                    'name' => null,
-                    'size_bytes' => null,
-                    'width' => null,
-                    'height' => null,
-                    'aspect_ratio' => null,
                     'type_thumbnail_id' => $typeThumbnail->id,
                 ]);
                 $miniatureChanged = true;
