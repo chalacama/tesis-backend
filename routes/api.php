@@ -11,8 +11,8 @@ use App\Http\Controllers\{
     SavedCourseController, ContentViewController, CommentController, LikeCommentController,
     CompletedChapterController, TestController, HistoryController, CertificateController, EducationalLevelController,
     ImageProxyController, NotificationController, UserCategoryInterestController, UserController, 
-    RatingCourseController, PanelController, RoleController, EcuadorLocationController, EducationalUnitController
-
+    RatingCourseController, PanelController, RoleController, EcuadorLocationController, EducationalUnitController,
+    TypeThumbnailController
 };
 
 
@@ -108,6 +108,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('type')->group(function () {
         Route::get('/index/question', [TypeQuestionController::class, 'index'])->middleware('permission:course.read');
         Route::get('/index/learning-content', [TypeLearningContentController::class, 'index'])->middleware('permission:course.read');
+        Route::get('/index/thumbnail', [TypeThumbnailController::class, 'index'])->middleware('permission:course.read');
     });
 
     Route::prefix('collaborator')->group(function () {

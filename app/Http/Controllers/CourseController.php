@@ -473,7 +473,6 @@ class CourseController extends Controller
                 if ($miniature) {
                     // Si era archive.image, eliminar archivo de GCS
                     if ($miniature->typeThumbnail && $miniature->typeThumbnail->name === 'archive.image') {
-                        // Extraemos la ruta relativa para que el delete() funcione
                         $relativePath = str_replace($gcsBaseUrl, '', $miniature->url);
                         Storage::disk('gcs')->delete($relativePath);
                     }
@@ -487,17 +486,11 @@ class CourseController extends Controller
                 }
                 
                 $file = $request->file('miniature');
-                
-                // 1. Obtenemos el nombre real exacto ("ff-jojos-visa.png")
                 $originalName = $file->getClientOriginalName(); 
-                
-                // 2. Ruta relativa para GCS
                 $path = "courses/{$course->id}/thumbnail/{$originalName}";
-                
-                // 3. Generamos la URL completa para guardar en la BD
                 $absoluteUrl = $gcsBaseUrl . $path;
                 
-                // Subir a GCS usando la ruta relativa
+                // Subir a GCS
                 Storage::disk('gcs')->put($path, file_get_contents($file->getRealPath()));
                 
                 // Extraer metadatos
@@ -521,15 +514,14 @@ class CourseController extends Controller
                 // Eliminar archivo anterior si existía y era archive.image
                 $existingMiniature = $course->miniature;
                 if ($existingMiniature && $existingMiniature->typeThumbnail && $existingMiniature->typeThumbnail->name === 'archive.image') {
-                    // Extraemos la ruta relativa para que el delete() funcione
                     $relativePath = str_replace($gcsBaseUrl, '', $existingMiniature->url);
                     Storage::disk('gcs')->delete($relativePath);
                 }
                 
-                // Crear o actualizar en la BD con la URL COMPLETA
+                // Crear o actualizar en la BD
                 $course->miniature()->updateOrCreate([], [
-                    'url' => $absoluteUrl,          // <-- AHORA GUARDA LA URL COMPLETA EN LA BD
-                    'name' => $originalName,        // Guarda el nombre real
+                    'url' => $absoluteUrl,
+                    'name' => $originalName,
                     'size_bytes' => $sizeBytes,
                     'width' => $width,
                     'height' => $height,
@@ -537,7 +529,34 @@ class CourseController extends Controller
                     'type_thumbnail_id' => $typeThumbnail->id,
                 ]);
                 $miniatureChanged = true;
+
+            } elseif ($request->filled('url_miniature')) {
+                // Guardar URL externa (debe ser link.image)
+                if (!$typeThumbnail || $typeThumbnail->name !== 'link.image') {
+                    throw new \Exception('Para usar una URL externa, type_thumbnail_id debe ser de tipo link.image.');
+                }
+
+                $existingMiniature = $course->miniature;
+                
+                // Si existía un archivo físico anterior, debemos borrarlo de GCS para no dejar basura
+                if ($existingMiniature && $existingMiniature->typeThumbnail && $existingMiniature->typeThumbnail->name === 'archive.image') {
+                    $relativePath = str_replace($gcsBaseUrl, '', $existingMiniature->url);
+                    Storage::disk('gcs')->delete($relativePath);
+                }
+
+                // Crear o actualizar en la BD asegurando que todo lo innecesario sea null
+                $course->miniature()->updateOrCreate([], [
+                    'url'               => $validated['url_miniature'],
+                    'name'              => null, // <-- Cambiado a null
+                    'size_bytes'        => null,
+                    'width'             => null,
+                    'height'            => null,
+                    'aspect_ratio'      => null, // <-- Debe sobreescribir el anterior
+                    'type_thumbnail_id' => $typeThumbnail->id,
+                ]);
+                $miniatureChanged = true;
             }
+
             // Si no se envía nada, no se toca la miniatura
             $wasUpdated = $wasUpdated || $miniatureChanged;
         });

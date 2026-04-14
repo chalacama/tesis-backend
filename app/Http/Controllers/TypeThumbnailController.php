@@ -4,15 +4,19 @@ namespace App\Http\Controllers;
 
 use App\Models\TypeThumbnail;
 use Illuminate\Http\Request;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\DB;
 
 class TypeThumbnailController extends Controller
 {
+    use AuthorizesRequests;
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        //
+
+        return response()->json(TypeThumbnail::all());
     }
 
     /**
