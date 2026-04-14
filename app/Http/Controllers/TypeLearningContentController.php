@@ -11,6 +11,6 @@ class TypeLearningContentController extends Controller
     public function index(): JsonResponse
     {
         
-        return response()->json(TypeLearningContent::all());
+        return response()->json(TypeLearningContent::with('formats')->get());
     }
 }
