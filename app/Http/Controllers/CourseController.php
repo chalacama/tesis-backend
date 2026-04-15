@@ -305,7 +305,7 @@ class CourseController extends Controller
         $this->authorize('viewHidden', $course);
 
         $course->load([
-        'miniature:id,course_id,url,width,height,aspect_ratio,size_bytes,type_thumbnail_id',
+        'miniature:id,course_id,url,name,width,height,aspect_ratio,size_bytes,type_thumbnail_id',
         'careers:id,name',
         'categories:id,name',
         'difficulty:id,name',
