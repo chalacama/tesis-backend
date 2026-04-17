@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 class ModuleController extends Controller
@@ -221,6 +222,11 @@ public function update(Request $request): JsonResponse
                 // Si se solicita remover faltantes y NO se envían capítulos, vacía todos los capítulos del curso
                 $moduleIds = Module::where('course_id', $course->id)->pluck('id');
                 if ($moduleIds->isNotEmpty()) {
+                    $chaptersToDelete = Chapter::whereIn('module_id', $moduleIds)->get();
+                    // Eliminar archivos de GCS antes de eliminar de la BD
+                    foreach ($chaptersToDelete as $chapter) {
+                        $this->deleteChapterFilesFromStorage($course->id, $chapter->id);
+                    }
                     Chapter::whereIn('module_id', $moduleIds)->delete();
                 }
             }
@@ -277,6 +283,12 @@ public function update(Request $request): JsonResponse
                     ->diff($incomingExistingChapterIds);
 
                 if ($toDelete->isNotEmpty()) {
+                    // Obtener los capítulos a eliminar para limpiar archivos de GCS
+                    $chaptersToDelete = Chapter::whereIn('id', $toDelete)->get();
+                    // Eliminar archivos de GCS antes de eliminar de la BD
+                    foreach ($chaptersToDelete as $chapter) {
+                        $this->deleteChapterFilesFromStorage($course->id, $chapter->id);
+                    }
                     Chapter::whereIn('id', $toDelete)->delete();
                 }
             }
@@ -320,6 +332,45 @@ public function update(Request $request): JsonResponse
                 }
                 $i++;
             }
+        }
+    }
+
+    /**
+     * Elimina los archivos de un capítulo en Google Cloud Storage si existen.
+     *
+     * Verifica si el capítulo tiene contenido de aprendizaje con type_content_id == 2 (archivo)
+     * y elimina el directorio completo: courses/{course_id}/chapters/{chapter_id}
+     *
+     * @param int $courseId
+     * @param int $chapterId
+     * @return void
+     */
+    private function deleteChapterFilesFromStorage(int $courseId, int $chapterId): void
+    {
+        try {
+            // Obtener el capítulo con su contenido de aprendizaje
+            $chapter = Chapter::with('learningContent')->find($chapterId);
+
+            if (!$chapter) {
+                return;
+            }
+
+            // Verificar si tiene contenido de aprendizaje con tipo 'archive' (type_content_id == 2)
+            if ($chapter->learningContent && (int)$chapter->learningContent->type_content_id === 2) {
+                $directory = "courses/{$courseId}/chapters/{$chapterId}";
+
+                // Eliminar el directorio completo del capítulo
+                if (Storage::disk('gcs')->exists($directory)) {
+                    Storage::disk('gcs')->deleteDirectory($directory);
+                }
+            }
+        } catch (\Exception $e) {
+            // Registrar el error pero no interrumpir la transacción
+            Log::error("Error al eliminar archivos del capítulo {$chapterId} de GCS", [
+                'course_id' => $courseId,
+                'chapter_id' => $chapterId,
+                'error' => $e->getMessage(),
+            ]);
         }
     }
 
