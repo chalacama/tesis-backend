@@ -14,7 +14,9 @@ return new class extends Migration
         Schema::create('completed_chapters', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('chapter_id');
+            $table->foreign('chapter_id')->references('id')->on('chapters')->onDelete('cascade');
             $table->unsignedBigInteger('user_id');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->timestamps();
         });
     }
