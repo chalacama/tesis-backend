@@ -24,8 +24,8 @@ return new class extends Migration
             $table->unsignedBigInteger('format_id');
             $table->timestamps();
             $table->foreign('type_content_id')->references('id')->on('type_learning_contents')->onDelete('cascade');
-            $table->foreign('chapter_id')->references('id')->on('chapters')->onDelete('restrict');
-            $table->foreign('format_id')->references('id')->on('formats')->onDelete('restrict');
+            $table->foreign('chapter_id')->references('id')->on('chapters')->onDelete('cascade');
+            $table->foreign('format_id')->references('id')->on('formats')->onDelete('cascade');
             
         });
     }

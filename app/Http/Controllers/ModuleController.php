@@ -49,6 +49,7 @@ public function index(Course $course): JsonResponse
 
 public function update(Request $request): JsonResponse
     {
+        set_time_limit(300);
         $data = $request->validate([
             'course_id' => ['required','integer','exists:courses,id'],
 
