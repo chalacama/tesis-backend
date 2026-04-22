@@ -13,6 +13,9 @@ use App\Models\Course;
 use App\Models\Category;
 use App\Models\Career;
 use App\Models\Suggestion;
+use App\Models\ContentView;
+use App\Models\UserCategoryInterest;
+use App\Models\EducationalUser;
 
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -68,9 +71,9 @@ class StartController extends Controller
             ];
     }
 
-    private function formatCourses($courses, ?User $user)
+    private function formatCourses($courses, ?User $user, array $recentlyViewedIds = [])
 {
-    return $courses->map(function ($course) use ($user) {
+    return $courses->map(function ($course) use ($user, $recentlyViewedIds) {
         $firstModule          = $course->modules->sortBy('order')->first();
         $firstChapter         = $firstModule ? $firstModule->chapters->sortBy('order')->first() : null;
         $firstLearningContent = $firstChapter ? $firstChapter->learningContent : null;
@@ -100,6 +103,8 @@ class StartController extends Controller
                 ? $course->registrations->where('user_id', $user->id)->isNotEmpty()
                 : false,
 
+            'recently_viewed' => in_array($course->id, $recentlyViewedIds),
+
             'first_learning_content_url' => $firstLearningContent
                 ? $firstLearningContent->url
                 : null,
@@ -118,12 +123,15 @@ class StartController extends Controller
     $page    = (int) $request->query('page', 1);
     $term    = $this->normalize($request->query('q', ''));
 
-    $query = Course::query()
-        ->select('courses.*')
-        ->with($this->getCourseWithRelations())
-        ->where('enabled', true)
-        ->withCount(['registrations', 'savedCourses'])
-        ->withSum('ratingCourses as total_stars', 'stars');
+    $recentlyViewedIds = $user ? ContentView::select('modules.course_id', DB::raw('MAX(content_views.updated_at) as latest_view'))
+        ->join('learning_contents', 'content_views.learning_content_id', '=', 'learning_contents.id')
+        ->join('chapters', 'learning_contents.chapter_id', '=', 'chapters.id')
+        ->join('modules', 'chapters.module_id', '=', 'modules.id')
+        ->where('content_views.user_id', $user->id)
+        ->groupBy('modules.course_id')
+        ->orderByDesc('latest_view')
+        ->pluck('course_id')
+        ->toArray() : [];
 
     // === Búsqueda con relevancia ===
     if ($term !== '') {
@@ -165,102 +173,155 @@ class StartController extends Controller
             ->having('relevance', '>', 0)
             ->orderByDesc('relevance');
 
-        $query
+        $query = Course::query()
+            ->select('courses.*')
+            ->with($this->getCourseWithRelations())
+            ->withCount(['registrations', 'savedCourses'])
+            ->withSum('ratingCourses as total_stars', 'stars')
             ->joinSub($relevanceSub, 'sr', 'sr.course_id', '=', 'courses.id')
             ->addSelect(DB::raw('sr.relevance'))
             ->orderByDesc('sr.relevance');
+
+        $courses = $query->skip(($page - 1) * $perPage)->take($perPage + 1)->get();
+        $hasMore = $courses->count() > $perPage;
+        if ($hasMore) {
+            $courses = $courses->slice(0, $perPage);
+        }
     } else {
-        // === Filtros clásicos del home ===
+        // === Filtros del home ===
+        if ($filter === 'all') {
+            if ($page == 1 && $user) {
+                $recentIds = ContentView::select('modules.course_id', DB::raw('MAX(content_views.updated_at) as latest_view'))
+                    ->join('learning_contents', 'content_views.learning_content_id', '=', 'learning_contents.id')
+                    ->join('chapters', 'learning_contents.chapter_id', '=', 'chapters.id')
+                    ->join('modules', 'chapters.module_id', '=', 'modules.id')
+                    ->where('content_views.user_id', $user->id)
+                    ->groupBy('modules.course_id')
+                    ->orderByDesc('latest_view')
+                    ->limit(3)
+                    ->pluck('course_id')
+                    ->toArray();
+                $recentCourses = collect();
+                if (!empty($recentIds)) {
+                    $recentCourses = Course::whereIn('id', $recentIds)
+                        ->with($this->getCourseWithRelations())
+                        ->withCount(['registrations', 'savedCourses'])
+                        ->withSum('ratingCourses as total_stars', 'stars')
+                        ->get()
+                        ->sortBy(function($c) use ($recentIds) {
+                            return array_search($c->id, $recentIds);
+                        });
+                }
+                $remaining = $perPage - $recentCourses->count();
+                $randomCourses = collect();
+                if ($remaining > 0) {
+                    $randomCourses = Course::where('enabled', true)
+                        ->whereNotIn('id', $recentIds)
+                        ->inRandomOrder()
+                        ->take($remaining + 1)
+                        ->with($this->getCourseWithRelations())
+                        ->withCount(['registrations', 'savedCourses'])
+                        ->withSum('ratingCourses as total_stars', 'stars')
+                        ->get();
+                    $hasMore = $randomCourses->count() > $remaining;
+                    if ($hasMore) {
+                        $randomCourses = $randomCourses->take($remaining);
+                    }
+                } else {
+                    $hasMore = false;
+                }
+                $courses = $recentCourses->merge($randomCourses);
+            } else {
+                $courses = Course::where('enabled', true)
+                    ->inRandomOrder()
+                    ->skip(($page - 1) * $perPage)
+                    ->take($perPage + 1)
+                    ->with($this->getCourseWithRelations())
+                    ->withCount(['registrations', 'savedCourses'])
+                    ->withSum('ratingCourses as total_stars', 'stars')
+                    ->get();
+                $hasMore = $courses->count() > $perPage;
+                if ($hasMore) {
+                    $courses = $courses->take($perPage);
+                }
+            }
+        } elseif ($filter === 'recommended' && $user) {
+            $query = Course::query()
+                ->select('courses.*')
+                ->with($this->getCourseWithRelations())
+                ->where('enabled', true)
+                ->withCount(['registrations', 'savedCourses'])
+                ->withSum('ratingCourses as total_stars', 'stars')
+                ->whereDoesntHave('registrations', fn($q) => $q->where('user_id', $user->id));
 
-        // Recomendados por categorías
-        if ($filter === 'recommended' && $user) {
-            $recommendedCategories = DB::table('registrations as r')
-                ->join('category_courses as cc', 'r.course_id', '=', 'cc.course_id')
-                ->join('categories as c', 'cc.category_id', '=', 'c.id')
-                ->select('c.id', DB::raw('SUM(CASE WHEN cc.order = 1 THEN 2 ELSE 1 END) as interest_score'))
-                ->where('r.user_id', $user->id)
-                ->groupBy('c.id')
-                ->orderByDesc('interest_score')
-                ->limit(5)
-                ->pluck('c.id')
-                ->toArray();
-
-            if (empty($recommendedCategories)) {
-                return response()->json([
-                    'courses'      => [],
-                    'has_more'     => false,
-                    'current_page' => $page,
-                ]);
+            $userCategories = UserCategoryInterest::where('user_id', $user->id)->pluck('category_id')->toArray();
+            if (!empty($userCategories)) {
+                $query->whereHas('categories', fn($q) => $q->whereIn('categories.id', $userCategories));
             }
 
-            $query->whereHas('categories', function ($q) use ($recommendedCategories) {
-                $q->whereIn('categories.id', $recommendedCategories);
-            })->orderByDesc('created_at');
-        }
+            $userCareer = EducationalUser::where('user_id', $user->id)->first()?->career_id;
+            if ($userCareer) {
+                $query->whereHas('careers', fn($q) => $q->where('careers.id', $userCareer));
+            }
 
-        // Mejor valorados
-        if ($filter === 'best_rated') {
-            $query->orderByDesc('total_stars');
-        }
-
-        // Populares (registros + guardados)
-        if ($filter === 'popular') {
-            $query->orderByDesc(DB::raw('registrations_count + saved_courses_count'));
-        }
-
-        // Actualizados
-        if ($filter === 'updated') {
-            $query->orderByDesc('updated_at');
-        }
-
-        // Más recientes
-        if ($filter === 'created') {
             $query->orderByDesc('created_at');
+
+            $courses = $query->skip(($page - 1) * $perPage)->take($perPage + 1)->get();
+            $hasMore = $courses->count() > $perPage;
+            if ($hasMore) {
+                $courses = $courses->slice(0, $perPage);
+            }
+        } elseif ($filter === 'created') {
+            $query = Course::query()
+                ->select('courses.*')
+                ->with($this->getCourseWithRelations())
+                ->where('enabled', true)
+                ->withCount(['registrations', 'savedCourses'])
+                ->withSum('ratingCourses as total_stars', 'stars')
+                ->orderByDesc('created_at');
+
+            $courses = $query->skip(($page - 1) * $perPage)->take($perPage + 1)->get();
+            $hasMore = $courses->count() > $perPage;
+            if ($hasMore) {
+                $courses = $courses->slice(0, $perPage);
+            }
+        } elseif ($filter === 'best_rated') {
+            $query = Course::query()
+                ->select('courses.*')
+                ->with($this->getCourseWithRelations())
+                ->where('enabled', true)
+                ->withCount(['registrations', 'savedCourses'])
+                ->withSum('ratingCourses as total_stars', 'stars')
+                ->orderByDesc('total_stars');
+
+            $courses = $query->skip(($page - 1) * $perPage)->take($perPage + 1)->get();
+            $hasMore = $courses->count() > $perPage;
+            if ($hasMore) {
+                $courses = $courses->slice(0, $perPage);
+            }
+        } elseif ($filter === 'popular') {
+            $query = Course::query()
+                ->select('courses.*')
+                ->with($this->getCourseWithRelations())
+                ->where('enabled', true)
+                ->withCount(['registrations', 'savedCourses'])
+                ->withSum('ratingCourses as total_stars', 'stars')
+                ->orderByDesc(DB::raw('registrations_count + saved_courses_count'));
+
+            $courses = $query->skip(($page - 1) * $perPage)->take($perPage + 1)->get();
+            $hasMore = $courses->count() > $perPage;
+            if ($hasMore) {
+                $courses = $courses->slice(0, $perPage);
+            }
+        } else {
+            // Fallback
+            $courses = collect();
+            $hasMore = false;
         }
-
-        // Home "all" priorizando categorías favoritas
-        if ($filter === 'all' && $user) {
-            $recommendedCategories = DB::table('registrations as r')
-                ->join('category_courses as cc', 'r.course_id', '=', 'cc.course_id')
-                ->join('categories as c', 'cc.category_id', '=', 'c.id')
-                ->select('c.id', DB::raw('SUM(CASE WHEN cc.order = 1 THEN 2 ELSE 1 END) as interest_score'))
-                ->where('r.user_id', $user->id)
-                ->groupBy('c.id')
-                ->orderByDesc('interest_score')
-                ->limit(5)
-                ->pluck('c.id')
-                ->toArray();
-
-            $ids = implode(',', $recommendedCategories ?: [0]);
-
-            $query->orderByRaw("
-                CASE 
-                    WHEN EXISTS (
-                        SELECT 1 FROM category_courses cc 
-                        WHERE cc.course_id = courses.id AND cc.category_id IN ($ids)
-                    ) THEN 1 ELSE 2
-                END
-            ")
-            ->orderByDesc('total_stars')
-            ->orderByDesc(DB::raw('registrations_count + saved_courses_count'));
-        }
-    }
-
-    // Fallback general
-    $query->orderByDesc('total_stars')
-          ->orderByDesc(DB::raw('registrations_count + saved_courses_count'))
-          ->orderByDesc('created_at');
-
-    // Paginación manual (lookahead)
-    $courses = $query->skip(($page - 1) * $perPage)->take($perPage + 1)->get();
-    $hasMore = $courses->count() > $perPage;
-
-    if ($hasMore) {
-        $courses = $courses->slice(0, $perPage);
     }
 
     return response()->json([
-        'courses'      => $this->formatCourses($courses, $user),
+        'courses'      => $this->formatCourses($courses, $user, $recentlyViewedIds),
         'has_more'     => $hasMore,
         'current_page' => $page,
     ]);
@@ -269,6 +330,15 @@ class StartController extends Controller
 public function getPortfolioByFilter(Request $request): JsonResponse
 {
     $authUser = Auth::user();
+    $recentlyViewedIds = $authUser ? ContentView::select('modules.course_id', DB::raw('MAX(content_views.updated_at) as latest_view'))
+        ->join('learning_contents', 'content_views.learning_content_id', '=', 'learning_contents.id')
+        ->join('chapters', 'learning_contents.chapter_id', '=', 'chapters.id')
+        ->join('modules', 'chapters.module_id', '=', 'modules.id')
+        ->where('content_views.user_id', $authUser->id)
+        ->groupBy('modules.course_id')
+        ->orderByDesc('latest_view')
+        ->pluck('course_id')
+        ->toArray() : [];
 
     $perPage  = (int) $request->query('per_page', 6);
     $page     = (int) $request->query('page', 1);
@@ -356,7 +426,7 @@ public function getPortfolioByFilter(Request $request): JsonResponse
     }
 
     return response()->json([
-        'courses'      => $this->formatCourses($courses, $authUser),
+        'courses'      => $this->formatCourses($courses, $authUser, $recentlyViewedIds),
         'has_more'     => $hasMore,
         'current_page' => $page,
     ]);

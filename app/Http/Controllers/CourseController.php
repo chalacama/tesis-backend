@@ -317,7 +317,7 @@ class CourseController extends Controller
         ]);
     }
 /** Límites de relaciones */
-    public int $maxCategories = 4;
+    public int $maxCategories = 2;
     public int $maxCareers    = 2;
 
     public function update(Request $request, Course $course): JsonResponse
