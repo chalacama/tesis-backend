@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Suggestion extends Model
 {
-    protected $fillable = ['texto', 'searched', 'user_id'];
+    protected $fillable = ['texto', 'searched', 'user_id', 'search_type', 'entity_id'];
 
     public function user()
     {

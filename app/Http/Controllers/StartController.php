@@ -16,6 +16,7 @@ use App\Models\Suggestion;
 use App\Models\ContentView;
 use App\Models\UserCategoryInterest;
 use App\Models\EducationalUser;
+use App\Models\Difficulty;
 
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -441,14 +442,28 @@ public function getPortfolioByFilter(Request $request): JsonResponse
         $user = Auth::user();
         $term = $this->normalize($request->query('q', ''));
         $limit = (int) $request->query('limit', 10);
+        $type = $request->query('type', 'title'); // Nuevo parámetro
 
-        // 1) Sin escribir: devolver historial reciente
+        // Validar type
+        $validTypes = ['title', 'category', 'career', 'difficulty', 'tutor'];
+        if (!in_array($type, $validTypes)) {
+            $type = 'title';
+        }
+
+        // 1) Sin escribir: devolver historial reciente filtrado por type
         if ($term === '') {
             $history = Suggestion::where('user_id', $user->id)
+                ->where('search_type', $type)
                 ->orderByDesc('updated_at')
                 ->limit($limit)
                 ->get()
-                ->map(fn($s) => ['text' => $s->texto, 'is_history' => true])
+                ->map(fn($s) => [
+                    'text' => $s->texto,
+                    'is_history' => true,
+                    'search_type' => $s->search_type,
+                    'entity_id' => $s->entity_id,
+                    'searched' => $s->searched
+                ])
                 ->values();
 
             return response()->json(['suggestions' => $history]);
@@ -456,55 +471,111 @@ public function getPortfolioByFilter(Request $request): JsonResponse
 
         $like = $this->like($term);
 
-        // 2) Historial que coincide (forzamos base Collection con toBase)
-$historyMatches = Suggestion::where('user_id', $user->id)
-    ->whereRaw('LOWER(texto) LIKE ?', [$like])
-    ->orderByDesc('updated_at')
-    ->limit($limit)
-    ->get()
-    ->map(fn($s) => ['text' => $s->texto, 'is_history' => true])
-    ->values()
-    ->toBase(); // <--- IMPORTANTE
+        // 2) Historial que coincide con type
+        $historyMatches = Suggestion::where('user_id', $user->id)
+            ->where('search_type', $type)
+            ->whereRaw('LOWER(texto) LIKE ?', [$like])
+            ->orderByDesc('updated_at')
+            ->limit($limit)
+            ->get()
+            ->map(fn($s) => [
+                'text' => $s->texto,
+                'is_history' => true,
+                'search_type' => $s->search_type,
+                'entity_id' => $s->entity_id,
+                'searched' => $s->searched
+            ])
+            ->values()
+            ->toBase();
 
-// 3) Sugerencia general (no historial): títulos, categorías, carreras, dueños
-$titles = Course::where('enabled', true)
-    ->whereRaw('LOWER(title) LIKE ?', [$like])
-    ->limit($limit)->pluck('title')->toArray();
+        // 3) Sugerencias nuevas según type
+        $general = collect();
+        switch ($type) {
+            case 'title':
+                $general = Course::where('enabled', true)
+                    ->whereRaw('LOWER(title) LIKE ?', [$like])
+                    ->select('id', 'title')
+                    ->limit($limit)
+                    ->get()
+                    ->map(fn($c) => [
+                        'text' => $c->title,
+                        'is_history' => false,
+                        'search_type' => 'title',
+                        'entity_id' => $c->id,
+                        'searched' => 0
+                    ]);
+                break;
+            case 'category':
+                $general = Category::whereRaw('LOWER(name) LIKE ?', [$like])
+                    ->select('id', 'name')
+                    ->limit($limit)
+                    ->get()
+                    ->map(fn($c) => [
+                        'text' => $c->name,
+                        'is_history' => false,
+                        'search_type' => 'category',
+                        'entity_id' => $c->id,
+                        'searched' => 0
+                    ]);
+                break;
+            case 'career':
+                $general = Career::whereRaw('LOWER(name) LIKE ?', [$like])
+                    ->select('id', 'name')
+                    ->limit($limit)
+                    ->get()
+                    ->map(fn($c) => [
+                        'text' => $c->name,
+                        'is_history' => false,
+                        'search_type' => 'career',
+                        'entity_id' => $c->id,
+                        'searched' => 0
+                    ]);
+                break;
+            case 'difficulty':
+                $general = Difficulty::whereRaw('LOWER(name) LIKE ?', [$like])
+                    ->select('id', 'name')
+                    ->limit($limit)
+                    ->get()
+                    ->map(fn($d) => [
+                        'text' => $d->name,
+                        'is_history' => false,
+                        'search_type' => 'difficulty',
+                        'entity_id' => $d->id,
+                        'searched' => 0
+                    ]);
+                break;
+            case 'tutor':
+                $general = DB::table('users as o')
+                    ->join('tutor_courses as tc', 'tc.user_id', '=', 'o.id')
+                    ->where('tc.is_owner', 1)
+                    ->where(function ($w) use ($like) {
+                        $w->whereRaw('LOWER(o.username) LIKE ?', [$like])
+                          ->orWhereRaw('LOWER(o.email) LIKE ?', [$like])
+                          ->orWhereRaw('LOWER(CONCAT_WS(" ", o.name, o.lastname)) LIKE ?', [$like]);
+                    })
+                    ->selectRaw('DISTINCT o.id, TRIM(CASE WHEN COALESCE(o.username,"") <> "" THEN o.username ELSE CONCAT(o.name," ",o.lastname) END) as text')
+                    ->limit($limit)
+                    ->get()
+                    ->map(fn($t) => [
+                        'text' => $t->text,
+                        'is_history' => false,
+                        'search_type' => 'tutor',
+                        'entity_id' => $t->id,
+                        'searched' => 0
+                    ]);
+                break;
+        }
 
-$categories = Category::whereRaw('LOWER(name) LIKE ?', [$like])
-    ->limit(5)->pluck('name')->toArray();
+        // 4) Merge sin duplicados y tope por límite
+        $suggestions = $historyMatches
+            ->merge($general)
+            ->unique(function ($item) {
+                return mb_strtolower($item['text']);
+            })
+            ->take($limit)
+            ->values();
 
-$careers = Career::whereRaw('LOWER(name) LIKE ?', [$like])
-    ->limit(5)->pluck('name')->toArray();
-
-$owners = DB::table('users as o')
-    ->join('tutor_courses as tc', 'tc.user_id', '=', 'o.id')
-    ->where('tc.is_owner', 1)
-    ->where(function ($w) use ($like) {
-        $w->whereRaw('LOWER(o.username) LIKE ?', [$like])
-          ->orWhereRaw('LOWER(CONCAT_WS(" ", o.name, o.lastname)) LIKE ?', [$like]);
-    })
-    ->selectRaw('DISTINCT TRIM(CASE WHEN COALESCE(o.username,"") <> "" THEN o.username ELSE CONCAT(o.name," ",o.lastname) END) as text')
-    ->limit(5)
-    ->pluck('text')
-    ->toArray();
-
-$general = collect(array_merge($titles, $categories, $careers, $owners))
-    ->filter()
-    ->map(fn($t) => ['text' => $this->normalize($t), 'is_history' => false])
-    ->values(); // base Collection
-
-// 4) Merge sin duplicados (case-insensitive) y tope por límite
-$suggestions = $historyMatches
-    ->merge($general)          // ambas ya son base Collection
-    ->unique(function ($item) {
-        return mb_strtolower($item['text']);
-    })
-    ->take($limit)
-    ->values();
-
-return response()->json(['suggestions' => $suggestions]);
-
+        return response()->json(['suggestions' => $suggestions]);
     }
 
     public function updateSuggestion(Request $request): JsonResponse
@@ -513,9 +584,51 @@ return response()->json(['suggestions' => $suggestions]);
         $user = Auth::user();
         $text = $this->normalize($request->input('text'));
 
+        // Determinar search_type y entity_id
+        $searchType = 'general';
+        $entityId = null;
+
+        // Buscar si es título de curso
+        $course = Course::where('enabled', true)->whereRaw('LOWER(title) = ?', [mb_strtolower($text)])->first();
+        if ($course) {
+            $searchType = 'title';
+            $entityId = $course->id;
+        } elseif (Category::whereRaw('LOWER(name) = ?', [mb_strtolower($text)])->exists()) {
+            $category = Category::whereRaw('LOWER(name) = ?', [mb_strtolower($text)])->first();
+            $searchType = 'category';
+            $entityId = $category->id;
+        } elseif (Career::whereRaw('LOWER(name) = ?', [mb_strtolower($text)])->exists()) {
+            $career = Career::whereRaw('LOWER(name) = ?', [mb_strtolower($text)])->first();
+            $searchType = 'career';
+            $entityId = $career->id;
+        } elseif (Difficulty::whereRaw('LOWER(name) = ?', [mb_strtolower($text)])->exists()) {
+            $difficulty = Difficulty::whereRaw('LOWER(name) = ?', [mb_strtolower($text)])->first();
+            $searchType = 'difficulty';
+            $entityId = $difficulty->id;
+        } elseif (DB::table('users as o')->join('tutor_courses as tc', 'tc.user_id', '=', 'o.id')->where('tc.is_owner', 1)->where(function ($w) use ($text) {
+            $w->whereRaw('LOWER(o.username) = ?', [mb_strtolower($text)])
+              ->orWhereRaw('LOWER(o.email) = ?', [mb_strtolower($text)])
+              ->orWhereRaw('LOWER(CONCAT_WS(" ", o.name, o.lastname)) = ?', [mb_strtolower($text)]);
+        })->exists()) {
+            $tutor = DB::table('users as o')->join('tutor_courses as tc', 'tc.user_id', '=', 'o.id')->where('tc.is_owner', 1)->where(function ($w) use ($text) {
+                $w->whereRaw('LOWER(o.username) = ?', [mb_strtolower($text)])
+                  ->orWhereRaw('LOWER(o.email) = ?', [mb_strtolower($text)])
+                  ->orWhereRaw('LOWER(CONCAT_WS(" ", o.name, o.lastname)) = ?', [mb_strtolower($text)]);
+            })->select('o.id')->first();
+            $searchType = 'tutor';
+            $entityId = $tutor->id;
+        }
+
+        // Verificar límite de 10 registros por usuario
+        $count = Suggestion::where('user_id', $user->id)->count();
+        if ($count >= 10) {
+            // Eliminar el más antiguo
+            Suggestion::where('user_id', $user->id)->orderBy('updated_at')->first()->delete();
+        }
+
         $s = Suggestion::firstOrCreate(
             ['user_id' => $user->id, 'texto' => $text],
-            ['searched' => 0]
+            ['searched' => 0, 'search_type' => $searchType, 'entity_id' => $entityId]
         );
         $s->increment('searched'); // +1 búsqueda
         $s->touch();               // actualiza updated_at
