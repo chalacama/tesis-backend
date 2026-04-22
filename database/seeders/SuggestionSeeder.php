@@ -14,10 +14,32 @@ class SuggestionSeeder extends Seeder
     public function run(): void
     {
         
-        Suggestion::create(['texto' => 'Curso Gratis', 'searched' => 1 , 'user_id' => 2]);
-        Suggestion::create(['texto' => 'programacion', 'searched' => 1 ,   'user_id' => 2]);
-        Suggestion::create(['texto' => 'Curso de diseño', 'searched' => 1 , 'user_id' => 2]);
-        Suggestion::create(['texto' => 'curso para hacer trampa en el examen', 'searched' => 1 , 'user_id' => 2]);
-        Suggestion::create(['texto' => 'Computacion', 'searched' => 1 , 'user_id' => 2]);
+        // Usuario de prueba
+        $userId = 1; 
+
+        $data = [
+            // 1. Tipo: Título
+            ['texto' => 'Laravel Básico', 'search_type' => 'title', 'entity_id' => 1, 'searched' => 5],
+            
+            // 2. Tipo: Carrera
+            ['texto' => 'Computación', 'search_type' => 'career', 'entity_id' => 5, 'searched' => 2],
+            
+            // 3. Tipo: Categoría
+            ['texto' => 'Programaciónb', 'search_type' => 'category', 'entity_id' => 1, 'searched' => 8],
+            
+            // 4. Tipo: Tutor
+            ['texto' => 'Juan Jandry', 'search_type' => 'tutor', 'entity_id' => 2, 'searched' => 1],
+ 
+            // 5. Tipo: Dificultad
+            ['texto' => 'Beginner', 'search_type' => 'difficulty', 'entity_id' => 1, 'searched' => 1],
+
+            // 5. Tipo: General (búsqueda abierta/basura)
+            ['texto' => 'curso para hacer trampa en el examen', 'search_type' => 'general', 'entity_id' => null, 'searched' => 3],
+        ];
+
+        foreach ($data as $item) {
+            Suggestion::create(array_merge($item, ['user_id' => $userId]));
+        }
+
     }
 }
