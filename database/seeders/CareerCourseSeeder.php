@@ -12,8 +12,22 @@ class CareerCourseSeeder extends Seeder
      */
     public function run(): void
     {
-        CareerCourse::create(['course_id' => 1, 'career_id' => 2]);
-        CareerCourse::create(['course_id' => 1, 'career_id' => 3]);
+        CareerCourse::create(['course_id' => 1, 'career_id' => 5]);
+        CareerCourse::create(['course_id' => 1, 'career_id' => 1]);
+
         CareerCourse::create(['course_id' => 2, 'career_id' => 1]);
+        CareerCourse::create(['course_id' => 2, 'career_id' => 2]);
+
+        CareerCourse::create(['course_id' => 3, 'career_id' => 1]);
+        CareerCourse::create(['course_id' => 3, 'career_id' => 2]);
+
+        CareerCourse::create(['course_id' => 4, 'career_id' => 5]);
+        CareerCourse::create(['course_id' => 4, 'career_id' => 1]);
+
+        CareerCourse::create(['course_id' => 5, 'career_id' => 2]);
+        CareerCourse::create(['course_id' => 5, 'career_id' => 1]);
+
+        CareerCourse::create(['course_id' => 6, 'career_id' => 5]);
+        CareerCourse::create(['course_id' => 6, 'career_id' => 3]);
     }
 }

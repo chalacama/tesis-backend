@@ -114,82 +114,25 @@ class StartController extends Controller
 }
 
 
-    /* ===================== SÚPER FILTRO ===================== */
+/* ===================== FILTROS DEL HOME ===================== */
 
     public function getCoursesByFilter(Request $request): JsonResponse
-{
-    $user    = Auth::user();
-    $filter  = $request->query('filter', 'all');
-    $perPage = (int) $request->query('per_page', 6);
-    $page    = (int) $request->query('page', 1);
-    $term    = $this->normalize($request->query('q', ''));
+    {
+        $user    = Auth::user();
+        $filter  = $request->query('filter', 'all');
+        $perPage = (int) $request->query('per_page', 6);
+        $page    = (int) $request->query('page', 1);
 
-    $recentlyViewedIds = $user ? ContentView::select('modules.course_id', DB::raw('MAX(content_views.updated_at) as latest_view'))
-        ->join('learning_contents', 'content_views.learning_content_id', '=', 'learning_contents.id')
-        ->join('chapters', 'learning_contents.chapter_id', '=', 'chapters.id')
-        ->join('modules', 'chapters.module_id', '=', 'modules.id')
-        ->where('content_views.user_id', $user->id)
-        ->groupBy('modules.course_id')
-        ->orderByDesc('latest_view')
-        ->pluck('course_id')
-        ->toArray() : [];
+        $recentlyViewedIds = $user ? ContentView::select('modules.course_id', DB::raw('MAX(content_views.updated_at) as latest_view'))
+            ->join('learning_contents', 'content_views.learning_content_id', '=', 'learning_contents.id')
+            ->join('chapters', 'learning_contents.chapter_id', '=', 'chapters.id')
+            ->join('modules', 'chapters.module_id', '=', 'modules.id')
+            ->where('content_views.user_id', $user->id)
+            ->groupBy('modules.course_id')
+            ->orderByDesc('latest_view')
+            ->pluck('course_id')
+            ->toArray() : [];
 
-    // === Búsqueda con relevancia ===
-    if ($term !== '') {
-        $like = $this->like($term);
-
-        $relevanceSub = DB::table('courses as c')
-            ->selectRaw("
-                c.id as course_id,
-                (CASE WHEN LOWER(c.title) LIKE ? THEN 5 ELSE 0 END)
-              + (CASE WHEN EXISTS(
-                    SELECT 1
-                    FROM tutor_courses tc_owner
-                    JOIN users owners ON owners.id = tc_owner.user_id
-                    WHERE tc_owner.course_id = c.id
-                      AND tc_owner.is_owner = 1
-                      AND (
-                          LOWER(CONCAT_WS(' ', owners.name, owners.lastname)) LIKE ?
-                          OR LOWER(owners.username) LIKE ?
-                      )
-                ) THEN 4 ELSE 0 END)
-              + (CASE WHEN EXISTS(
-                    SELECT 1
-                    FROM category_courses cc
-                    JOIN categories cat ON cat.id = cc.category_id
-                    WHERE cc.course_id = c.id
-                      AND LOWER(cat.name) LIKE ?
-                ) THEN 3 ELSE 0 END)
-              + (CASE WHEN EXISTS(
-                    SELECT 1
-                    FROM career_courses cac
-                    JOIN careers car ON car.id = cac.career_id
-                    WHERE cac.course_id = c.id
-                      AND LOWER(car.name) LIKE ?
-                ) THEN 3 ELSE 0 END)
-              AS relevance
-            ", [$like, $like, $like, $like, $like])
-            ->where('c.enabled', 1)
-            ->whereNull('c.deleted_at')
-            ->having('relevance', '>', 0)
-            ->orderByDesc('relevance');
-
-        $query = Course::query()
-            ->select('courses.*')
-            ->with($this->getCourseWithRelations())
-            ->withCount(['registrations', 'savedCourses'])
-            ->withSum('ratingCourses as total_stars', 'stars')
-            ->joinSub($relevanceSub, 'sr', 'sr.course_id', '=', 'courses.id')
-            ->addSelect(DB::raw('sr.relevance'))
-            ->orderByDesc('sr.relevance');
-
-        $courses = $query->skip(($page - 1) * $perPage)->take($perPage + 1)->get();
-        $hasMore = $courses->count() > $perPage;
-        if ($hasMore) {
-            $courses = $courses->slice(0, $perPage);
-        }
-    } else {
-        // === Filtros del home ===
         if ($filter === 'all') {
             if ($page == 1 && $user) {
                 $recentIds = ContentView::select('modules.course_id', DB::raw('MAX(content_views.updated_at) as latest_view'))
@@ -202,6 +145,7 @@ class StartController extends Controller
                     ->limit(3)
                     ->pluck('course_id')
                     ->toArray();
+
                 $recentCourses = collect();
                 if (!empty($recentIds)) {
                     $recentCourses = Course::whereIn('id', $recentIds)
@@ -315,18 +259,16 @@ class StartController extends Controller
                 $courses = $courses->slice(0, $perPage);
             }
         } else {
-            // Fallback
             $courses = collect();
             $hasMore = false;
         }
-    }
 
-    return response()->json([
-        'courses'      => $this->formatCourses($courses, $user, $recentlyViewedIds),
-        'has_more'     => $hasMore,
-        'current_page' => $page,
-    ]);
-}
+        return response()->json([
+            'courses'      => $this->formatCourses($courses, $user, $recentlyViewedIds),
+            'has_more'     => $hasMore,
+            'current_page' => $page,
+        ]);
+    }
 
 public function getPortfolioByFilter(Request $request): JsonResponse
 {
@@ -433,7 +375,152 @@ public function getPortfolioByFilter(Request $request): JsonResponse
     ]);
 }
 
+/* ===================== RESULTADOS DE BÚSQUEDA ===================== */
 
+    public function searchCourses(Request $request): JsonResponse
+    {
+        $user    = Auth::user();
+        $term    = $this->normalize($request->query('q', ''));
+        $type    = $request->query('type', 'title');
+        $perPage = (int) $request->query('per_page', 6);
+        $page    = (int) $request->query('page', 1);
+
+        $validTypes = ['title', 'category', 'career', 'difficulty', 'tutor'];
+        if (!in_array($type, $validTypes)) {
+            $type = 'title';
+        }
+
+        $recentlyViewedIds = $user ? ContentView::select('modules.course_id', DB::raw('MAX(content_views.updated_at) as latest_view'))
+            ->join('learning_contents', 'content_views.learning_content_id', '=', 'learning_contents.id')
+            ->join('chapters', 'learning_contents.chapter_id', '=', 'chapters.id')
+            ->join('modules', 'chapters.module_id', '=', 'modules.id')
+            ->where('content_views.user_id', $user->id)
+            ->groupBy('modules.course_id')
+            ->pluck('course_id')
+            ->toArray() : [];
+
+        $entities = [];
+        $coursesFormatted = [];
+        $hasMore = false;
+
+        if ($term !== '') {
+            $like = $this->like($term);
+
+            $query = Course::query()
+                ->select('courses.*')
+                ->with($this->getCourseWithRelations())
+                ->where('courses.enabled', true)
+                ->whereNull('courses.deleted_at')
+                ->withCount(['registrations', 'savedCourses'])
+                ->withSum('ratingCourses as total_stars', 'stars');
+
+            switch ($type) {
+                case 'title':
+                    // Para el título usamos el mismo motor de relevancia global (tal como lo solicitaste)
+                    $relevanceSub = DB::table('courses as c')
+                        ->selectRaw("
+                            c.id as course_id,
+                            (CASE WHEN LOWER(c.title) LIKE ? THEN 5 ELSE 0 END)
+                          + (CASE WHEN EXISTS(
+                                SELECT 1 FROM tutor_courses tc_owner
+                                JOIN users owners ON owners.id = tc_owner.user_id
+                                WHERE tc_owner.course_id = c.id AND tc_owner.is_owner = 1
+                                  AND (LOWER(CONCAT_WS(' ', owners.name, owners.lastname)) LIKE ? OR LOWER(owners.username) LIKE ?)
+                            ) THEN 4 ELSE 0 END)
+                          + (CASE WHEN EXISTS(
+                                SELECT 1 FROM category_courses cc
+                                JOIN categories cat ON cat.id = cc.category_id
+                                WHERE cc.course_id = c.id AND LOWER(cat.name) LIKE ?
+                            ) THEN 3 ELSE 0 END)
+                          + (CASE WHEN EXISTS(
+                                SELECT 1 FROM career_courses cac
+                                JOIN careers car ON car.id = cac.career_id
+                                WHERE cac.course_id = c.id AND LOWER(car.name) LIKE ?
+                            ) THEN 3 ELSE 0 END)
+                          AS relevance
+                        ", [$like, $like, $like, $like, $like])
+                        ->where('c.enabled', 1)
+                        ->whereNull('c.deleted_at')
+                        ->having('relevance', '>', 0);
+
+                    $query->joinSub($relevanceSub, 'sr', 'sr.course_id', '=', 'courses.id')
+                          ->addSelect(DB::raw('sr.relevance'))
+                          ->orderByDesc('sr.relevance');
+                    break;
+
+                case 'category':
+                    if ($page === 1) {
+                        $entities = Category::whereRaw('LOWER(name) LIKE ?', [$like])
+                            ->select('id', 'name')
+                            ->limit(5)->get();
+                    }
+                    $query->whereHas('categories', fn($q) => $q->whereRaw('LOWER(categories.name) LIKE ?', [$like]));
+                    break;
+
+                case 'career':
+                    if ($page === 1) {
+                        $entities = Career::whereRaw('LOWER(name) LIKE ?', [$like])
+                            ->select('id', 'name', 'url_logo') // Ojo: Asegúrate que url_logo exista en tu tabla careers
+                            ->limit(5)->get();
+                    }
+                    $query->whereHas('careers', fn($q) => $q->whereRaw('LOWER(careers.name) LIKE ?', [$like]));
+                    break;
+
+                case 'difficulty':
+                    if ($page === 1) {
+                        // Asumiendo que tu tabla y modelo se llaman Difficulty
+                        $entities = Difficulty::whereRaw('LOWER(name) LIKE ?', [$like])
+                            ->select('id', 'name')
+                            ->limit(5)->get();
+                    }
+                    // Ojo: Asegúrate de que la relación en tu modelo Course se llame "difficulty" 
+                    // o ajusta este "whereHas" según tu base de datos (por ejemplo, si es una columna directa puedes usar where('difficulty_id', ...))
+                    $query->whereHas('difficulty', fn($q) => $q->whereRaw('LOWER(difficulties.name) LIKE ?', [$like]));
+                    break;
+
+                case 'tutor':
+                    if ($page === 1) {
+                        $entities = DB::table('users as o')
+                            ->join('tutor_courses as tc', 'tc.user_id', '=', 'o.id')
+                            ->where('tc.is_owner', 1)
+                            ->where(function ($w) use ($like) {
+                                $w->whereRaw('LOWER(o.username) LIKE ?', [$like])
+                                  ->orWhereRaw('LOWER(o.email) LIKE ?', [$like])
+                                  ->orWhereRaw('LOWER(CONCAT_WS(" ", o.name, o.lastname)) LIKE ?', [$like]);
+                            })
+                            ->selectRaw('DISTINCT o.id, o.username, o.name, o.lastname, o.profile_picture_url')
+                            ->limit(5)
+                            ->get();
+                    }
+                    // Ojo: Asegúrate de que la relación se llame "tutors" en el modelo Course
+                    $query->whereHas('tutors', function($q) use ($like) {
+                        $q->where('tutor_courses.is_owner', 1)
+                          ->where(function ($w) use ($like) {
+                              $w->whereRaw('LOWER(users.username) LIKE ?', [$like])
+                                ->orWhereRaw('LOWER(users.email) LIKE ?', [$like])
+                                ->orWhereRaw('LOWER(CONCAT_WS(" ", users.name, users.lastname)) LIKE ?', [$like]);
+                          });
+                    });
+                    break;
+            }
+
+            $courses = $query->skip(($page - 1) * $perPage)->take($perPage + 1)->get();
+            $hasMore = $courses->count() > $perPage;
+            
+            if ($hasMore) {
+                $courses = $courses->slice(0, $perPage);
+            }
+            
+            $coursesFormatted = $this->formatCourses($courses, $user, $recentlyViewedIds);
+        }
+
+        return response()->json([
+            'entities'     => $entities, // Saldrá vacío si es 'title' o si page > 1 (ahorra datos)
+            'courses'      => $coursesFormatted,
+            'has_more'     => $hasMore,
+            'current_page' => $page,
+        ]);
+    }
 
     /* ===================== SUGERENCIAS / HISTORIAL ===================== */
 
@@ -487,16 +574,16 @@ public function getPortfolioByFilter(Request $request): JsonResponse
             ->toBase();
 
         // 3) Sugerencias nuevas según type
-        $general = collect();
+        $newSuggestions = collect();
         switch ($type) {
             case 'title':
-                $general = Course::where('enabled', true)
+                $newSuggestions = Course::where('enabled', true)
                     ->whereRaw('LOWER(title) LIKE ?', [$like])
-                    ->select('id', 'title')
+                    ->select('id', 'title as text')
                     ->limit($limit)
                     ->get()
                     ->map(fn($c) => [
-                        'text' => $c->title,
+                        'text' => $c->text,
                         'is_history' => false,
                         'search_type' => 'title',
                         'entity_id' => $c->id,
@@ -504,12 +591,12 @@ public function getPortfolioByFilter(Request $request): JsonResponse
                     ]);
                 break;
             case 'category':
-                $general = Category::whereRaw('LOWER(name) LIKE ?', [$like])
-                    ->select('id', 'name')
+                $newSuggestions = Category::whereRaw('LOWER(name) LIKE ?', [$like])
+                    ->select('id', 'name as text')
                     ->limit($limit)
                     ->get()
                     ->map(fn($c) => [
-                        'text' => $c->name,
+                        'text' => $c->text,
                         'is_history' => false,
                         'search_type' => 'category',
                         'entity_id' => $c->id,
@@ -517,12 +604,12 @@ public function getPortfolioByFilter(Request $request): JsonResponse
                     ]);
                 break;
             case 'career':
-                $general = Career::whereRaw('LOWER(name) LIKE ?', [$like])
-                    ->select('id', 'name')
+                $newSuggestions = Career::whereRaw('LOWER(name) LIKE ?', [$like])
+                    ->select('id', 'name as text')
                     ->limit($limit)
                     ->get()
                     ->map(fn($c) => [
-                        'text' => $c->name,
+                        'text' => $c->text,
                         'is_history' => false,
                         'search_type' => 'career',
                         'entity_id' => $c->id,
@@ -530,12 +617,12 @@ public function getPortfolioByFilter(Request $request): JsonResponse
                     ]);
                 break;
             case 'difficulty':
-                $general = Difficulty::whereRaw('LOWER(name) LIKE ?', [$like])
-                    ->select('id', 'name')
+                $newSuggestions = Difficulty::whereRaw('LOWER(name) LIKE ?', [$like])
+                    ->select('id', 'name as text')
                     ->limit($limit)
                     ->get()
                     ->map(fn($d) => [
-                        'text' => $d->name,
+                        'text' => $d->text,
                         'is_history' => false,
                         'search_type' => 'difficulty',
                         'entity_id' => $d->id,
@@ -543,7 +630,7 @@ public function getPortfolioByFilter(Request $request): JsonResponse
                     ]);
                 break;
             case 'tutor':
-                $general = DB::table('users as o')
+                $newSuggestions = DB::table('users as o')
                     ->join('tutor_courses as tc', 'tc.user_id', '=', 'o.id')
                     ->where('tc.is_owner', 1)
                     ->where(function ($w) use ($like) {
@@ -566,7 +653,7 @@ public function getPortfolioByFilter(Request $request): JsonResponse
 
         // 4) Merge sin duplicados y tope por límite
         $suggestions = $historyMatches
-            ->merge($general)
+            ->merge($newSuggestions)
             ->unique(function ($item) {
                 return mb_strtolower($item['text']);
             })
@@ -578,10 +665,9 @@ public function getPortfolioByFilter(Request $request): JsonResponse
 
     public function updateSuggestion(Request $request): JsonResponse
     {
-        // Validamos que text y search_type sean obligatorios
         $request->validate([
             'text' => 'required|string|max:255',
-            'search_type' => 'required|string|in:title,category,career,difficulty,tutor,general',
+            'search_type' => 'required|string|in:title,category,career,difficulty,tutor',
             'entity_id' => 'nullable|integer'
         ]);
 
@@ -590,30 +676,25 @@ public function getPortfolioByFilter(Request $request): JsonResponse
         $searchType = $request->input('search_type');
         $entityId = $request->input('entity_id');
 
-        // Buscar si la sugerencia ya existe para este usuario (ignorando mayúsculas/minúsculas)
         $suggestion = Suggestion::where('user_id', $user->id)
             ->whereRaw('LOWER(texto) = ?', [mb_strtolower($text)])
             ->first();
 
         if ($suggestion) {
-            // Si ya existe, simplemente la actualizamos
             $suggestion->search_type = $searchType;
             $suggestion->entity_id = $entityId;
             $suggestion->increment('searched');
             $suggestion->touch();
         } else {
-            // Si es nueva, verificamos el límite antes de crearla
             $count = Suggestion::where('user_id', $user->id)->count();
             
             if ($count >= 10) {
-                // Eliminar la que no se ha buscado recientemente (la más antigua)
                 Suggestion::where('user_id', $user->id)
                     ->orderBy('updated_at', 'asc')
                     ->first()
                     ->delete();
             }
 
-            // Crear la nueva sugerencia
             Suggestion::create([
                 'user_id' => $user->id,
                 'texto' => $text,
