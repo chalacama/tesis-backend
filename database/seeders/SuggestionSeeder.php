@@ -33,8 +33,7 @@ class SuggestionSeeder extends Seeder
             // 5. Tipo: Dificultad
             ['texto' => 'Beginner', 'search_type' => 'difficulty', 'entity_id' => 1, 'searched' => 1],
 
-            // 5. Tipo: General (búsqueda abierta/basura)
-            ['texto' => 'curso para hacer trampa en el examen', 'search_type' => 'general', 'entity_id' => null, 'searched' => 3],
+            
         ];
 
         foreach ($data as $item) {

@@ -442,18 +442,16 @@ public function getPortfolioByFilter(Request $request): JsonResponse
         $user = Auth::user();
         $term = $this->normalize($request->query('q', ''));
         $limit = (int) $request->query('limit', 10);
-        $type = $request->query('type', 'title'); // Nuevo parámetro
+        $type = $request->query('type', 'title');
 
-        // Validar type
         $validTypes = ['title', 'category', 'career', 'difficulty', 'tutor'];
         if (!in_array($type, $validTypes)) {
             $type = 'title';
         }
 
-        // 1) Sin escribir: devolver historial reciente filtrado por type
+        // 1) Sin escribir (q vacío): devolver todo el historial reciente sin importar el type
         if ($term === '') {
             $history = Suggestion::where('user_id', $user->id)
-                ->where('search_type', $type)
                 ->orderByDesc('updated_at')
                 ->limit($limit)
                 ->get()
@@ -471,7 +469,7 @@ public function getPortfolioByFilter(Request $request): JsonResponse
 
         $like = $this->like($term);
 
-        // 2) Historial que coincide con type
+        // 2) Historial que coincide con type y texto
         $historyMatches = Suggestion::where('user_id', $user->id)
             ->where('search_type', $type)
             ->whereRaw('LOWER(texto) LIKE ?', [$like])
@@ -580,58 +578,50 @@ public function getPortfolioByFilter(Request $request): JsonResponse
 
     public function updateSuggestion(Request $request): JsonResponse
     {
-        $request->validate(['text' => 'required|string|max:255']);
+        // Validamos que text y search_type sean obligatorios
+        $request->validate([
+            'text' => 'required|string|max:255',
+            'search_type' => 'required|string|in:title,category,career,difficulty,tutor,general',
+            'entity_id' => 'nullable|integer'
+        ]);
+
         $user = Auth::user();
         $text = $this->normalize($request->input('text'));
+        $searchType = $request->input('search_type');
+        $entityId = $request->input('entity_id');
 
-        // Determinar search_type y entity_id
-        $searchType = 'general';
-        $entityId = null;
+        // Buscar si la sugerencia ya existe para este usuario (ignorando mayúsculas/minúsculas)
+        $suggestion = Suggestion::where('user_id', $user->id)
+            ->whereRaw('LOWER(texto) = ?', [mb_strtolower($text)])
+            ->first();
 
-        // Buscar si es título de curso
-        $course = Course::where('enabled', true)->whereRaw('LOWER(title) = ?', [mb_strtolower($text)])->first();
-        if ($course) {
-            $searchType = 'title';
-            $entityId = $course->id;
-        } elseif (Category::whereRaw('LOWER(name) = ?', [mb_strtolower($text)])->exists()) {
-            $category = Category::whereRaw('LOWER(name) = ?', [mb_strtolower($text)])->first();
-            $searchType = 'category';
-            $entityId = $category->id;
-        } elseif (Career::whereRaw('LOWER(name) = ?', [mb_strtolower($text)])->exists()) {
-            $career = Career::whereRaw('LOWER(name) = ?', [mb_strtolower($text)])->first();
-            $searchType = 'career';
-            $entityId = $career->id;
-        } elseif (Difficulty::whereRaw('LOWER(name) = ?', [mb_strtolower($text)])->exists()) {
-            $difficulty = Difficulty::whereRaw('LOWER(name) = ?', [mb_strtolower($text)])->first();
-            $searchType = 'difficulty';
-            $entityId = $difficulty->id;
-        } elseif (DB::table('users as o')->join('tutor_courses as tc', 'tc.user_id', '=', 'o.id')->where('tc.is_owner', 1)->where(function ($w) use ($text) {
-            $w->whereRaw('LOWER(o.username) = ?', [mb_strtolower($text)])
-              ->orWhereRaw('LOWER(o.email) = ?', [mb_strtolower($text)])
-              ->orWhereRaw('LOWER(CONCAT_WS(" ", o.name, o.lastname)) = ?', [mb_strtolower($text)]);
-        })->exists()) {
-            $tutor = DB::table('users as o')->join('tutor_courses as tc', 'tc.user_id', '=', 'o.id')->where('tc.is_owner', 1)->where(function ($w) use ($text) {
-                $w->whereRaw('LOWER(o.username) = ?', [mb_strtolower($text)])
-                  ->orWhereRaw('LOWER(o.email) = ?', [mb_strtolower($text)])
-                  ->orWhereRaw('LOWER(CONCAT_WS(" ", o.name, o.lastname)) = ?', [mb_strtolower($text)]);
-            })->select('o.id')->first();
-            $searchType = 'tutor';
-            $entityId = $tutor->id;
+        if ($suggestion) {
+            // Si ya existe, simplemente la actualizamos
+            $suggestion->search_type = $searchType;
+            $suggestion->entity_id = $entityId;
+            $suggestion->increment('searched');
+            $suggestion->touch();
+        } else {
+            // Si es nueva, verificamos el límite antes de crearla
+            $count = Suggestion::where('user_id', $user->id)->count();
+            
+            if ($count >= 10) {
+                // Eliminar la que no se ha buscado recientemente (la más antigua)
+                Suggestion::where('user_id', $user->id)
+                    ->orderBy('updated_at', 'asc')
+                    ->first()
+                    ->delete();
+            }
+
+            // Crear la nueva sugerencia
+            Suggestion::create([
+                'user_id' => $user->id,
+                'texto' => $text,
+                'search_type' => $searchType,
+                'entity_id' => $entityId,
+                'searched' => 1
+            ]);
         }
-
-        // Verificar límite de 10 registros por usuario
-        $count = Suggestion::where('user_id', $user->id)->count();
-        if ($count >= 10) {
-            // Eliminar el más antiguo
-            Suggestion::where('user_id', $user->id)->orderBy('updated_at')->first()->delete();
-        }
-
-        $s = Suggestion::firstOrCreate(
-            ['user_id' => $user->id, 'texto' => $text],
-            ['searched' => 0, 'search_type' => $searchType, 'entity_id' => $entityId]
-        );
-        $s->increment('searched'); // +1 búsqueda
-        $s->touch();               // actualiza updated_at
 
         return response()->json(['ok' => true]);
     }
