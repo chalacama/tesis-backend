@@ -13,9 +13,9 @@ class DifficultySeeder extends Seeder
     public function run(): void
     {
         $difficulties = [
-            ['name' => 'Beginner'],
-            ['name' => 'Intermediate'],
-            ['name' => 'Advanced'],
+            ['name' => 'Facil'], //beginner
+            ['name' => 'Medio'], //intermediate
+            ['name' => 'Avanzado'], //advanced
         ];
 
         foreach ($difficulties as $difficulty) {
