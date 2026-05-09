@@ -228,31 +228,16 @@ class LearningContentController extends Controller
 
     // ── Helpers ─────────────────────────────────────────────────────────────
 
-    /**
-     * Respuesta unificada: contenido actual + todos los tipos/formatos activos.
-     * El frontend nunca necesita una segunda llamada para los tipos.
+/**
+     * Respuesta unificada: solo el contenido actual del capítulo.
+     * Los tipos y formatos se consultan desde TypeLearningContentController.
      */
     private function buildResponse(Chapter $chapter, ?LearningContent $content): array
     {
-        $types = TypeLearningContent::where('enabled', true)
-            ->with(['formats' => fn ($q) => $q
-                ->where('enabled', true)
-                ->select(
-                    'id', 'name',
-                    'max_size_bytes', 'min_duration_seconds', 'max_duration_seconds',
-                    'type_learning_content_id'
-                )
-                ->orderBy('id'),
-            ])
-            ->select('id', 'name')
-            ->orderBy('id')
-            ->get();
-
         return [
             'ok'               => true,
             'chapter_id'       => $chapter->id,
             'learning_content' => $content ? $this->serializeContent($content) : null,
-            'types'            => $types,
         ];
     }
 
