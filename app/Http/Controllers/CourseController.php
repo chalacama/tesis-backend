@@ -74,12 +74,9 @@ class CourseController extends Controller
         });
     }
 
-    // 🔎 Búsqueda por título o descripción
+    // 🔎 Búsqueda por título
     if (!empty($search)) {
-        $query->where(function ($q) use ($search) {
-            $q->where('title', 'like', "%{$search}%")
-              ->orWhere('description', 'like', "%{$search}%");
-        });
+        $query->where('title', 'like', "%{$search}%");
     }
 
     // 🎛️ Filtros opcionales
