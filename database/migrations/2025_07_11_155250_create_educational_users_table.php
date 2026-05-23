@@ -18,6 +18,8 @@ return new class extends Migration
             $table->unsignedBigInteger('career_id')->nullable();
             $table->unsignedBigInteger('educational_level_id')->nullable();
             $table->integer('level')->nullable();
+            $table->boolean('finished')->default(false);
+        
             $table->timestamps();
 
             $table->foreign('sede_id')->references('id')->on('sedes')->onDelete('cascade');
