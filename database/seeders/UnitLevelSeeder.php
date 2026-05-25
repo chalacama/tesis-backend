@@ -54,17 +54,6 @@ class UnitLevelSeeder extends Seeder
             'educational_unit_id' => 3,
             'educational_level_id' => 6,  //no hay nivel 6
         ]);
-
-        // Colegio Raymundo Aveiga
-        UnitLevel::create([
-            'educational_unit_id' => 4,
-            'educational_level_id' => 1, //nivel 1
-        ]);
-
-        UnitLevel::create([
-            'educational_unit_id' => 4,
-            'educational_level_id' => 2, //nivel 2
-        ]);
         
 
         
