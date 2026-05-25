@@ -29,11 +29,5 @@ class EducationalUnitSeeder extends Seeder
             'name' => 'Ninguno (No posee ninguna sede educativa)', 
             'url_logo' => 'https://res.cloudinary.com/dvvqko1vv/image/upload/v1764369806/logo-no-pose-institucion-educativa_kg1myq.png',
         ]);
-        //  4 Colegio Raymundo Aveiga
-        EducationalUnit::create([
-            'name' => 'Colegio Raymundo Aveiga',
-            // 'organization_domain' => 'uce.edu.ec',
-            'url_logo' => 'https://www.designevo.com/res/templates/thumb_small/branch-encircled-book-and-torch-shield.webp',
-        ]);
     }
 }

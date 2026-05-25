@@ -33,12 +33,5 @@ class SedeSeeder extends Seeder
             'contry' => 'ECUADOR',
             'educational_unit_id' => 3,
         ]);
-        // Sede del Colegio Raymundo Aveiga
-        Sede::create([
-            'contry' => 'ECUADOR',
-            'province_id' => 13,   // 👈 ID real de Manabí en tu JSON
-            'canton_id'   => 1303, // 👈 ID real de Bolívar en tu JSON
-            'educational_unit_id' => 4,
-        ]);
     }
 }

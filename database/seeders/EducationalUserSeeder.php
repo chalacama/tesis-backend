@@ -19,38 +19,29 @@ class EducationalUserSeeder extends Seeder
             
             
         ]);
-        //ingenieri@ tutor no posen semestre ni nivel
+        //Tutor real de la espam no posen semestre ni nivel
         EducationalUser::create([
             'sede_id' => 1,
             'user_id' => 2,
             'career_id' => 5, 
         ]); 
-        //estudiante de la Espam Mfl
+        //studiante fuera de la espam paso a ser tutor temporalmente
         EducationalUser::create([
-            'sede_id' => 1,
+            'sede_id' => 2,
             'user_id' => 3,
             'career_id' => 5,
-            'educational_level_id' => 1,
-            'level' => 8,
+            'educational_level_id' => 3,
+            'level' => 10,
             
         ]);
-        // persona fuera de la espam
+        // Estudiante  fuera de la espam
         EducationalUser::create([
-            'sede_id' => 1,
-            'user_id' => 3,
-            'career_id' => 5,
-            'educational_level_id' => 1,
-            'level' => 8,
-            
+            'sede_id' => 2,
+            'user_id' => 4,
+            'career_id' => 2,
+            'educational_level_id' => 2,
+            'level' => 3,
         ]);
-        //Estudiante de colegio
-        // EducationalUser::create([
-        //     'sede_id' => 3,
-        //     'user_id' => 4,
-            
-        //     'educational_level_id' => 2,
-        //     'level' => 3,
-        // ]);
 
     }
 }
