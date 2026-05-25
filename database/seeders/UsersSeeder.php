@@ -16,9 +16,9 @@ class UsersSeeder extends Seeder
         // Usuarios admin
         $admins = [
             [
-                'name' => 'Admin', // id : 1
-                'lastname' => 'Digimentor',
-                'username' => 'admindigi',
+                'name' => 'Digimentor', // id : 1
+                'lastname' => 'Espam Mfl',
+                'username' => 'digimentor',
                 'email' => 'digimentor.espam@gmail.com',
                 'password' => bcrypt('password123'),
                 'profile_picture_url' => 'https://i.pinimg.com/736x/70/aa/d2/70aad2738a5e301652843930582fffaa.jpg'
@@ -36,15 +36,15 @@ class UsersSeeder extends Seeder
             [
                 'name' => 'Luis', // id : 2
                 'lastname' => 'Chalacama',
-                'username' => 'luis.chalacama',
+                'username' => 'chalacama',
                 'email' => 'luis.chalacama@espam.edu.ec',
                 'password' => bcrypt('password123'),
-                'profile_picture_url' => 'https://i.pinimg.com/474x/e8/7c/32/e87c325d2487e441901df6330f2b7ad6.jpg'
+                'profile_picture_url' => 'https://lh3.googleusercontent.com/a/ACg8ocKPljXTCWcfVZ5TUwdqq2wrFRyNgrVqeQJah7FnbEVE5CVFYno=s389-c-no'
             ],
             [
-                'name' => 'Filyp', // id : 3
-                'lastname' => 'Lopez',
-                'username' => 'filyp007',
+                'name' => 'Philip', // id : 3
+                'lastname' => 'Chalacama',
+                'username' => 'philip.chala',
                 'email' => 'filyp007lfcm117@gmail.com',
                 'password' => bcrypt('password123'),
                 'profile_picture_url' => 'https://i.pinimg.com/736x/3d/b7/ae/3db7ae3f2cecd4706c85376d49f6879f.jpg'
@@ -59,12 +59,11 @@ class UsersSeeder extends Seeder
         // Usuarios student
         $students = [
             [
-                'name' => 'Yoryi', // id : 4
+                'name' => 'Yorlli', // id : 4
                 'lastname' => 'Chalacama',
-                'username' => 'yoryi.chalacama',
+                'username' => 'yorlli.chala',
                 'email' => 'yoryi.chalacama@gmail.com',
                 'password' => bcrypt('password123'),
-                'profile_picture_url' => 'https://i.pinimg.com/736x/83/30/7d/83307da0f2648ecb70a70d585f1f3486.jpg'
             ],
         ];
 

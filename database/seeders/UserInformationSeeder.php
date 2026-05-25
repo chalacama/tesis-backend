@@ -29,8 +29,8 @@ class UserInformationSeeder extends Seeder
 
         // Tutor 1
         UserInformation::create([
-            'birthdate' => '1999-04-30',
-            'phone_number' => '+593994861344',
+            'birthdate' => '2001-11-25',
+            'phone_number' => '+593987047148',
             'cedula' => '1316675295',
             'province_id' => 1,      // ID de GUAYAS en provincias.json
             'canton_id'   => 101,    // ID de GUAYAQUIL
@@ -45,8 +45,8 @@ class UserInformationSeeder extends Seeder
 
         // Tutor 2
         UserInformation::create([
-            'birthdate' => '1995-05-15',
-            'phone_number' => '+593990000002',
+            'birthdate' => '2001-11-25',
+            'phone_number' => '+593987047148',
             'province_id' => 1,      // ID de GUAYAS en provincias.json
             'canton_id'   => 101,    // ID de GUAYAQUIL
             'parish_id'   => 10101,  // ID de TARQUI
@@ -60,8 +60,8 @@ class UserInformationSeeder extends Seeder
 
         // Student
         UserInformation::create([
-            'birthdate' => '2005-10-20',
-            'phone_number' => '+593990000003',
+            'birthdate' => '1967-04-30',
+            'phone_number' => '+593983088926',
             'province_id' => 1,      // ID de GUAYAS en provincias.json
             'canton_id'   => 101,    // ID de GUAYAQUIL
             'parish_id'   => 10101,  // ID de TARQUI
