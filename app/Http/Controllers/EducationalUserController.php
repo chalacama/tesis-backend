@@ -65,6 +65,7 @@ class EducationalUserController extends Controller
             'career_id'             => ['nullable', 'exists:careers,id'],
             'educational_level_id'  => ['required', 'exists:educational_levels,id'],
             'level'                 => ['nullable', 'integer', 'min:1'],
+            'finished'              => ['nullable', 'boolean'],
         ]);
 
         // 2) Validar que la sede sea "permitida" para este usuario
@@ -179,6 +180,7 @@ class EducationalUserController extends Controller
             'career_id'            => $eduUser->career_id,
             'educational_level_id' => $eduUser->educational_level_id,
             'level'                => $eduUser->level,
+            'finished'             => $eduUser->finished,
             'created_at'           => $eduUser->created_at,
             'updated_at'           => $eduUser->updated_at,
 
