@@ -16,6 +16,7 @@ class UsersSeeder extends Seeder
         // Usuarios admin
         $admins = [
             [
+                //'google_id' => '100000000000000000002',
                 'name' => 'Digimentor', // id : 1
                 'lastname' => 'Espam Mfl',
                 'username' => 'digimentor',

@@ -31,7 +31,7 @@ class DatabaseSeeder extends Seeder
         
         $this->call(CoursesSeeder::class);
 
-        $this->call(RatingCourseSeeder::class);
+        //$this->call(RatingCourseSeeder::class);
 
         $this->call(TutorCourseSeeder::class);
         
@@ -39,7 +39,7 @@ class DatabaseSeeder extends Seeder
         
         $this->call(CategoryCourseSeeder::class);
         
-        $this->call(CommentsSeeder::class);
+        //$this->call(CommentsSeeder::class);
        
         $this->call(ModulesSeeder::class);
         
@@ -60,27 +60,27 @@ class DatabaseSeeder extends Seeder
         
         
        
-        $this->call(RegistrationsSeeder::class);
+        //$this->call(RegistrationsSeeder::class);
        
-        $this->call(CertificatesSeeder::class);
+        //$this->call(CertificatesSeeder::class);
         
-        $this->call(ContentViewsSeeder::class);
+        //$this->call(ContentViewsSeeder::class);
         
-        $this->call(UserAnswersSeeder::class);
+        //$this->call(UserAnswersSeeder::class);
 
-        $this->call(CompletedChapterSeeder::class);
+        //$this->call(CompletedChapterSeeder::class);
         
-        $this->call(LikeChaptersSeeder::class);
+        //$this->call(LikeChaptersSeeder::class);
         
-        $this->call(SavedCoursesSeeder::class);
+        //$this->call(SavedCoursesSeeder::class);
         $this->call(TypeThumbnailSeeder::class);
         $this->call(MiniatureCoursesSeeder::class);
         
-        $this->call(UserCategoryInterestSeeder::class);
+        //$this->call(UserCategoryInterestSeeder::class);
 
         $this->call(CareerCourseSeeder::class);
-        $this->call(LikeCommentSeeder::class);
-        $this->call(SuggestionSeeder::class);
+        //$this->call(LikeCommentSeeder::class);
+        //$this->call(SuggestionSeeder::class);
         // UnitLevelSeeder
     }
 }
