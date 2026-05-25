@@ -12,9 +12,10 @@ class UserInformationSeeder extends Seeder
      */
     public function run(): void
     {
+        // Admin
         UserInformation::create([
-            'birthdate' => '1999-04-30',
-            'phone_number' => '+593994861344',
+            'birthdate' => '1990-01-01',
+            'phone_number' => '+593990000001',
             'province_id' => 1,      // ID de GUAYAS en provincias.json
             'canton_id'   => 101,    // ID de GUAYAQUIL
             'parish_id'   => 10101,  // ID de TARQUI
@@ -26,9 +27,10 @@ class UserInformationSeeder extends Seeder
             'asistencia_establecimiento_discapacidad' => null,
         ]);
 
+        // Tutor 1
         UserInformation::create([
-            'birthdate' => '2000-01-01',
-            'phone_number' => '+593963856048',
+            'birthdate' => '1999-04-30',
+            'phone_number' => '+593994861344',
             'cedula' => '1316675295',
             'province_id' => 1,      // ID de GUAYAS en provincias.json
             'canton_id'   => 101,    // ID de GUAYAQUIL
@@ -39,6 +41,36 @@ class UserInformationSeeder extends Seeder
             'estado_civil' => 'soltero/a',
             'discapacidad_permanente' => "visual (ceguera)",
             'asistencia_establecimiento_discapacidad' => "si",
+        ]);
+
+        // Tutor 2
+        UserInformation::create([
+            'birthdate' => '1995-05-15',
+            'phone_number' => '+593990000002',
+            'province_id' => 1,      // ID de GUAYAS en provincias.json
+            'canton_id'   => 101,    // ID de GUAYAQUIL
+            'parish_id'   => 10101,  // ID de TARQUI
+            'user_id' => 3,
+            'sexo' => 'masculino',
+            'discapacidad'=>'no',
+            'estado_civil' => 'casado/a',
+            'discapacidad_permanente' => null,
+            'asistencia_establecimiento_discapacidad' => null,
+        ]);
+
+        // Student
+        UserInformation::create([
+            'birthdate' => '2005-10-20',
+            'phone_number' => '+593990000003',
+            'province_id' => 1,      // ID de GUAYAS en provincias.json
+            'canton_id'   => 101,    // ID de GUAYAQUIL
+            'parish_id'   => 10101,  // ID de TARQUI
+            'user_id' => 4,
+            'sexo' => 'masculino',
+            'discapacidad'=>'no',
+            'estado_civil' => 'soltero/a',
+            'discapacidad_permanente' => null,
+            'asistencia_establecimiento_discapacidad' => null,
         ]);
 
     }
