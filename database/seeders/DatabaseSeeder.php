@@ -76,7 +76,7 @@ class DatabaseSeeder extends Seeder
         $this->call(TypeThumbnailSeeder::class);
         $this->call(MiniatureCoursesSeeder::class);
         
-        //$this->call(UserCategoryInterestSeeder::class);
+        $this->call(UserCategoryInterestSeeder::class);
 
         $this->call(CareerCourseSeeder::class);
         //$this->call(LikeCommentSeeder::class);

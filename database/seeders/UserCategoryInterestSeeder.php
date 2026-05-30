@@ -12,7 +12,7 @@ class UserCategoryInterestSeeder extends Seeder
      */
     public function run(): void
     {
-        // User 1 (Admin) - 5 interests (broad interests as admin)
+        // User 1 (Admin) - 4 interests (broad interests as admin)
     UserCategoryInterest::create(['user_id' => 1, 'category_id' => 1]); // Programación
     UserCategoryInterest::create(['user_id' => 1, 'category_id' => 3]); // Marketing
     UserCategoryInterest::create(['user_id' => 1, 'category_id' => 4]); // Negocios
@@ -30,7 +30,7 @@ class UserCategoryInterestSeeder extends Seeder
     UserCategoryInterest::create(['user_id' => 3, 'category_id' => 9]); // Fotografía
     UserCategoryInterest::create(['user_id' => 3, 'category_id' => 16]); // Arte
 
-    // User 4 (Tutor: Marketing, Ciencia de Datos, Video, IA, Cocina) - 4 interests
+    // User 4 (Estudiante: Marketing, Ciencia de Datos, Video, IA, Cocina) - 4 interests
     UserCategoryInterest::create(['user_id' => 4, 'category_id' => 3]); // Marketing
     UserCategoryInterest::create(['user_id' => 4, 'category_id' => 5]); // Tecnología
     UserCategoryInterest::create(['user_id' => 4, 'category_id' => 6]); // Ciencia de Datos
