@@ -45,6 +45,8 @@ class User extends Authenticatable
         'name',
         'lastname',       // Añadido
         'username',       // Añadido
+        'phone_number',   // Añadido
+        'cedula',         // Añadido
         'username_at',    // Añadido
         'email',
         'password',

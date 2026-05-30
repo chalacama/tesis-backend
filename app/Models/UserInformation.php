@@ -10,7 +10,6 @@ class UserInformation extends Model
 {
     protected $fillable = [
         'birthdate',
-        'phone_number',
         'province_id',
         'canton_id',
         'parish_id',

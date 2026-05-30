@@ -19,10 +19,13 @@ return new class extends Migration
             $table->string('name');
             $table->string('lastname');
             $table->string('username')->unique();
+            $table->string('cedula', 10)->unique()->nullable();
             $table->timestamp('username_at')->nullable()->default(null);
-            $table->string('email')->unique();
+            $table->string('email')->unique()->nullable();
+            $table->string('phone_number', 13)->unique()->nullable();
             $table->string('password')->nullable(); // Contraseña opcional
-            $table->string('registration_method')->default('email'); // Método de registro
+            $table->enum('register_method', ['email', 'google', 'cedula', 'username', 'phone_number'])->default('email'); // Método de registro
+            $table->enum('login_method', ['email', 'google', 'cedula', 'username', 'phone_number'])->default('email');
             $table->string('profile_picture_url')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->rememberToken();

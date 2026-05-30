@@ -22,7 +22,7 @@ class UsersSeeder extends Seeder
                 'username' => 'digimentor',
                 'email' => 'digimentor.espam@gmail.com',
                 'password' => null,
-                'registration_method' => 'google',
+                'register_method' => 'google',
                 'email_verified_at' => now(),
             ],
             // Puedes agregar más admins aquí
@@ -39,9 +39,10 @@ class UsersSeeder extends Seeder
                 'name' => 'Luis', // id : 2
                 'lastname' => 'Chalacama',
                 'username' => 'chalacama',
+                'cedula' => '1316675295',
                 'email' => 'luis.chalacama@espam.edu.ec',
                 'password' => null,
-                'registration_method' => 'google',
+                'register_method' => 'google',
                 'email_verified_at' => now(),
             ],
             [
@@ -50,7 +51,7 @@ class UsersSeeder extends Seeder
                 'username' => 'philip.chala',
                 'email' => 'filyp007lfcm117@gmail.com',
                 'password' => null,
-                'registration_method' => 'google',
+                'register_method' => 'google',
                 'email_verified_at' => now(),
             ],
         ];
@@ -66,9 +67,11 @@ class UsersSeeder extends Seeder
                 'name' => 'Yorlli', // id : 4
                 'lastname' => 'Chalacama',
                 'username' => 'yorlli.chala',
+                'phone_number' => '+593983088926',
+                'cedula' => '1306226547',
                 'email' => 'yoryi.chalacama@gmail.com',
                 'password' => null,
-                'registration_method' => 'google',
+                'register_method' => 'google',
                 'email_verified_at' => now(),
             ],
         ];

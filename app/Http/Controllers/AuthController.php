@@ -33,7 +33,7 @@ class AuthController extends Controller
         'username'            => $request->username,
         'email'               => $request->email,
         'password'            => Hash::make($request->password),
-        'registration_method' => 'email',
+        'register_method' => 'email',
         // 'username_at' => null, // opcional, por defecto ya es null
     ]);
 
@@ -187,7 +187,7 @@ class AuthController extends Controller
                 $user->lastname            = $fullName[1] ?? '';
                 $user->username            = Str::slug($name) . '_' . uniqid();
                 $user->username_at         = null; // primer cambio libre
-                $user->registration_method = 'google';
+                $user->register_method = 'google';
                 $user->profile_picture_url = $avatar;
                 $user->email_verified_at   = now();
                 $user->save();
@@ -204,8 +204,8 @@ class AuthController extends Controller
                 $user->name     = $fullName[0] ?? $user->name;
                 $user->lastname = $fullName[1] ?? $user->lastname;
 
-                if (!$user->registration_method) {
-                    $user->registration_method = 'google';
+                if (!$user->register_methodod) {
+                    $user->register_method = 'google';
                 }
 
                 if ($avatar) {
