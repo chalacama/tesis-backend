@@ -48,7 +48,7 @@ class UserInformationController extends Controller
 
         $validator = Validator::make($request->all(), [
             'birthdate' => ['required', 'date', 'before_or_equal:today'],
-            'phone_number' => ['required', 'regex:/^\+593[0-9]{9}$/'],
+            //'phone_number' => ['required', 'regex:/^\+593[0-9]{9}$/'],
 
             // IDs de ubicación (ya no textos)
             'province_id' => ['required', 'integer'],
@@ -149,7 +149,7 @@ class UserInformationController extends Controller
         return [
             'id' => $info->id,
             'birthdate' => optional($info->birthdate)->toDateString(),
-            'phone_number' => $info->phone_number,
+            //'phone_number' => $info->phone_number,
 
             'province_id'   => $info->province_id,
             'province_name' => $provinceName,
