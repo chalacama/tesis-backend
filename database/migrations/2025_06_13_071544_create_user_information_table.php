@@ -20,7 +20,7 @@ return new class extends Migration
         $table->unsignedInteger('canton_id');
         $table->unsignedInteger('parish_id');
 
-        $table->enum('sexo', ['femenino', 'masculino']);
+        $table->enum('sexo', ['MUJER', 'HOMBRE']);
 
         $table->enum('estado_civil', [
             'casado/a',

@@ -55,7 +55,7 @@ class UserInformationController extends Controller
             'canton_id'   => ['required', 'integer'],
             'parish_id'   => ['required', 'integer'],
 
-            'sexo' => ['required', 'in:masculino,femenino'],
+            'sexo' => ['required', 'in:MUJER,HOMBRE'],
             'estado_civil' => [
                 'required',
                 'in:casado/a,unido/a,separado/a,divorciado/a,viudo/a,soltero/a'

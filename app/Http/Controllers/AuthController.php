@@ -144,7 +144,7 @@ class AuthController extends Controller
      * LOGIN/REGISTRO CON GOOGLE
      * Gestiona la autenticación a través de Google.
      */
-    public function handleGoogleCallback(Request $request): JsonResponse
+    public function googleStart(Request $request): JsonResponse
     {
         $request->validate(['token' => 'required|string']);
 

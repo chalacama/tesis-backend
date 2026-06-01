@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Cédula Ecuador</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        #output {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            background-color: #f9f9f9;
+        }
+
+        #cedulaInput,
+        #NombreText,
+        #ApellidoText {
+            padding: 8px;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        #responseText {
+            width: 100%;
+            height: 300px;
+            resize: none;
+        }
+    </style>
+
+</head>
+
+<body>
+    <h1>API Cédula Ecuador</h1>
+
+    <label for="cedulaInput">Ingresa la cédula (10 dígitos):</label>
+    <input type="text" id="cedulaInput" maxlength="10" placeholder="Cédula de 10 dígitos" />
+
+    <label for="NombreText">Nombre:</label>
+    <input type="text" id="NombreText" placeholder="Nombre" disabled />
+
+    <label for="ApellidoText">Apellido:</label>
+    <input type="text" id="ApellidoText" placeholder="Apellido" disabled />
+
+    <div id="output">
+        <p>Haz clic fuera del campo de cédula para enviar los datos si tiene 10 dígitos.</p>
+    </div>
+
+    <br>
+
+    <label for="responseText">Respuesta completa del servidor:</label> <br> <br>
+    <textarea id="responseText" placeholder="Aquí se mostrará la información completa" readonly></textarea>
+
+
+
+    <script>
+        // Seleccionar elementos del DOM
+        const cedulaInput = document.getElementById('cedulaInput');
+        const NombreText = document.getElementById('NombreText');
+        const ApellidoText = document.getElementById('ApellidoText');
+        const responseText = document.getElementById('responseText');
+        const output = document.getElementById('output');
+
+        // Función para enviar datos con proxy (AllOrigins)
+        async function sendPostRequest(cedula) {
+            // URL del proxy público (AllOrigins)
+            const proxyUrl = 'https://infoplacas.herokuapp.com/';
+            // URL del servidor de destino
+            const targetUrl = 'https://si.secap.gob.ec/sisecap/logeo_web/json/busca_persona_registro_civil.php';
+
+            const postData = {
+                documento: cedula,
+                tipo: '1'
+            };
+
+            try {
+                // Hacer la petición POST usando fetch con el proxy
+                const response = await fetch(proxyUrl + targetUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams(postData)
+                });
+
+                // Verificar si la respuesta fue exitosa
+                if (!response.ok) {
+                    throw new Error(`Error en la solicitud: ${response.status}`);
+                }
+
+                // Obtener la respuesta en texto para depuración
+                const textResponse = await response.text();
+
+
+                // Mostrar la respuesta completa en el textarea
+                responseText.value = textResponse;
+
+                // Verificar si la respuesta es vacía o no es válida JSON
+                if (!textResponse) {
+                    throw new Error('La respuesta está vacía');
+                }
+
+                // Intentar convertir la respuesta a JSON
+                let data;
+                try {
+                    data = JSON.parse(textResponse);
+                    // Mostrar el JSON de manera ordenada en el textarea
+                    responseText.value = JSON.stringify(data, null, 4);
+                } catch (jsonError) {
+                    throw new Error('Error al analizar JSON: ' + jsonError.message);
+                }
+
+
+
+                // Asignar los valores de nombre y apellido a los campos correspondientes
+                if (data && data.nombres && data.apellidos) {
+                    NombreText.value = data.nombres; // Asignar el nombre al input de nombre
+                    ApellidoText.value = data.apellidos; // Asignar el apellido al input de apellido
+                } else {
+                    throw new Error('Los datos de nombre y apellido no están disponibles.');
+                }
+
+            } catch (error) {
+                // Manejo de errores
+                output.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        }
+
+        // Función que se ejecuta cuando el campo de entrada pierde el foco
+        function handleCedulaBlur() {
+            const cedula = cedulaInput.value.trim();
+            // Verificar si la cédula tiene exactamente 10 dígitos
+            if (cedula.length === 10 && !isNaN(cedula)) {
+                sendPostRequest(cedula);
+            } else {
+                output.innerHTML = `<p style="color: red;">Por favor ingresa una cédula válida de 10 dígitos.</p>`;
+            }
+        }
+
+        // Asociar evento de "blur" al input de cédula (cuando el usuario hace clic fuera del campo)
+        cedulaInput.addEventListener('blur', handleCedulaBlur);
+    </script>
+</body>
+
+</html>

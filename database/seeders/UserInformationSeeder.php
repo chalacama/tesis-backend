@@ -19,7 +19,7 @@ class UserInformationSeeder extends Seeder
             'canton_id'   => 101,    // ID de GUAYAQUIL
             'parish_id'   => 10101,  // ID de TARQUI
             'user_id' => 1,
-            'sexo' => 'masculino',
+            'sexo' => 'HOMBRE',
             'discapacidad'=>'no',
             'estado_civil' => 'soltero/a',
             'discapacidad_permanente' => null,
@@ -34,7 +34,7 @@ class UserInformationSeeder extends Seeder
             'canton_id'   => 101,    // ID de GUAYAQUIL
             'parish_id'   => 10101,  // ID de TARQUI
             'user_id' => 2,
-            'sexo' => 'masculino',
+            'sexo' => 'HOMBRE',
             'discapacidad'=>'si',
             'estado_civil' => 'soltero/a',
             'discapacidad_permanente' => "visual (ceguera)",
@@ -48,7 +48,7 @@ class UserInformationSeeder extends Seeder
             'canton_id'   => 101,    // ID de GUAYAQUIL
             'parish_id'   => 10101,  // ID de TARQUI
             'user_id' => 3,
-            'sexo' => 'masculino',
+            'sexo' => 'HOMBRE',
             'discapacidad'=>'no',
             'estado_civil' => 'casado/a',
             'discapacidad_permanente' => null,
@@ -62,7 +62,7 @@ class UserInformationSeeder extends Seeder
             'canton_id'   => 101,    // ID de GUAYAQUIL
             'parish_id'   => 10101,  // ID de TARQUI
             'user_id' => 4,
-            'sexo' => 'masculino',
+            'sexo' => 'HOMBRE',
             'discapacidad'=>'no',
             'estado_civil' => 'soltero/a',
             'discapacidad_permanente' => null,
