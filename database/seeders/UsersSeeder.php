@@ -20,9 +20,9 @@ class UsersSeeder extends Seeder
                 'name' => 'Digimentor', // id : 1
                 'lastname' => 'Espam Mfl',
                 'username' => 'digimentor',
+                'username_at' => now(),
                 'email' => 'digimentor.espam@gmail.com',
-                'password' => null,
-                'register_method' => 'google',
+                'password' => '123.Password',
                 'email_verified_at' => now(),
             ],
             // Puedes agregar más admins aquí
@@ -39,20 +39,26 @@ class UsersSeeder extends Seeder
                 'name' => 'Luis', // id : 2
                 'lastname' => 'Chalacama',
                 'username' => 'chalacama',
+                'username_at' => now(),
                 'cedula' => '1316675295',
                 'email' => 'luis.chalacama@espam.edu.ec',
-                'password' => null,
-                'register_method' => 'google',
+                'password' => '123.Password',
                 'email_verified_at' => now(),
+                'username_at' => now(),
+                'phone_number_at' => now(),
+                'cedula_at' => now(),
             ],
             [
                 'name' => 'Philip', // id : 3
                 'lastname' => 'Chalacama',
                 'username' => 'philip.chala',
+                'username_at' => now(),
                 'email' => 'filyp007lfcm117@gmail.com',
-                'password' => null,
-                'register_method' => 'google',
+                'password' => '123.Password',
                 'email_verified_at' => now(),
+                'username_at' => now(),
+                'phone_number_at' => now(),
+                'cedula_at' => now(),
             ],
         ];
 
@@ -64,15 +70,19 @@ class UsersSeeder extends Seeder
         // Usuarios student
         $students = [
             [
+                //'google_id' => '100000000000000000002',
                 'name' => 'Yorlli', // id : 4
                 'lastname' => 'Chalacama',
                 'username' => 'yorlli.chala',
+                'username_at' => now(),
                 'phone_number' => '+593983088926',
                 'cedula' => '1306226547',
                 'email' => 'yoryi.chalacama@gmail.com',
-                'password' => null,
-                'register_method' => 'google',
+                'password' => '123.Password',
                 'email_verified_at' => now(),
+                'username_at' => now(),
+                'phone_number_at' => now(),
+                'cedula_at' => now(),
             ],
         ];
 

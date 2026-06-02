@@ -23,18 +23,27 @@ return new class extends Migration
             $table->timestamp('username_at')->nullable()->default(null);
             $table->string('email')->unique()->nullable();
             $table->string('phone_number', 13)->unique()->nullable();
-            $table->string('password')->nullable(); // Contraseña opcional
-            $table->enum('register_method', ['email', 'google', 'cedula', 'username', 'phone_number'])->default('email'); // Método de registro
-            $table->enum('login_method', ['email', 'google', 'cedula', 'username', 'phone_number'])->default('email');
+            $table->string('password'); // Contraseña opcional
             $table->string('profile_picture_url')->nullable();
             $table->timestamp('email_verified_at')->nullable();
+            $table->timestamp('phone_verified_at')->nullable();
+            $table->timestamp('cedula_verified_at')->nullable();
             $table->rememberToken();
             $table->timestamps();
             $table->softDeletes();
         });
-        Schema::create('password_reset_tokens', function (Blueprint $table) {
+        /*Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();
             $table->string('token');
+            $table->timestamp('created_at')->nullable();
+        });*/
+        Schema::create('password_reset_tokens', function (Blueprint $table) {
+            $table->id();
+            // Se conecta directamente con el ID del usuario, no con su email
+            $table->foreignId('user_id')->constrained()->onDelete('cascade'); 
+            $table->string('token');
+            // Te ayuda a saber si el token se envió por SMS o por EMAIL
+            $table->string('send_to_channel')->default('email'); 
             $table->timestamp('created_at')->nullable();
         });
 
