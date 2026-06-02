@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use App\Models\UserInformation;
+use App\Models\VerificationCode;
 use App\Models\RatingCourse;
 use App\Models\Course;
 use App\Models\TutorCourse;
@@ -75,6 +76,8 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'phone_verified_at' => 'datetime',
+            'cedula_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
     }
@@ -243,6 +246,14 @@ class User extends Authenticatable
     public function likeComments(): HasMany
     {
         return $this->hasMany(LikeComment::class);
+    }
+
+    /**
+     * Relación uno a muchos con VerificationCode.
+     */
+    public function verificationCodes(): HasMany
+    {
+        return $this->hasMany(VerificationCode::class);
     }
 
     public function testView()

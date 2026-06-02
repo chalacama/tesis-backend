@@ -32,20 +32,6 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
         });
-        /*Schema::create('password_reset_tokens', function (Blueprint $table) {
-            $table->string('email')->primary();
-            $table->string('token');
-            $table->timestamp('created_at')->nullable();
-        });*/
-        Schema::create('password_reset_tokens', function (Blueprint $table) {
-            $table->id();
-            // Se conecta directamente con el ID del usuario, no con su email
-            $table->foreignId('user_id')->constrained()->onDelete('cascade'); 
-            $table->string('token');
-            // Te ayuda a saber si el token se envió por SMS o por EMAIL
-            $table->string('send_to_channel')->default('email'); 
-            $table->timestamp('created_at')->nullable();
-        });
 
         Schema::create('sessions', function (Blueprint $table) {
             $table->string('id')->primary();
@@ -63,7 +49,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('users');
-        Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
     }
 };

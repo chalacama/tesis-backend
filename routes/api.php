@@ -12,7 +12,7 @@ use App\Http\Controllers\{
     CompletedChapterController, TestController, HistoryController, CertificateController, EducationalLevelController,
     ImageProxyController, NotificationController, UserCategoryInterestController, UserController, 
     RatingCourseController, PanelController, RoleController, EcuadorLocationController, EducationalUnitController,
-    TypeThumbnailController
+    TypeThumbnailController, VerificationCodeController
 };
 
 
@@ -47,9 +47,15 @@ Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
-    Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])
-    ->middleware('signed')
-    ->name('verification.verify');
+});
+
+// == RUTAS PÚBLICAS DE VERIFICACIÓN (Password Reset - usuario NO autenticado) ==
+Route::prefix('verification')->group(function () {
+    Route::prefix('password-reset')->group(function () {
+        Route::post('/send', [VerificationCodeController::class, 'sendCode']);
+        Route::post('/verify', [VerificationCodeController::class, 'verifyCode']);
+        Route::post('/check-status', [VerificationCodeController::class, 'checkStatus']);
+    });
 });
 Route::prefix('certificate')->group(function () {
         Route::get('/show', [CertificateController::class, 'show']);
@@ -57,6 +63,13 @@ Route::prefix('certificate')->group(function () {
 });
 // == RUTAS DE GESTIÓN (Protegidas por autenticación y permisos) ==
 Route::middleware('auth:sanctum')->group(function () {
+
+    // == RUTAS PROTEGIDAS DE VERIFICACIÓN (Email/Phone - usuario autenticado) ==
+    Route::prefix('verification')->group(function () {
+        Route::post('/send', [VerificationCodeController::class, 'sendCode']);
+        Route::post('/verify', [VerificationCodeController::class, 'verifyCode']);
+        Route::post('/check-status', [VerificationCodeController::class, 'checkStatus']);
+    });
 
     Route::prefix('course')->group(function () {
         Route::post('/store', [CourseController::class, 'store'])->middleware('permission:course.create');

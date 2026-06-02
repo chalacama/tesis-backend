@@ -45,8 +45,8 @@ class UsersSeeder extends Seeder
                 'password' => '123.Password',
                 'email_verified_at' => now(),
                 'username_at' => now(),
-                'phone_number_at' => now(),
-                'cedula_at' => now(),
+                'phone_verified_at' => now(), // Corregido
+                'cedula_verified_at' => now(), // Corregido
             ],
             [
                 'name' => 'Philip', // id : 3
@@ -57,8 +57,8 @@ class UsersSeeder extends Seeder
                 'password' => '123.Password',
                 'email_verified_at' => now(),
                 'username_at' => now(),
-                'phone_number_at' => now(),
-                'cedula_at' => now(),
+                'phone_verified_at' => now(), // Corregido
+                'cedula_verified_at' => now(), // Corregido
             ],
         ];
 
@@ -81,8 +81,8 @@ class UsersSeeder extends Seeder
                 'password' => '123.Password',
                 'email_verified_at' => now(),
                 'username_at' => now(),
-                'phone_number_at' => now(),
-                'cedula_at' => now(),
+                'phone_verified_at' => now(), // Corregido
+                'cedula_verified_at' => now(), // Corregido
             ],
         ];
 

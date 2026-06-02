@@ -9,7 +9,7 @@ class VerificationCode extends Model
     //
     protected $fillable = [
         'user_id',
-        'code',       // Se guarda encriptado
+        'code',       // Se guarda encriptado (Hash::make)
         'type',       // 'email_verification', 'phone_verification', 'password_reset'
         'channel',    // 'email', 'whatsapp'
         'expires_at', // Fecha de expiración
