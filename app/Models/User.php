@@ -45,13 +45,15 @@ class User extends Authenticatable
         'name',
         'lastname',       // Añadido
         'username',       // Añadido
+        'username_at',    // Añadido
         'phone_number',   // Añadido
         'cedula',         // Añadido
-        'username_at',    // Añadido
         'email',
         'password',
-        'registration_method', // Añadido
         'profile_picture_url',
+        'email_verified_at',
+        'phone_verified_at',
+        'cedula_verified_at',
     ];
 
     /**
