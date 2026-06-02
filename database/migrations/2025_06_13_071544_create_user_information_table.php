@@ -14,7 +14,6 @@ return new class extends Migration
     Schema::create('user_information', function (Blueprint $table) {
         $table->id();
         $table->date('birthdate');
-        //$table->string('phone_number')->nullable();
         // 👇 Ahora guardamos solo IDs numéricos
         $table->unsignedInteger('province_id');
         $table->unsignedInteger('canton_id');
