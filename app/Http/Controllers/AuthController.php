@@ -9,6 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -115,10 +116,13 @@ class AuthController extends Controller
     {
         // 1. Validaciones comunes
         $rules = [
-            'name'     => 'required|string|max:255',
-            'lastname' => 'required|string|max:255',
-            'username' => 'required|string|max:255|unique:users,username',
-            'password' => ['required', 'confirmed', Password::defaults()],
+            'name'         => 'required|string|max:255',
+            'lastname'     => 'required|string|max:255',
+            'username'     => 'required|string|max:255|unique:users,username',
+            'password'     => ['required', 'confirmed', Password::defaults()],
+            'phone_number' => 'nullable|string|max:13|unique:users,phone_number',
+            'cedula'       => 'nullable|string|max:10|unique:users,cedula',
+            'birthdate'    => 'required_with:cedula|date_format:Y-m-d',
         ];
 
         // 2. Si NO viene google_token, el email es obligatorio
@@ -132,7 +136,65 @@ class AuthController extends Controller
         $googleId = null;
         $emailVerifiedAt = null;
 
-        // 3. Procesamiento si viene con google_token
+        // 3. Validación de Cédula mediante API externa
+        $cedulaVerifiedAt = null;
+        $sexo = null;
+
+        if ($request->filled('cedula')) {
+            try {
+                $response = Http::asForm()->post('https://si.secap.gob.ec/sisecap/logeo_web/json/busca_persona_registro_civil.php', [
+                    'documento' => $request->cedula,
+                    'tipo'      => '1',
+                ]);
+
+                if ($response->successful()) {
+                    $data = $response->json();
+                    
+                    // La API puede devolver el objeto directo o dentro de un array
+                    $person = is_array($data) && isset($data[0]) ? $data[0] : $data;
+                    
+                    if (isset($person['nombres']) && isset($person['apellidos'])) {
+                        // Limpiar y normalizar nombres y apellidos a mayúsculas sin espacios extra
+                        $apiNombres = preg_replace('/\s+/', ' ', trim(strtoupper($person['nombres'])));
+                        $apiApellidos = preg_replace('/\s+/', ' ', trim(strtoupper($person['apellidos'])));
+                        $reqName = preg_replace('/\s+/', ' ', trim(strtoupper($request->name)));
+                        $reqLastname = preg_replace('/\s+/', ' ', trim(strtoupper($request->lastname)));
+                        
+                        $apiBirthdate = null;
+                        if (isset($person['fechaNacimiento'])) {
+                            try {
+                                $apiBirthdate = Carbon::createFromFormat('d/m/Y', $person['fechaNacimiento'])->format('Y-m-d');
+                            } catch (\Exception $e) {
+                                // Por si la API devuelve otro formato
+                                $apiBirthdate = date('Y-m-d', strtotime(str_replace('/', '-', $person['fechaNacimiento'])));
+                            }
+                        }
+
+                        if ($apiNombres !== $reqName || $apiApellidos !== $reqLastname || ($apiBirthdate && $apiBirthdate !== $request->birthdate)) {
+                            return response()->json([
+                                'message' => 'Los nombres, apellidos o fecha de nacimiento no coinciden con los datos del Registro Civil para esta cédula',
+                            ], 422);
+                        }
+
+                        $cedulaVerifiedAt = now();
+                        $sexo = $person['sexo'] ?? null;
+                    } else {
+                        // La cédula no existe o no devolvió datos válidos
+                        return response()->json([
+                            'message' => 'Los nombres, apellidos o fecha de nacimiento no coinciden con los datos del Registro Civil para esta cédula',
+                        ], 422);
+                    }
+                } else {
+                    Log::error('Error calling Registro Civil API: ' . $response->body());
+                    return response()->json(['message' => 'No se pudo validar la cédula con el Registro Civil en este momento.'], 500);
+                }
+            } catch (\Exception $e) {
+                Log::error('Exception calling Registro Civil API: ' . $e->getMessage());
+                return response()->json(['message' => 'Error de conexión al validar la cédula con el Registro Civil.'], 500);
+            }
+        }
+
+        // 4. Procesamiento si viene con google_token
         if ($request->has('google_token')) {
             try {
                 $client = new GoogleClient(['client_id' => config('services.google.client_id')]);
@@ -166,18 +228,27 @@ class AuthController extends Controller
             $email = $request->email;
         }
 
-        // 4. Crear el usuario
+        // 5. Crear el usuario
         $user = User::create([
-            'google_id' => $googleId,
-            'name'      => $request->name,
-            'lastname'  => $request->lastname,
-            'username'  => $request->username,
-            'email'     => $email,
-            'password'  => Hash::make($request->password), // SIEMPRE usa la que provee el usuario
-            'email_verified_at' => $emailVerifiedAt,
+            'google_id'          => $googleId,
+            'name'               => $request->name,
+            'lastname'           => $request->lastname,
+            'username'           => $request->username,
+            'email'              => $email,
+            'password'           => Hash::make($request->password), // SIEMPRE usa la que provee el usuario
+            'email_verified_at'  => $emailVerifiedAt,
+            'phone_number'       => $request->phone_number,
+            'cedula'             => $request->cedula,
+            'cedula_verified_at' => $cedulaVerifiedAt,
         ]);
 
         $user->assignRole('student');
+
+        // Crear registro en UserInformation
+        $user->userInformation()->create([
+            'birthdate' => $request->birthdate,
+            'sexo'      => $sexo,
+        ]);
 
         $response = [
             'message'             => 'Usuario registrado exitosamente.',
@@ -186,7 +257,7 @@ class AuthController extends Controller
             'can_update_username' => true,
         ];
 
-        // 5. Si es tradicional, enviar OTP. Si es Google, no se envía nada.
+        // 6. Si es tradicional, enviar OTP. Si es Google, no se envía nada.
         if (!$request->has('google_token')) {
             VerificationCode::active($user->id, 'email_verification', 'email')
                 ->update(['used_at' => now()]);
