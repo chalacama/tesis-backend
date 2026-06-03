@@ -72,15 +72,26 @@ class AuthController extends Controller
 
         // 2. SI ES LOGIN TRADICIONAL
         $request->validate([
-            'email'    => 'required|email',
-            'password' => 'required|string',
+            'identifier' => 'required|string',
+            'password'   => 'required|string',
         ]);
 
-        if (! Auth::attempt($request->only('email', 'password'))) {
+        $identifier = $request->identifier;
+        $loginField = 'username'; // por defecto
+
+        if (str_contains($identifier, '@')) {
+            $loginField = 'email';
+        } elseif (str_starts_with($identifier, '+593') && strlen($identifier) === 13) {
+            $loginField = 'phone_number';
+        } elseif (ctype_digit($identifier) && strlen($identifier) <= 10) {
+            $loginField = 'cedula';
+        }
+
+        if (! Auth::attempt([$loginField => $identifier, 'password' => $request->password])) {
             return response()->json(['message' => 'Credenciales incorrectas.'], 401);
         }
 
-        $user = User::where('email', $request->email)->firstOrFail();
+        $user = User::where($loginField, $identifier)->firstOrFail();
 
         // Verificar que el correo esté verificado (solo para login tradicional)
         if (is_null($user->email_verified_at)) {
@@ -220,8 +231,6 @@ class AuthController extends Controller
         $expiresInMinutes = config('sanctum.expiration');
         $expiresAt = now()->addMinutes($expiresInMinutes);
 
-        $user->load(['userInformation', 'educationalUser']);
-
         $canUpdateUsername = false;
         if (is_null($user->username_at)) {
             $canUpdateUsername = true;
@@ -234,6 +243,8 @@ class AuthController extends Controller
             }
         }
 
+        $user->makeHidden('roles');
+
         $responseData = [
             'message'                    => 'Inicio de sesión exitoso.',
             'access_token'               => $token,
@@ -242,8 +253,6 @@ class AuthController extends Controller
             'user'                       => $user,
             'role'                       => $user->getRoleNames()[0] ?? 'student',
             'can_update_username'        => $canUpdateUsername,
-            'has_user_information'       => $user->hasUserInformation(),
-            'has_educational_user'       => $user->hasEducationalUser(),
             'has_user_category_interest' => $user->hasCategoryInterest(),
         ];
 

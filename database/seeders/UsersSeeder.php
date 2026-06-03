@@ -36,11 +36,12 @@ class UsersSeeder extends Seeder
         // Usuarios tutor
         $tutors = [
             [
-                'name' => 'Luis', // id : 2
-                'lastname' => 'Chalacama',
+                'name' => 'LUIS FELIPE', // id : 2
+                'lastname' => 'CHALACAMA MENDOZA',
                 'username' => 'chalacama',
                 'username_at' => now(),
                 'cedula' => '1316675295',
+                'phone_number' => '+593997047184',
                 'email' => 'luis.chalacama@espam.edu.ec',
                 'password' => '123.Password',
                 'email_verified_at' => now(),
