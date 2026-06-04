@@ -2,16 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Mail\SendOTPCode;
 use App\Models\User;
-use App\Models\VerificationCode;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 use Google\Client as GoogleClient;
@@ -127,7 +124,7 @@ class AuthController extends Controller
 
         // 2. Si NO viene google_token, el email es obligatorio
         if (!$request->has('google_token')) {
-            $rules['email'] = 'required|string|email|max:255|unique:users,email';
+            $rules['email'] = 'nullable|string|email|max:255|unique:users,email';
         }
 
         $request->validate($rules);
@@ -256,30 +253,6 @@ class AuthController extends Controller
             'role'                => 'student',
             'can_update_username' => true,
         ];
-
-        // 6. Si es tradicional, enviar OTP. Si es Google, no se envía nada.
-        if (!$request->has('google_token')) {
-            VerificationCode::active($user->id, 'email_verification', 'email')
-                ->update(['used_at' => now()]);
-
-            $plainCode = VerificationCode::generateCode(6);
-
-            $verificationCode = VerificationCode::create([
-                'user_id'    => $user->id,
-                'code'       => Hash::make($plainCode),
-                'type'       => 'email_verification',
-                'channel'    => 'email',
-                'expires_at' => now()->addMinutes(15),
-            ]);
-
-            Mail::to($user->email)->send(new SendOTPCode($user, $plainCode, 'email_verification'));
-
-            $response['message'] = 'Usuario registrado exitosamente. Se ha enviado un código de verificación a tu correo.';
-            $response['verification'] = [
-                'code_sent'          => true,
-                'expires_in_seconds' => now()->diffInSeconds($verificationCode->expires_at),
-            ];
-        }
 
         return response()->json($response, 201);
     }

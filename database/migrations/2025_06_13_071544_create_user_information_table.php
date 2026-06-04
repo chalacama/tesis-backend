@@ -15,9 +15,9 @@ return new class extends Migration
         $table->id();
         $table->date('birthdate');
         // 👇 Ahora guardamos solo IDs numéricos
-        $table->unsignedInteger('province_id');
-        $table->unsignedInteger('canton_id');
-        $table->unsignedInteger('parish_id');
+        $table->unsignedInteger('province_id')->nullable();
+        $table->unsignedInteger('canton_id')->nullable();
+        $table->unsignedInteger('parish_id')->nullable();
 
         $table->enum('sexo', ['MUJER', 'HOMBRE']);
 
