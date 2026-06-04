@@ -30,7 +30,7 @@ return new class extends Migration
             'soltero/a',
         ]);
 
-        $table->enum('discapacidad', ['si', 'no']);
+        $table->enum('discapacidad', ['si', 'no'])->nullable();
 
         $table->enum('discapacidad_permanente', [
             'intelectual (retraso mental)',
