@@ -76,10 +76,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/phone/update', [VerificationController::class, 'phoneUpdate'])->middleware('permission:profile.update');
         Route::put('/cedula/update', [VerificationController::class, 'cedulaUpdate'])->middleware('permission:profile.update');
         Route::prefix('/verified')->group(function () {
-            Route::put('/phone', [UserController::class, 'verifiedPhone'])->middleware('permission:profile.update');
-            Route::put('/email', [UserController::class, 'verifiedEmail'])->middleware('permission:profile.update');
+            Route::put('/phone', [VerificationController::class, 'verifiedPhone'])->middleware('permission:profile.update');
+            Route::put('/email', [VerificationController::class, 'verifiedEmail'])->middleware('permission:profile.update');
         });
-        
     });
 
     Route::prefix('course')->group(function () {
@@ -101,9 +100,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('dashboard')->group(function () {
         Route::get('/index', [PanelController::class, 'index'])->middleware('permission:course.read.hidden');
         Route::get('/{course}/show', [PanelController::class, 'show'])->middleware('permission:course.read.hidden');
-    });
-    Route::prefix('user')->group(function () {
-        Route::get('/index', [UserController::class, 'index'])->middleware('permission:user.read.hidden');
     });
     Route::prefix('role')->group(function () {
         Route::get('/index', [RoleController::class, 'index'])->middleware('permission:user.read.hidden');

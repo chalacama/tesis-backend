@@ -8,6 +8,10 @@ use App\Models\VerificationCode;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Validation\Rule;
 
 class VerificationController extends Controller
 {
@@ -145,8 +149,19 @@ class VerificationController extends Controller
         $user->email_verified_at = null;
         $user->save();
 
-        // 2. Desencadenar flujo de verificación (enviar código nuevo)
+        // 2. Desencadenar flujo de verificación (enviar código)
+        $codePlain = VerificationCode::generateCode();
+        VerificationCode::where('user_id', $user->id)->where('type', 'email_verification')->delete();
+        
+        VerificationCode::create([
+            'user_id'    => $user->id,
+            'code'       => Hash::make($codePlain),
+            'type'       => 'email_verification',
+            'channel'    => 'email',
+            'expires_at' => now()->addMinutes(15),
+        ]);
 
+        Mail::mailer('gmail')->to($user->email)->send(new SendOTPCode($user, $codePlain, 'email_verification'));
 
         // 3. Retornar respuesta estándar
         return response()->json([
@@ -190,9 +205,24 @@ class VerificationController extends Controller
         $user->phone_verified_at = null;
         $user->save();
 
-        // 2. Desencadenar flujo de verificación (enviar código nuevo)
-
+        // 2. Desencadenar flujo de verificación (enviar código)
+        $codePlain = VerificationCode::generateCode();
+        VerificationCode::where('user_id', $user->id)->where('type', 'phone_verification')->delete();
         
+        VerificationCode::create([
+            'user_id'    => $user->id,
+            'code'       => Hash::make($codePlain),
+            'type'       => 'phone_verification',
+            'channel'    => 'whatsapp',
+            'expires_at' => now()->addMinutes(15),
+        ]);
+
+        $botToken = config('services.telegram.bot_token');
+        Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
+            'chat_id' => $user->phone_number,
+            'text'    => "Tu código de verificación de DigiMentor es: {$codePlain}",
+        ]);
+
         // 3. Retornar respuesta estándar
         return response()->json([
             'message' => 'Se ha enviado un código de verificación al teléfono.' ,
@@ -239,6 +269,48 @@ class VerificationController extends Controller
             'cedula_verified_at' => null,
         ]);
     
+    }
+
+    public function verifiedEmail(Request $request): JsonResponse
+    {
+        $request->validate(['code' => 'required|string']);
+        $user = $request->user();
+
+        $verification = VerificationCode::active($user->id, 'email_verification')->first();
+
+        if (!$verification || !Hash::check($request->code, $verification->code)) {
+            return response()->json(['message' => 'Código inválido o expirado'], 400);
+        }
+
+        $verification->markAsUsed();
+        $user->email_verified_at = now();
+        $user->save();
+
+        return response()->json([
+            'message' => 'Correo verificado correctamente', 
+            'email_verified_at' => $user->email_verified_at
+        ]);
+    }
+
+    public function verifiedPhone(Request $request): JsonResponse
+    {
+        $request->validate(['code' => 'required|string']);
+        $user = $request->user();
+
+        $verification = VerificationCode::active($user->id, 'phone_verification')->first();
+
+        if (!$verification || !Hash::check($request->code, $verification->code)) {
+            return response()->json(['message' => 'Código inválido o expirado'], 400);
+        }
+
+        $verification->markAsUsed();
+        $user->phone_verified_at = now();
+        $user->save();
+
+        return response()->json([
+            'message' => 'Teléfono verificado correctamente', 
+            'phone_verified_at' => $user->phone_verified_at
+        ]);
     }
 
 }

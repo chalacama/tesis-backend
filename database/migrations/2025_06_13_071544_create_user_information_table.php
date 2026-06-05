@@ -13,13 +13,13 @@ return new class extends Migration
 {
     Schema::create('user_information', function (Blueprint $table) {
         $table->id();
-        $table->date('birthdate');
+        $table->date('birthdate')->nullable();
         // 👇 Ahora guardamos solo IDs numéricos
         $table->unsignedInteger('province_id')->nullable();
         $table->unsignedInteger('canton_id')->nullable();
         $table->unsignedInteger('parish_id')->nullable();
 
-        $table->enum('sexo', ['MUJER', 'HOMBRE']);
+        $table->enum('sexo', ['MUJER', 'HOMBRE'])->nullable();
 
         $table->enum('estado_civil', [
             'casado/a',
@@ -28,7 +28,7 @@ return new class extends Migration
             'divorciado/a',
             'viudo/a',
             'soltero/a',
-        ]);
+        ])->nullable();
 
         $table->enum('discapacidad', ['si', 'no'])->nullable();
 
