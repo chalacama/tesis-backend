@@ -20,7 +20,7 @@ class UserController extends Controller
     {
         // Query base
         $query = User::query()
-            ->select(['id', 'name', 'lastname', 'username', 'profile_picture_url', 'email', 'created_at'])
+            ->select(['id', 'name', 'lastname', 'username', 'profile_picture_url', 'email', 'phone_number', 'cedula', 'email_verified_at', 'phone_verified_at', 'cedula_verified_at', 'created_at'])
             ->with(['roles:id,name']); // usa HasRoles del modelo User
 
         /**
@@ -101,6 +101,11 @@ class UserController extends Controller
                 'lastname'            => $user->lastname,
                 'username'            => $user->username,
                 'email'               => $user->email,
+                'phone_number'        => $user->phone_number,
+                'cedula'              => $user->cedula,
+                'email_verified_at'   => $user->email_verified_at,
+                'phone_verified_at'   => $user->phone_verified_at,
+                'cedula_verified_at'  => $user->cedula_verified_at,
                 'profile_picture_url' => $user->profile_picture_url,
                 'rol'                 => $role?->name, // nombre del rol (admin, tutor, student, etc.)
                 'role_id'             => $role?->id,
@@ -111,36 +116,121 @@ class UserController extends Controller
         return response()->json($paginator);
     }
     /**
-     * Cambiar el rol principal de un usuario.
-     * PUT /api/user/{user}/change-role
-     * Body JSON: { "role_id": 1 }
+     * Actualizar usuario: rol, email, teléfono, y cédula.
+     * PUT /api/user/{user}/update
      */
-    public function changeRole(Request $request, User $user): JsonResponse
+    public function update(Request $request, User $user): JsonResponse
     {
-        // 1) Validar role_id
         $validated = $request->validate([
-            'role_id' => ['required', 'integer', 'exists:roles,id'],
+            'role_id'      => ['nullable', 'integer', 'exists:roles,id'],
+            'email'        => ['nullable', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'phone_number' => ['nullable', 'string', 'max:13', Rule::unique('users')->ignore($user->id)],
+            'cedula'       => ['nullable', 'string', 'max:10', Rule::unique('users')->ignore($user->id)],
         ]);
 
-        // 2) Buscar el rol
-        $role = Role::findOrFail($validated['role_id']);
+        if ($request->has('role_id') && $request->role_id) {
+            $role = Role::findOrFail($request->role_id);
+            $user->syncRoles([$role->name]);
+        }
 
-        // 3) Asignar solo este rol al usuario (remueve los anteriores)
-        $user->syncRoles([$role->name]);
+        if ($request->has('email')) {
+            $user->email = $request->email;
+            if ($user->isDirty('email')) {
+                $user->email_verified_at = null;
+                $user->google_id = null;
+            }
+        }
 
-        // 4) Recargar relación roles para responder con datos actualizados
+        if ($request->has('phone_number')) {
+            $user->phone_number = $request->phone_number;
+            if ($user->isDirty('phone_number')) {
+                $user->phone_verified_at = null;
+            }
+        }
+        // Validar campos requeridos para nueva cédula
+        $request->validate([
+            'name'      => ['required', 'string', 'max:255'],
+            'lastname'  => ['required', 'string', 'max:255'],
+            'birthdate' => ['required', 'date_format:Y-m-d'],
+        ]);
+        $user->name = $request->name;
+        $user->lastname = $request->lastname;
+        $user->birthdate = $request->birthdate;
+
+        if ($request->has('cedula')) {
+            $newCedula = $request->cedula;
+            
+            if (is_null($newCedula)) {
+                $user->cedula = null;
+                $user->cedula_verified_at = null;
+            } elseif ($newCedula !== $user->cedula) {
+
+
+                // Validación con Registro Civil
+                $response = \Illuminate\Support\Facades\Http::asForm()->post('https://si.secap.gob.ec/sisecap/logeo_web/json/busca_persona_registro_civil.php', [
+                    'documento' => $newCedula,
+                    'tipo'      => '1',
+                ]);
+
+                if ($response->successful()) {
+                    $data = $response->json();
+                    $person = is_array($data) && isset($data[0]) ? $data[0] : $data;
+
+                    if (isset($person['nombres']) && isset($person['apellidos'])) {
+                        $apiNombres = preg_replace('/\s+/', ' ', trim(strtoupper($person['nombres'])));
+                        $apiApellidos = preg_replace('/\s+/', ' ', trim(strtoupper($person['apellidos'])));
+                        $reqName = preg_replace('/\s+/', ' ', trim(strtoupper($request->name)));
+                        $reqLastname = preg_replace('/\s+/', ' ', trim(strtoupper($request->lastname)));
+                        
+                        $apiBirthdate = null;
+                        if (isset($person['fechaNacimiento'])) {
+                            try {
+                                $apiBirthdate = \Carbon\Carbon::createFromFormat('d/m/Y', $person['fechaNacimiento'])->format('Y-m-d');
+                            } catch (\Exception $e) {
+                                $apiBirthdate = date('Y-m-d', strtotime(str_replace('/', '-', $person['fechaNacimiento'])));
+                            }
+                        }
+
+                        if ($apiNombres !== $reqName || $apiApellidos !== $reqLastname || ($apiBirthdate && $apiBirthdate !== $request->birthdate)) {
+                            return response()->json([
+                                'message' => 'Los nombres, apellidos o fecha de nacimiento no coinciden con los datos del Registro Civil para esta cédula',
+                            ], 422);
+                        }
+
+                        $user->cedula = $newCedula;
+                        $user->name = $request->name;
+                        $user->lastname = $request->lastname;
+                        $user->cedula_verified_at = now();
+                        
+                        // Actualizar UserInformation
+                        $userInfo = $user->userInformation()->firstOrCreate(['user_id' => $user->id]);
+                        $userInfo->sexo = $person['sexo'] ?? $userInfo->sexo;
+                        $userInfo->birthdate = $request->birthdate;
+                        $userInfo->save();
+
+                    } else {
+                        return response()->json(['message' => 'Los nombres, apellidos o fecha de nacimiento no coinciden con los datos del Registro Civil para esta cédula'], 422);
+                    }
+                } else {
+                    return response()->json(['message' => 'No se pudo validar la cédula con el Registro Civil en este momento.'], 500);
+                }
+            }
+        }
+
+        $user->save();
         $user->load('roles:id,name');
-
         $currentRole = $user->roles->first();
 
         return response()->json([
-            'message' => 'Rol actualizado correctamente.',
+            'message' => 'Usuario actualizado correctamente.',
             'data' => [
                 'id'                  => $user->id,
                 'name'                => $user->name,
                 'lastname'            => $user->lastname,
                 'username'            => $user->username,
                 'email'               => $user->email,
+                'phone_number'        => $user->phone_number,
+                'cedula'              => $user->cedula,
                 'profile_picture_url' => $user->profile_picture_url,
                 'rol'                 => $currentRole?->name,
                 'role_id'             => $currentRole?->id,

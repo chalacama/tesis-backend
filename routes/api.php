@@ -104,7 +104,6 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     Route::prefix('user')->group(function () {
         Route::get('/index', [UserController::class, 'index'])->middleware('permission:user.read.hidden');
-        Route::put('/{user}/change-role', [UserController::class, 'changeRole'])->middleware('permission:user.read.hidden');
     });
     Route::prefix('role')->group(function () {
         Route::get('/index', [RoleController::class, 'index'])->middleware('permission:user.read.hidden');
