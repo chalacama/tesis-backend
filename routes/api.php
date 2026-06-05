@@ -12,7 +12,7 @@ use App\Http\Controllers\{
     CompletedChapterController, TestController, HistoryController, CertificateController, EducationalLevelController,
     ImageProxyController, NotificationController, UserCategoryInterestController, UserController, 
     RatingCourseController, PanelController, RoleController, EcuadorLocationController, EducationalUnitController,
-    TypeThumbnailController
+    TypeThumbnailController, IdentifierController
 };
 
 
@@ -52,10 +52,10 @@ Route::prefix('auth')->group(function () {
         Route::post('/update', [AuthController::class, 'updatePassword']);
     });
     Route::prefix('validate')->group(function () {
-        Route::get('/username', [UserController::class, 'validateUsername']);
-        Route::get('/email', [UserController::class, 'validateEmail']);
-        Route::get('/phone', [UserController::class, 'validatePhone']);
-        Route::get('/cedula', [UserController::class, 'validateCedula']);
+        Route::get('/username', [IdentifierController::class, 'validateUsername']);
+        Route::get('/email', [IdentifierController::class, 'validateEmail']);
+        Route::post('/phone', [IdentifierController::class, 'validatePhone']);
+        Route::get('/cedula', [IdentifierController::class, 'validateCedula']);
     });
 });
 
