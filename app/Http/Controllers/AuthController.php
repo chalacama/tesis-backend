@@ -13,9 +13,10 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 use Google\Client as GoogleClient;
 use Carbon\Carbon;
-
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 class AuthController extends Controller
 {
+    use AuthorizesRequests;
     /**
      * LOGIN UNIFICADO
      * Acepta credenciales tradicionales (email/password) O un token de Google (google_token).

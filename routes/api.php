@@ -12,7 +12,7 @@ use App\Http\Controllers\{
     CompletedChapterController, TestController, HistoryController, CertificateController, EducationalLevelController,
     ImageProxyController, NotificationController, UserCategoryInterestController, UserController, 
     RatingCourseController, PanelController, RoleController, EcuadorLocationController, EducationalUnitController,
-    TypeThumbnailController, VerificationCodeController
+    TypeThumbnailController
 };
 
 
@@ -46,16 +46,20 @@ Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
-});
-
-// == RUTAS PÚBLICAS DE VERIFICACIÓN (Password Reset - usuario NO autenticado) ==
-Route::prefix('verification')->group(function () {
-    Route::prefix('password-reset')->group(function () {
-        Route::post('/send', [VerificationCodeController::class, 'sendCode']);
-        Route::post('/verify', [VerificationCodeController::class, 'verifyCode']);
-        Route::post('/check-status', [VerificationCodeController::class, 'checkStatus']);
+    Route::prefix('/recover-password')->group(function () {
+        Route::post('/send-code', [AuthController::class, 'sendCode']);
+        Route::post('/verify', [AuthController::class, 'verify']);
+        Route::post('/update', [AuthController::class, 'updatePassword']);
+    });
+    Route::prefix('validate')->group(function () {
+        Route::get('/username', [UserController::class, 'validateUsername']);
+        Route::get('/email', [UserController::class, 'validateEmail']);
+        Route::get('/phone', [UserController::class, 'validatePhone']);
+        Route::get('/cedula', [UserController::class, 'validateCedula']);
     });
 });
+
+
 Route::prefix('certificate')->group(function () {
         Route::get('/show', [CertificateController::class, 'show']);
         Route::get('/image-proxy', [ImageProxyController::class, 'show']);
@@ -63,11 +67,19 @@ Route::prefix('certificate')->group(function () {
 // == RUTAS DE GESTIÓN (Protegidas por autenticación y permisos) ==
 Route::middleware('auth:sanctum')->group(function () {
 
-    // == RUTAS PROTEGIDAS DE VERIFICACIÓN (Email/Phone - usuario autenticado) ==
-    Route::prefix('verification')->group(function () {
-        Route::post('/send', [VerificationCodeController::class, 'sendCode']);
-        Route::post('/verify', [VerificationCodeController::class, 'verifyCode']);
-        Route::post('/check-status', [VerificationCodeController::class, 'checkStatus']);
+    Route::prefix('/user')->group(function () {
+        Route::get('/index', [UserController::class, 'index'])->middleware('permission:user.read.hidden');
+        Route::put('/{user}/update', [UserController::class, 'update'])->middleware('permission:user.read.hidden');
+        Route::put('/password/update', [UserController::class, 'passwordUpdate'])->middleware('permission:profile.update');
+        Route::put('/username/update', [UserController::class, 'usernameUpdate'])->middleware('permission:profile.update');
+        Route::put('/email/update', [UserController::class, 'emailUpdate'])->middleware('permission:profile.update');
+        Route::put('/phone/update', [UserController::class, 'phoneUpdate'])->middleware('permission:profile.update');
+        Route::put('/cedula/update', [UserController::class, 'cedulaUpdate'])->middleware('permission:profile.update');
+        Route::prefix('/verified')->group(function () {
+            Route::put('/phone', [UserController::class, 'verifiedPhone'])->middleware('permission:profile.update');
+            Route::put('/email', [UserController::class, 'verifiedEmail'])->middleware('permission:profile.update');
+        });
+        
     });
 
     Route::prefix('course')->group(function () {
@@ -193,10 +205,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/show', [UserCategoryInterestController::class, 'show'])->middleware('permission:profile.read');
             Route::put('/update', [UserCategoryInterestController::class, 'update'])->middleware('permission:profile.update');
         });
-        Route::prefix('/user')->group(function () {
-            Route::put('/update', [UserController::class, 'update'])->middleware('permission:profile.update');
-            Route::get('/validate-username', [UserController::class, 'validateUsername'])->middleware('permission:profile.update');
-        });
+
 
         Route::prefix('portfolio')->group(function () {
             Route::get('/@{username}', [PortfolioController::class, 'show'])->middleware('permission:user.read');
@@ -209,7 +218,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('certificate')->group(function () {
         Route::get('/index', [CertificateController::class, 'index'])->middleware('permission:course.read');
     });
-
+    
     Route::prefix('sede')->group(function () {
         Route::get('/index', [SedeController::class, 'index'])->middleware('permission:education.read');
         Route::get('/index-admin', [SedeController::class, 'indexAdmin'])->middleware('permission:education.read.hidden');

@@ -13,7 +13,7 @@ class UserController extends Controller
 {
     use AuthorizesRequests;
 
-    public function update(Request $request)
+    public function usernameUpdate(Request $request)
     {
         $user = $request->user();
 
@@ -48,9 +48,9 @@ class UserController extends Controller
 
         // Regla de tiempo:
         // - Si username_at es null -> primer cambio permitido siempre
-        // - Si NO es null -> debe haber pasado al menos 3 meses
+        // - Si NO es null -> debe haber pasado al menos 6 meses
         if ($user->username_at !== null) {
-            $limiteTresMeses = $user->username_at->copy()->addMonths(3);
+            $limiteTresMeses = $user->username_at->copy()->addMonths(6);
 
             if (now()->lt($limiteTresMeses)) {
                 return response()->json([
@@ -88,7 +88,7 @@ class UserController extends Controller
                 'regex:/^[a-z0-9._-]+$/',
             ],
         ], [
-            'username.regex' => 'El usuario solo puede contener letras minúsculas, números, puntos (.) y guiones bajos (_). Sin espacios ni mayúsculas.',
+            'username.regex' => 'El usuario solo puede contener letras minúsculas, números, puntos (.) y guiones (_-). Sin espacios ni mayúsculas.',
             'username.min' => 'El nombre de usuario debe tener al menos 3 caracteres.',
         ]);
 
