@@ -12,7 +12,7 @@ use App\Http\Controllers\{
     CompletedChapterController, TestController, HistoryController, CertificateController, EducationalLevelController,
     ImageProxyController, NotificationController, UserCategoryInterestController, UserController, 
     RatingCourseController, PanelController, RoleController, EcuadorLocationController, EducationalUnitController,
-    TypeThumbnailController, IdentifierController
+    TypeThumbnailController, IdentifierController, VerificationController
 };
 
 
@@ -70,11 +70,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('/user')->group(function () {
         Route::get('/index', [UserController::class, 'index'])->middleware('permission:user.read.hidden');
         Route::put('/{user}/update', [UserController::class, 'update'])->middleware('permission:user.read.hidden');
-        Route::put('/password/update', [UserController::class, 'passwordUpdate'])->middleware('permission:profile.update');
-        Route::put('/username/update', [UserController::class, 'usernameUpdate'])->middleware('permission:profile.update');
-        Route::put('/email/update', [UserController::class, 'emailUpdate'])->middleware('permission:profile.update');
-        Route::put('/phone/update', [UserController::class, 'phoneUpdate'])->middleware('permission:profile.update');
-        Route::put('/cedula/update', [UserController::class, 'cedulaUpdate'])->middleware('permission:profile.update');
+        Route::put('/password/update', [VerificationController::class, 'passwordUpdate'])->middleware('permission:profile.update');
+        Route::put('/username/update', [VerificationController::class, 'usernameUpdate'])->middleware('permission:profile.update');
+        Route::put('/email/update', [VerificationController::class, 'emailUpdate'])->middleware('permission:profile.update');
+        Route::put('/phone/update', [VerificationController::class, 'phoneUpdate'])->middleware('permission:profile.update');
+        Route::put('/cedula/update', [VerificationController::class, 'cedulaUpdate'])->middleware('permission:profile.update');
         Route::prefix('/verified')->group(function () {
             Route::put('/phone', [UserController::class, 'verifiedPhone'])->middleware('permission:profile.update');
             Route::put('/email', [UserController::class, 'verifiedEmail'])->middleware('permission:profile.update');

@@ -124,7 +124,7 @@ class UserController extends Controller
         $validated = $request->validate([
             'role_id'      => ['nullable', 'integer', 'exists:roles,id'],
             'email'        => ['nullable', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
-            'phone_number' => ['nullable', 'string', 'max:13', Rule::unique('users')->ignore($user->id)],
+            'phone_number' => ['nullable', 'string', 'max:13', 'regex:/^\+593[0-9]{9}$/',Rule::unique('users')->ignore($user->id)],
             'cedula'       => ['nullable', 'string', 'max:10', Rule::unique('users')->ignore($user->id)],
         ]);
 
