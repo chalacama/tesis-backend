@@ -45,7 +45,7 @@ class UsersSeeder extends Seeder
                 'password' => '123.Password',
                 'email_verified_at' => now(),
                 'username_at' => now(),
-                'phone_verified_at' => now(), // Corregido
+                //'phone_verified_at' => now(), // Corregido
                 'cedula_verified_at' => now(), // Corregido
             ],
             [
