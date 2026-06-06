@@ -127,7 +127,7 @@ class VerificationController extends Controller
         // Validación para email
         $validatedData = $request->validate([
             'email' => [
-                'required',
+                'nullable',
                 'string',
                 'email',
                 Rule::unique('users', 'email')->ignore($user->id),
@@ -181,7 +181,7 @@ class VerificationController extends Controller
         // Validación para phone
         $validatedData = $request->validate([
             'phone_number' => [
-                'required',
+                'nullable',
                 'string',
                 'min:10',
                 'max:15',
@@ -201,7 +201,8 @@ class VerificationController extends Controller
             ]);
         }
 
-        // 1. Marcar como no verificado
+        // 1. Marcar como no verificado y ACTUALIZAR EL NÚMERO
+        $user->phone_number = $newPhone; // <--- ¡Esta es la línea que faltaba!
         $user->phone_verified_at = null;
         $user->save();
 
@@ -241,7 +242,7 @@ class VerificationController extends Controller
         // Validación para cedula
         $validatedData = $request->validate([
             'cedula' => [
-                'required',
+                'nullable',
                 'string',
                 'min:10',
                 'max:10',

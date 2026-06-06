@@ -73,7 +73,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/password/update', [VerificationController::class, 'passwordUpdate'])->middleware('permission:profile.update');
         Route::put('/username/update', [VerificationController::class, 'usernameUpdate'])->middleware('permission:profile.update');
         Route::put('/email/update', [VerificationController::class, 'emailUpdate'])->middleware('permission:profile.update');
-        Route::put('/phone/update', [VerificationController::class, 'phoneUpdate'])->middleware('permission:profile.update');
+        Route::post('/phone/update', [VerificationController::class, 'phoneUpdate'])->middleware('permission:profile.update');
         Route::put('/cedula/update', [VerificationController::class, 'cedulaUpdate'])->middleware('permission:profile.update');
         Route::prefix('/verified')->group(function () {
             Route::put('/phone', [VerificationController::class, 'verifiedPhone'])->middleware('permission:profile.update');

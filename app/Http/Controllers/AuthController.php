@@ -92,12 +92,28 @@ class AuthController extends Controller
 
         $user = User::where($loginField, $identifier)->firstOrFail();
 
-        // Verificar que el correo esté verificado (solo para login tradicional)
-        if (is_null($user->email_verified_at)) {
+        // Verificar que el identificador usado esté verificado
+        if ($loginField === 'email' && is_null($user->email_verified_at)) {
             return response()->json([
-                'message' => 'Tu correo electrónico no ha sido verificado. Por favor, ingresa el código de verificación.',
+                'message' => 'Tu correo electrónico no ha sido verificado. Por favor, inicie sesión con su usuario para verificarlo.',
                 'action'  => 'verify_email',
                 'email'   => $user->email,
+            ], 403);
+        }
+
+        if ($loginField === 'phone_number' && is_null($user->phone_verified_at)) {
+            return response()->json([
+                'message' => 'Tu número de teléfono no ha sido verificado. Por favor, inicie sesión con su usuario para verificarlo.',
+                'action'  => 'verify_phone',
+                'phone_number' => $user->phone_number,
+            ], 403);
+        }
+
+        if ($loginField === 'cedula' && is_null($user->cedula_verified_at)) {
+            return response()->json([
+                'message' => 'Tu cédula no ha sido verificada. Por favor, inicie sesión con su usuario para verificarla.',
+                'action'  => 'verify_cedula',
+                'cedula'  => $user->cedula,
             ], 403);
         }
 
@@ -248,14 +264,8 @@ class AuthController extends Controller
             'sexo'      => $sexo,
         ]);
 
-        $response = [
-            'message'             => 'Usuario registrado exitosamente.',
-            'user'                => $user,
-            'role'                => 'student',
-            'can_update_username' => true,
-        ];
-
-        return response()->json($response, 201);
+        // Autologuear al usuario tras el registro
+        return $this->generateLoginResponse($user, $request->has('google_token'));
     }
 
     /**

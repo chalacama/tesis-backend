@@ -31,7 +31,7 @@ return new class extends Migration
             // Por dónde se envió
             $table->enum('channel', [
                 'email', 
-                'whatsapp'
+                'whatsapp-telegram'
             ])->default('email');
             
             // Control de tiempo y uso

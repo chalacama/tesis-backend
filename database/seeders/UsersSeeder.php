@@ -39,7 +39,6 @@ class UsersSeeder extends Seeder
                 'name' => 'LUIS FELIPE', // id : 2
                 'lastname' => 'CHALACAMA MENDOZA',
                 'username' => 'chalacama',
-                'username_at' => now(),
                 'cedula' => '1316675295',
                 'phone_number' => '+593997047184',
                 'email' => 'luis.chalacama@espam.edu.ec',
@@ -53,13 +52,10 @@ class UsersSeeder extends Seeder
                 'name' => 'Philip', // id : 3
                 'lastname' => 'Chalacama',
                 'username' => 'philip.chala',
-                'username_at' => now(),
                 'email' => 'filyp007lfcm117@gmail.com',
                 'password' => '123.Password',
                 'email_verified_at' => now(),
                 'username_at' => now(),
-                'phone_verified_at' => now(), // Corregido
-                'cedula_verified_at' => now(), // Corregido
             ],
         ];
 
@@ -75,7 +71,6 @@ class UsersSeeder extends Seeder
                 'name' => 'Yorlli', // id : 4
                 'lastname' => 'Chalacama',
                 'username' => 'yorlli.chala',
-                'username_at' => now(),
                 'phone_number' => '+593983088926',
                 'cedula' => '1306226547',
                 'email' => 'yoryi.chalacama@gmail.com',
