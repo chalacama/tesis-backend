@@ -188,6 +188,10 @@ class VerificationController extends Controller
                 'regex:/^\+593[0-9]{9}$/',
                 Rule::unique('users', 'phone_number')->ignore($user->id),
             ],
+            'channel' => [
+                'required',
+                'in:whatsapp,telegram'
+            ]
         ]);
 
         $newPhone = $validatedData['phone_number'];
@@ -207,22 +211,7 @@ class VerificationController extends Controller
         $user->save();
 
         // 2. Desencadenar flujo de verificación (enviar código)
-        $codePlain = VerificationCode::generateCode();
-        VerificationCode::where('user_id', $user->id)->where('type', 'phone_verification')->delete();
         
-        VerificationCode::create([
-            'user_id'    => $user->id,
-            'code'       => Hash::make($codePlain),
-            'type'       => 'phone_verification',
-            'channel'    => 'whatsapp',
-            'expires_at' => now()->addMinutes(15),
-        ]);
-
-        $botToken = config('services.telegram.bot_token');
-        Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
-            'chat_id' => $user->phone_number,
-            'text'    => "Tu código de verificación de DigiMentor es: {$codePlain}",
-        ]);
 
         // 3. Retornar respuesta estándar
         return response()->json([

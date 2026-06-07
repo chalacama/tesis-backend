@@ -19,7 +19,9 @@ return new class extends Migration
             
             // El código en sí (ej. "482910")
             // Recomendación: Guarda el código encriptado (Hash) por seguridad
-            $table->string('code'); 
+            $table->string('code')->nullable(); 
+            //Campo para identificar al usuario en el chat bot de whatsapp y telegram para eviar el spam.
+            $table->string('code_verify')->nullable();
             
             // Para qué sirve este código
             $table->enum('type', [
@@ -36,7 +38,7 @@ return new class extends Migration
             ])->default('email');
             
             // Control de tiempo y uso
-            $table->timestamp('expires_at'); // Cuándo caduca (ej. 15 minutos)
+            $table->timestamp('expires_at')->nullable(); // Cuándo caduca (ej. 15 minutos)
             $table->timestamp('used_at')->nullable(); // Para saber si ya se usó y no dejarlo usar dos veces
             
             $table->timestamps();
