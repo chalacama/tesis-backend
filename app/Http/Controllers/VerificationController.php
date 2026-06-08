@@ -265,6 +265,7 @@ class VerificationController extends Controller
     {
         $request->validate(['code' => 'required|string']);
         $user = $request->user();
+        $this->authorize('update', $user);
 
         $verification = VerificationCode::active($user->id, 'email_verification')->first();
 
@@ -278,7 +279,9 @@ class VerificationController extends Controller
 
         return response()->json([
             'message' => 'Correo verificado correctamente', 
-            'email_verified_at' => $user->email_verified_at
+            'email_verified_at' => $user->email_verified_at,
+            //  $table->enum('type'   'email_verification'  ,'phone_verification' ,password_reset 
+            'type' => $verification->type,
         ]);
     }
 
@@ -286,6 +289,7 @@ class VerificationController extends Controller
     {
         $request->validate(['code' => 'required|string']);
         $user = $request->user();
+        $this->authorize('update', $user);
 
         $verification = VerificationCode::active($user->id, 'phone_verification')->first();
 
@@ -299,7 +303,8 @@ class VerificationController extends Controller
 
         return response()->json([
             'message' => 'Teléfono verificado correctamente', 
-            'phone_verified_at' => $user->phone_verified_at
+            'phone_verified_at' => $user->phone_verified_at,
+            'type' => $verification->type,
         ]);
     }
 

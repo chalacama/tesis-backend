@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-
+use Illuminate\Support\Facades\Hash;
 class VerificationCode extends Model
 {
     //
@@ -47,10 +47,24 @@ class VerificationCode extends Model
         $this->update(['used_at' => now()]);
     }
 
-    // Método para generar código
+    // Método para generar código unico
     public static function generateCode($length = 6)
     {
-        return str_pad(mt_rand(0, pow(10, $length) - 1), $length, '0', STR_PAD_LEFT);
+        // Generate 6 random digits unique (000000 - 999999)
+        do {
+            $code = str_pad(mt_rand(0, pow(10, $length) - 1), $length, '0', STR_PAD_LEFT);
+        } while (self::where('code', Hash::make($code))->exists());
+        
+        return $code;
+    }
+        public static function generateVerifyCode($length = 6)
+    {
+        // Generate 6 random digits unique (000000 - 999999)
+        do {
+            $code = str_pad(mt_rand(0, pow(10, $length) - 1), $length, '0', STR_PAD_LEFT);
+        } while (self::where('code', Hash::make($code))->exists());
+        
+        return $code;
     }
     
 }

@@ -335,10 +335,25 @@ class AuthController extends Controller
         }
 
         
-        // Desencadenar flujo de verificación (enviar código)
+        // Desencadenar flujo de verificación
+        $code = VerificationCode::generateCode();
+
+        $verificationCode = VerificationCode::create([
+            'user_id' => $user->id,
+            'code' => Hash::make($code),
+            'type' => 'password_reset',
+            'channel' => 'email',
+            'expires_at' => now()->addMinutes(10)
+
+        ]);
+
+        // TO-DO: Enviar el código al usuario por correo electrónico
+        
 
         return response()->json([
             'message' => 'Código enviado exitosamente.',
+            'channel' => 'email',
+            'expires_at' => $verificationCode->expires_at,
         ]);
     }
     
@@ -348,9 +363,87 @@ class AuthController extends Controller
             'phone_number' => 'required',
             'channel'=>'required|in:whatsapp,telegram'
         ]);
-        // Desencadenar flujo de verificación (enviar código)
+        
+        $user = User::where('phone_number', $request->phone_number)->first();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'El número de teléfono no existe.',
+            ], 404);
+        }
+        
+        // Desencadenar flujo de verificación
+        $code = VerificationCode::generateCode();
+        $codeVerify = VerificationCode::generateVerifyCode();
+
+        $verificationCode = VerificationCode::create([
+            'user_id' => $user->id,
+            'code_verify' => Hash::make($codeVerify),
+            'type' => 'password_reset',
+            'channel' => $request->channel,
+            'code_verify_expires_at' => now()->addMinutes(10)
+
+        ]);
+        // TO-DO: Enviar el código al usuario por whatsapp
+
+        // TO-DO: Enviar el código al usuario por telegram
+
+        return response()->json([
+            'message' => 'Ingresa al chat de '.$request->channel.' para verificar tu código.',
+            'code_verify_expires_at' => $verificationCode->code_verify_expires_at,
+            'code_verify' => $verificationCode->code_verify,
+            'channel' => $verificationCode->channel,
+            'username' => $user->username,
+        ]);
+
         
     }
     
+    //verify
+    public function verify(Request $request): JsonResponse {
+        $request->validate([
+            'code' => 'required',
+            'channel' => 'required|in:whatsapp,telegram,email',
+        ]);
+        
+        $user = $request->user();
+        $verificationCode = VerificationCode::active($user->id, 'password_reset', $request->channel)->first();
+        
+        if (!$verificationCode) {
+            return response()->json([
+                'message' => 'Código de verificación expirado o inválido.',
+            ], 404);
+        }
+        
+        if (!Hash::check($request->code, $verificationCode->code_verify)) {
+            return response()->json([
+                'message' => 'Código de verificación incorrecto.',
+            ], 404);
+        }
+        
+        $verificationCode->used_at = now();
+        $verificationCode->save();
+        
+        return response()->json([
+            'message' => 'Código de verificación correcto.',
+            'code_verified_at' => $verificationCode->used_at,
+            'type' => $verificationCode->type,
+        ]);
+    }
+
+    //updatePassword
+    public function updatePassword(Request $request): JsonResponse {
+        $request->validate([
+            'password' => 'required|string|min:8',
+        ]);
+        
+        $user = $request->user();
+        $user->password = Hash::make($request->password);
+        $user->save();
+        
+        return response()->json([
+            'message' => 'Contraseña actualizada correctamente.',
+        ]);
+    }
 
 }

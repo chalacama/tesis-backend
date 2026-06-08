@@ -39,6 +39,7 @@ return new class extends Migration
             
             // Control de tiempo y uso
             $table->timestamp('expires_at')->nullable(); // Cuándo caduca (ej. 15 minutos)
+            $table->timestamp('code_verify_expires_at')->nullable();
             $table->timestamp('used_at')->nullable(); // Para saber si ya se usó y no dejarlo usar dos veces
             
             $table->timestamps();
