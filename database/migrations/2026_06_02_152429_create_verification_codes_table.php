@@ -21,7 +21,7 @@ return new class extends Migration
             // Recomendación: Guarda el código encriptado (Hash) por seguridad
             $table->string('code')->nullable(); 
             //Campo para identificar al usuario en el chat bot de whatsapp y telegram para eviar el spam.
-            $table->string('code_verify')->nullable();
+            $table->string('code_verify')->nullable()->unique();
             
             // Para qué sirve este código
             $table->enum('type', [

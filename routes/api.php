@@ -47,7 +47,8 @@ Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
     Route::prefix('/recover-password')->group(function () {
-        Route::post('/send-code', [AuthController::class, 'sendCode']);
+        Route::post('/email/send-code', [AuthController::class, 'emailSendCode']);
+        Route::post('/phone/send-code', [AuthController::class, 'phoneSendCode']);
         Route::post('/verify', [AuthController::class, 'verify']);
         Route::post('/update', [AuthController::class, 'updatePassword']);
     });

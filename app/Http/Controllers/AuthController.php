@@ -319,4 +319,38 @@ class AuthController extends Controller
 
         return response()->json($responseData);
     }
+    
+    //emailSendCode
+    public function emailSendCode(Request $request): JsonResponse {
+        $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'El correo electrónico no existe.',
+            ], 404);
+        }
+
+        
+        // Desencadenar flujo de verificación (enviar código)
+
+        return response()->json([
+            'message' => 'Código enviado exitosamente.',
+        ]);
+    }
+    
+    //phoneSendCode
+    public function phoneSendCode(Request $request): JsonResponse {
+        $request->validate([
+            'phone_number' => 'required',
+            'channel'=>'required|in:whatsapp,telegram'
+        ]);
+        // Desencadenar flujo de verificación (enviar código)
+        
+    }
+    
+
 }
