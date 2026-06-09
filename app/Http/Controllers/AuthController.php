@@ -133,7 +133,7 @@ class AuthController extends Controller
             'name'         => 'required|string|max:255',
             'lastname'     => 'required|string|max:255',
             'username'     => 'required|string|max:255|unique:users,username',
-            'password'     => ['required', 'confirmed', Password::defaults()],
+            'password'     => ['required', 'confirmed', Password::min(8)->letters()->numbers()->symbols()],
             'phone_number' => 'nullable|string|max:13|unique:users,phone_number',
             'cedula'       => 'nullable|string|max:10|unique:users,cedula',
             'birthdate'    => 'required_with:cedula|date_format:Y-m-d',
@@ -361,7 +361,7 @@ class AuthController extends Controller
     public function phoneSendCode(Request $request): JsonResponse {
         $request->validate([
             'phone_number' => 'required',
-            'channel'=>'required|in:whatsapp,telegram'
+            'channel' => 'required|in:whatsapp,telegram'
         ]);
         
         $user = User::where('phone_number', $request->phone_number)->first();
@@ -372,61 +372,64 @@ class AuthController extends Controller
             ], 404);
         }
         
-        // Desencadenar flujo de verificación
-        $code = VerificationCode::generateCode();
+        // 1. Código real (El que el bot da al usuario para cambiar la clave)
+        $code = VerificationCode::generateCode(); 
+        
+        // 2. Pre-código (El que el usuario le envía al bot)
         $codeVerify = VerificationCode::generateVerifyCode();
 
         $verificationCode = VerificationCode::create([
             'user_id' => $user->id,
-            'code_verify' => Hash::make($codeVerify),
+            'code' => Hash::make($code), // GUARDAMOS EL CÓDIGO REAL ENCRIPTADO
+            'code_verify' => Hash::make($codeVerify), // Guardamos el pre-código encriptado
             'type' => 'password_reset',
             'channel' => $request->channel,
-            'code_verify_expires_at' => now()->addMinutes(10)
-
+            'code_verify_expires_at' => now()->addMinutes(10), // Tiempo para hablarle al bot
+            'expires_at' => now()->addMinutes(15) // Tiempo para usar el código real
         ]);
-        // TO-DO: Enviar el código al usuario por whatsapp
-
-        // TO-DO: Enviar el código al usuario por telegram
 
         return response()->json([
             'message' => 'Ingresa al chat de '.$request->channel.' para verificar tu código.',
             'code_verify_expires_at' => $verificationCode->code_verify_expires_at,
-            'code_verify' => $verificationCode->code_verify,
+            'code_verify' => $codeVerify, // TEXTO PLANO para que el frontend arme el link wa.me/...
             'channel' => $verificationCode->channel,
             'username' => $user->username,
         ]);
-
-        
     }
     
     //verify
     public function verify(Request $request): JsonResponse {
         $request->validate([
+            'identifier' => 'required', // Puede ser el phone_number o email
             'code' => 'required',
-            'channel' => 'required|in:whatsapp,telegram,email',
         ]);
         
-        $user = $request->user();
-        $verificationCode = VerificationCode::active($user->id, 'password_reset', $request->channel)->first();
-        
-        if (!$verificationCode) {
-            return response()->json([
-                'message' => 'Código de verificación expirado o inválido.',
-            ], 404);
+        // Buscar al usuario manualmente
+        $user = User::where('phone_number', $request->identifier)
+                    ->orWhere('email', $request->identifier)->first();
+
+        if (!$user) {
+            return response()->json(['message' => 'Usuario no encontrado.'], 404);
         }
         
-        if (!Hash::check($request->code, $verificationCode->code_verify)) {
+        // Buscar el código sin usar y no expirado
+        $verificationCode = VerificationCode::where('user_id', $user->id)
+            ->where('type', 'password_reset')
+            ->whereNull('used_at')
+            ->where('expires_at', '>', now())
+            ->latest()
+            ->first();
+        
+        // Comparamos contra el 'code' (el real), no contra el 'code_verify'
+        if (!$verificationCode || !Hash::check($request->code, $verificationCode->code)) {
             return response()->json([
-                'message' => 'Código de verificación incorrecto.',
-            ], 404);
+                'message' => 'Código de verificación incorrecto o expirado.',
+            ], 400);
         }
         
-        $verificationCode->used_at = now();
-        $verificationCode->save();
-        
+        // IMPORTANTE: No hacemos $verificationCode->used_at = now(); todavía.
         return response()->json([
             'message' => 'Código de verificación correcto.',
-            'code_verified_at' => $verificationCode->used_at,
             'type' => $verificationCode->type,
         ]);
     }
@@ -434,12 +437,41 @@ class AuthController extends Controller
     //updatePassword
     public function updatePassword(Request $request): JsonResponse {
         $request->validate([
-            'password' => 'required|string|min:8',
+            'identifier' => 'required',
+            'code' => 'required',
+            'password' => 'required|string|min:8|confirmed', // 'confirmed' obliga a enviar 'password_confirmation'
         ]);
         
-        $user = $request->user();
+        $user = User::where('phone_number', $request->identifier)
+                    ->orWhere('email', $request->identifier)->first();
+
+        if (!$user) {
+            return response()->json(['message' => 'Usuario no encontrado.'], 404);
+        }
+
+        // Repetimos la validación estricta del código
+        $verificationCode = VerificationCode::where('user_id', $user->id)
+            ->where('type', 'password_reset')
+            ->whereNull('used_at')
+            ->where('expires_at', '>', now())
+            ->latest()
+            ->first();
+
+        if (!$verificationCode || !Hash::check($request->code, $verificationCode->code)) {
+            return response()->json(['message' => 'Código incorrecto o expirado.'], 400);
+        }
+        
+        // 1. Actualizamos la contraseña
         $user->password = Hash::make($request->password);
         $user->save();
+        
+        // 2. Quemamos el código para que no se pueda reusar
+        $verificationCode->used_at = now();
+        $verificationCode->save();
+
+        // 3. (Opcional pero crítico en seguridad): Revocar todas las sesiones previas
+        // Si alguien tenía su cuenta abierta en otro dispositivo, se cerrará.
+        $user->tokens()->delete(); 
         
         return response()->json([
             'message' => 'Contraseña actualizada correctamente.',

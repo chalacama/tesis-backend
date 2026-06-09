@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 
 class VerificationController extends Controller
 {
@@ -22,22 +23,15 @@ class VerificationController extends Controller
         $this->authorize('update', $user);
 
         $validated = $request->validate([
-            'password_old' => ['required', 'string', 'min:6', 'max:255'],
-            'password' => ['required', 'string', 'min:6', 'max:255'],
-            'password_confirmation' => ['required', 'string', 'min:6', 'max:255']
+            'password_old' => ['required', 'string', 'max:255'],
+            'password'     => ['required', 'string','confirmed', Password::min(8)->letters()->numbers()->symbols()],
+
         ]);
 
         $oldPassword = $request->old_password;
         if (!Hash::check($oldPassword, $user->password)) {
             return response()->json([
                 'message' => 'La contraseña anterior no es correcta',
-                'logout_forced' => false
-            ], 422);
-        }
-
-        if ($request->password !== $request->password_confirmation) {
-            return response()->json([
-                'message' => 'Las contraseñas no coinciden',
                 'logout_forced' => false
             ], 422);
         }
