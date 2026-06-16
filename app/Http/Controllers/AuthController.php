@@ -248,6 +248,7 @@ class AuthController extends Controller
             'name'               => $request->name,
             'lastname'           => $request->lastname,
             'username'           => $request->username,
+            'username_at'        => $request->username ? now() : null,
             'email'              => $email,
             'password'           => Hash::make($request->password), // SIEMPRE usa la que provee el usuario
             'email_verified_at'  => $emailVerifiedAt,
