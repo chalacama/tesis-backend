@@ -42,24 +42,7 @@ LinkedIn: [Tu Perfil Profesional]
 GitHub: [Tu Repositorio]
 
 Opción 2: Estilo Redes Sociales (Instagram / LinkedIn / Facebook)
-Corto, con emojis y enfocado en generar interés rápido.
-
-Texto del Post:
-
-¡Da el salto al desarrollo profesional! 💻✨
-
-Presentamos nuestro nuevo curso: Laravel Básico. 🐘 Si buscas crear aplicaciones web modernas, escalables y seguras, pero no sabes por dónde empezar, este curso es tu puerta de entrada.
-
-🔹 Nivel: Principiante (¡Empezamos desde cero!) 🔹 Modalidad: Exclusiva / Privada 🔒 🔹 Objetivo: Escribir código limpio y eficiente.
-
-Olvídate del "código espagueti" y aprende a programar con los estándares de la industria. 🚀
-
-👇 ¿Te interesa acceder? Escríbenos o visita el link en la bio 👇
-
-🔗 [Link a tu web o formulario de registro]
-Síguenos para más tips de programación: 📸 IG: @TuMarca 💼 LI: Tu Empresa 🐦 TW: @TuMarca
-
-#Laravel #PHP #WebDevelopment #Coding #Programacion #DevLife #CursoOnline',
+Corto, con emojis y enfocado en generar interés rápido.',
         'private' => true,
         'enabled' => true,
         'difficulty_id' => 1,
