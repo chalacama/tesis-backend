@@ -524,143 +524,25 @@ public function getPortfolioByFilter(Request $request): JsonResponse
 
     /* ===================== SUGERENCIAS / HISTORIAL ===================== */
 
-    public function getSuggestionByFilter(Request $request): JsonResponse
+    public function getUserSearchHistory(): JsonResponse
     {
         $user = Auth::user();
-        $term = $this->normalize($request->query('q', ''));
-        $limit = (int) $request->query('limit', 10);
-        $type = $request->query('type', 'title');
 
-        $validTypes = ['title', 'category', 'career', 'difficulty', 'tutor'];
-        if (!in_array($type, $validTypes)) {
-            $type = 'title';
-        }
-
-        // 1) Sin escribir (q vacío): devolver todo el historial reciente sin importar el type
-        if ($term === '') {
-            $history = Suggestion::where('user_id', $user->id)
-                ->orderByDesc('updated_at')
-                ->limit($limit)
-                ->get()
-                ->map(fn($s) => [
-                    'text' => $s->texto,
-                    'is_history' => true,
-                    'search_type' => $s->search_type,
-                    'entity_id' => $s->entity_id,
-                    'searched' => $s->searched
-                ])
-                ->values();
-
-            return response()->json(['suggestions' => $history]);
-        }
-
-        $like = $this->like($term);
-
-        // 2) Historial que coincide con type y texto
-        $historyMatches = Suggestion::where('user_id', $user->id)
-            ->where('search_type', $type)
-            ->whereRaw('LOWER(texto) LIKE ?', [$like])
+        // Obtenemos únicamente el historial reciente del usuario
+        $history = Suggestion::where('user_id', $user->id)
             ->orderByDesc('updated_at')
-            ->limit($limit)
+            ->limit(10)
             ->get()
             ->map(fn($s) => [
-                'text' => $s->texto,
-                'is_history' => true,
+                'text'        => $s->texto,
+                'is_history'  => true,
                 'search_type' => $s->search_type,
-                'entity_id' => $s->entity_id,
-                'searched' => $s->searched
+                'entity_id'   => $s->entity_id,
+                'searched'    => $s->searched
             ])
-            ->values()
-            ->toBase();
-
-        // 3) Sugerencias nuevas según type
-        $newSuggestions = collect();
-        switch ($type) {
-            case 'title':
-                $newSuggestions = Course::where('enabled', true)
-                    ->whereRaw('LOWER(title) LIKE ?', [$like])
-                    ->select('id', 'title as text')
-                    ->limit($limit)
-                    ->get()
-                    ->map(fn($c) => [
-                        'text' => $c->text,
-                        'is_history' => false,
-                        'search_type' => 'title',
-                        'entity_id' => $c->id,
-                        'searched' => 0
-                    ]);
-                break;
-            case 'category':
-                $newSuggestions = Category::whereRaw('LOWER(name) LIKE ?', [$like])
-                    ->select('id', 'name as text')
-                    ->limit($limit)
-                    ->get()
-                    ->map(fn($c) => [
-                        'text' => $c->text,
-                        'is_history' => false,
-                        'search_type' => 'category',
-                        'entity_id' => $c->id,
-                        'searched' => 0
-                    ]);
-                break;
-            case 'career':
-                $newSuggestions = Career::whereRaw('LOWER(name) LIKE ?', [$like])
-                    ->select('id', 'name as text')
-                    ->limit($limit)
-                    ->get()
-                    ->map(fn($c) => [
-                        'text' => $c->text,
-                        'is_history' => false,
-                        'search_type' => 'career',
-                        'entity_id' => $c->id,
-                        'searched' => 0
-                    ]);
-                break;
-            case 'difficulty':
-                $newSuggestions = Difficulty::whereRaw('LOWER(name) LIKE ?', [$like])
-                    ->select('id', 'name as text')
-                    ->limit($limit)
-                    ->get()
-                    ->map(fn($d) => [
-                        'text' => $d->text,
-                        'is_history' => false,
-                        'search_type' => 'difficulty',
-                        'entity_id' => $d->id,
-                        'searched' => 0
-                    ]);
-                break;
-            case 'tutor':
-                $newSuggestions = DB::table('users as o')
-                    ->join('tutor_courses as tc', 'tc.user_id', '=', 'o.id')
-                    ->where('tc.is_owner', 1)
-                    ->where(function ($w) use ($like) {
-                        $w->whereRaw('LOWER(o.username) LIKE ?', [$like])
-                          ->orWhereRaw('LOWER(o.email) LIKE ?', [$like])
-                          ->orWhereRaw('LOWER(CONCAT_WS(" ", o.name, o.lastname)) LIKE ?', [$like]);
-                    })
-                    ->selectRaw('DISTINCT o.id, TRIM(CASE WHEN COALESCE(o.username,"") <> "" THEN o.username ELSE CONCAT(o.name," ",o.lastname) END) as text')
-                    ->limit($limit)
-                    ->get()
-                    ->map(fn($t) => [
-                        'text' => $t->text,
-                        'is_history' => false,
-                        'search_type' => 'tutor',
-                        'entity_id' => $t->id,
-                        'searched' => 0
-                    ]);
-                break;
-        }
-
-        // 4) Merge sin duplicados y tope por límite
-        $suggestions = $historyMatches
-            ->merge($newSuggestions)
-            ->unique(function ($item) {
-                return mb_strtolower($item['text']);
-            })
-            ->take($limit)
             ->values();
 
-        return response()->json(['suggestions' => $suggestions]);
+        return response()->json(['suggestions' => $history]);
     }
 
     public function updateSuggestion(Request $request): JsonResponse

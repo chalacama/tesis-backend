@@ -185,7 +185,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/courses-by-filter', [StartController::class, 'getCoursesByFilter'])->middleware('permission:course.read');
         Route::get('/courses-search', [StartController::class, 'searchCourses'])->middleware('permission:course.read');        
         Route::get('/portfolio-by-filter', [StartController::class, 'getPortfolioByFilter'])->middleware('permission:course.read');
-        Route::get('/suggestion-by-filter', [StartController::class, 'getSuggestionByFilter'])->middleware('permission:course.read');
+        Route::get('/suggestion-history', [StartController::class, 'getUserSearchHistory'])->middleware('permission:course.read');
         Route::post('/suggestion', [StartController::class, 'updateSuggestion']); // <- para guardar historial
     });
     Route::prefix('profile')->group(function () {
