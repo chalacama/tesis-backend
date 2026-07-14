@@ -38,27 +38,26 @@ class SedeController extends Controller
                 $domain = strtolower(substr(strrchr($email, '@'), 1));
             }
 
-            if ($domain === 'gmail.com') {
-                // Solo sedes cuya unidad educativa NO tiene dominio
+            $hasInstitutionalMatch = false;
+
+            if ($domain) {
+                $hasInstitutionalMatch = EducationalUnit::where('organization_domain', $domain)->exists();
+            }
+
+            if ($domain === 'gmail.com' || !$domain || !$hasInstitutionalMatch) {
+                // Usuarios sin correo, con correos personales o con un dominio institucional no registrado
+                // ven solo sedes cuya unidad educativa NO tiene dominio, incluyendo las unidades especiales.
                 $query->whereHas('educationalUnit', function ($q) {
-                    $q->whereNull('organization_domain');
+                    $q->where(function ($subQuery) {
+                        $subQuery->whereNull('organization_domain')
+                            ->orWhere('organization_domain', '');
+                    });
                 });
             } elseif ($domain) {
-                // Dominio institucional
-                $existsDomain = EducationalUnit::where('organization_domain', $domain)->exists();
-
-                if ($existsDomain) {
-                    // Mostrar solo sedes de unidades con ese dominio
-                    $query->whereHas('educationalUnit', function ($q) use ($domain) {
-                        $q->where('organization_domain', $domain);
-                    });
-                } else {
-                    // Dominio no registrado → no mostrar sedes
-                    $query->whereRaw('1 = 0');
-                }
-            } else {
-                // Sin dominio legible → no mostramos nada
-                $query->whereRaw('1 = 0');
+                // Dominio institucional registrado: mostrar solo sedes de unidades con ese dominio
+                $query->whereHas('educationalUnit', function ($q) use ($domain) {
+                    $q->where('organization_domain', $domain);
+                });
             }
         }
 
