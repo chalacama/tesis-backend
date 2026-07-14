@@ -78,41 +78,34 @@ class EducationalUserController extends Controller
             $domain = null;
 
             if ($email && str_contains($email, '@')) {
-                // parte después de @ → ejemplo: "colegio.edu.ec"
                 $domain = strtolower(substr(strrchr($email, '@'), 1));
             }
 
-            if ($domain === 'gmail.com') {
-                // Solo sedes cuya unidad educativa NO tenga dominio
-                if ($sede->educationalUnit && $sede->educationalUnit->organization_domain) {
+            $hasInstitutionalMatch = false;
+
+            if ($domain) {
+                $hasInstitutionalMatch = EducationalUnit::where('organization_domain', $domain)->exists();
+            }
+
+            if ($domain === 'gmail.com' || !$domain || !$hasInstitutionalMatch) {
+                // Usuarios sin correo, con correos personales o con un dominio institucional no registrado
+                // solo pueden seleccionar sedes de unidades educativas sin dominio.
+                $sedeDomain = optional($sede->educationalUnit)->organization_domain;
+
+                if ($sedeDomain) {
                     return response()->json([
-                        'message' => 'No puedes seleccionar esta sede con tu correo Gmail.',
+                        'message' => 'No puedes seleccionar esta sede con tu correo actual.',
                     ], 403);
                 }
             } elseif ($domain) {
-                // Verificamos si el dominio existe en alguna unidad educativa
-                $existsDomain = EducationalUnit::where('organization_domain', $domain)->exists();
+                // Dominio institucional registrado: la sede debe coincidir con ese dominio
+                $sedeDomain = optional($sede->educationalUnit)->organization_domain;
 
-                if ($existsDomain) {
-                    $sedeDomain = optional($sede->educationalUnit)->organization_domain;
-
-                    // La sede debe tener dominio y coincidir con el dominio del usuario
-                    if (!$sedeDomain || strtolower($sedeDomain) !== $domain) {
-                        return response()->json([
-                            'message' => 'No puedes seleccionar esta sede con tu correo institucional.',
-                        ], 403);
-                    }
-                } else {
-                    // Dominio no registrado en ninguna unidad educativa → no puede seleccionar ninguna sede
+                if (!$sedeDomain || strtolower($sedeDomain) !== $domain) {
                     return response()->json([
-                        'message' => 'Tu dominio de correo no está asociado a ninguna unidad educativa registrada.',
+                        'message' => 'No puedes seleccionar esta sede con tu correo institucional.',
                     ], 403);
                 }
-            } else {
-                // Sin dominio legible → por seguridad no permitimos seleccionar sede
-                return response()->json([
-                    'message' => 'No se pudo determinar el dominio de tu correo.',
-                ], 403);
             }
         }
 
