@@ -80,6 +80,16 @@ class UsersSeeder extends Seeder
                 'phone_verified_at' => now(), // Corregido
                 'cedula_verified_at' => now(), // Corregido
             ],
+            [
+                //'google_id' => '100000000000000000002',
+                'name' => 'Elias Xavier', // id : 5
+                'lastname' => 'Chalacama Velez',
+                'username' => 'elias.chala',
+                'email' => 'elias.chalacama@utm.edu.ec',
+                'password' => '123.Password',
+                'email_verified_at' => now(),
+                'username_at' => now(),
+            ],
         ];
 
         foreach ($students as $studentData) {
