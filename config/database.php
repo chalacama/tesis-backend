@@ -57,12 +57,12 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
+            'options' => [],
             // --- ESTA ES LA PARTE IMPORTANTE A CAMBIAR ---
-    'options' => extension_loaded('pdo_mysql') ? array_filter([
-        // Esto busca el archivo dentro de la carpeta /storage/ de tu servidor
-        PDO::MYSQL_ATTR_SSL_CA => base_path('storage/isrgrootx1.pem'),
-        PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => true,
-    ]) : [],
+    // 'options' => extension_loaded('pdo_mysql') ? array_filter([
+    //     PDO::MYSQL_ATTR_SSL_CA => base_path('storage/isrgrootx1.pem'),
+    //     PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => true,
+    // ]) : [],
         ],
 
         'mariadb' => [

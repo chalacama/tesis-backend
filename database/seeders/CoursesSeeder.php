@@ -43,7 +43,7 @@ GitHub: [Tu Repositorio]
 
 Opción 2: Estilo Redes Sociales (Instagram / LinkedIn / Facebook)
 Corto, con emojis y enfocado en generar interés rápido.',
-        'private' => true,
+        'private' => false,
         'enabled' => true,
         'difficulty_id' => 1,
     ]);
@@ -53,7 +53,7 @@ Corto, con emojis y enfocado en generar interés rápido.',
     $course = Course::create([
         'title' => 'Fundamentos de Diseño Gráfico',
         'description' => 'Aprende los principios básicos del diseño gráfico y herramientas como Adobe Photoshop.',
-        'private' => false,
+        'private' => true,
         'enabled' => true,
         'difficulty_id' => 1,
     ]);
