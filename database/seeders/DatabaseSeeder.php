@@ -79,6 +79,7 @@ class DatabaseSeeder extends Seeder
         $this->call(UserCategoryInterestSeeder::class);
 
         $this->call(CareerCourseSeeder::class);
+        $this->call(ContenidoSeeder::class);
         //$this->call(LikeCommentSeeder::class);
         //$this->call(SuggestionSeeder::class);
         // UnitLevelSeeder
