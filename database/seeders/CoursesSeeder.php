@@ -45,7 +45,7 @@ Opción 2: Estilo Redes Sociales (Instagram / LinkedIn / Facebook)
 Corto, con emojis y enfocado en generar interés rápido.',
         'private' => false,
         'enabled' => true,
-        'difficulty_id' => 1,
+        'difficulty_id' => 3,
     ]);
     
 
