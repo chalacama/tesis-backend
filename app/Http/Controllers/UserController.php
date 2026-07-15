@@ -25,6 +25,7 @@ class UserController extends Controller
             ->select(['id', 'name', 'lastname', 'username', 'profile_picture_url', 'email', 'phone_number', 'cedula', 'email_verified_at', 'phone_verified_at', 'cedula_verified_at', 'created_at'])
             ->with(['roles:id,name']); // usa HasRoles del modelo User
 
+
         /**
          * 1) Filtro de búsqueda por nombre, apellido o email
          *    Parámetro: ?search=texto
@@ -105,6 +106,7 @@ class UserController extends Controller
                 'email'               => $user->email,
                 'phone_number'        => $user->phone_number,
                 'cedula'              => $user->cedula,
+                'birthdate'           => $user->userInformation?->birthdate,
                 'email_verified_at'   => $user->email_verified_at,
                 'phone_verified_at'   => $user->phone_verified_at,
                 'cedula_verified_at'  => $user->cedula_verified_at,
