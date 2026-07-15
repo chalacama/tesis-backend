@@ -132,6 +132,8 @@ class UserController extends Controller
             'password'           => ['nullable', 'string', 'min:8'],
             'admin_password'     => ['nullable', 'string'],
             'logout_all_sessions' => ['nullable', 'boolean'],
+            'verify_email'       => ['nullable', 'boolean'],
+            'verify_phone'       => ['nullable', 'boolean'],
             'name'               => ['nullable', 'string', 'max:255'],
             'lastname'           => ['nullable', 'string', 'max:255'],
             'birthdate'          => ['nullable', 'date_format:Y-m-d'],
@@ -141,6 +143,21 @@ class UserController extends Controller
 
         if ($request->has('role_id') && $request->filled('role_id')) {
             $role = Role::findOrFail($request->role_id);
+
+            if ($role->name === 'admin' && ! $authUser?->hasRole('admin')) {
+                return response()->json([
+                    'message' => 'Debes confirmar con tu contraseña para asignar el rol de administrador.',
+                ], 403);
+            }
+
+            if ($role->name === 'admin') {
+                if (! $request->filled('admin_password') || ! Hash::check($request->admin_password, $authUser->password)) {
+                    return response()->json([
+                        'message' => 'Debes confirmar con tu contraseña para asignar el rol de administrador.',
+                    ], 403);
+                }
+            }
+
             $user->syncRoles([$role->name]);
         }
 
@@ -150,12 +167,20 @@ class UserController extends Controller
                 $user->email_verified_at = null;
                 $user->google_id = null;
             }
+
+            if ($request->boolean('verify_email')) {
+                $user->email_verified_at = now();
+            }
         }
 
         if ($request->has('phone_number')) {
             $user->phone_number = $request->phone_number;
             if ($user->isDirty('phone_number')) {
                 $user->phone_verified_at = null;
+            }
+
+            if ($request->boolean('verify_phone')) {
+                $user->phone_verified_at = now();
             }
         }
 

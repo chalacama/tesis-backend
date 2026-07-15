@@ -46,4 +46,37 @@ class UserControllerTest extends TestCase
         $this->assertTrue(Hash::check('new-password', $user->fresh()->password));
         $this->assertCount(0, $user->fresh()->tokens);
     }
+
+    public function test_changing_to_admin_requires_admin_password_and_can_verify_contact_data(): void
+    {
+        $adminRole = Role::create(['name' => 'admin']);
+        $admin = User::factory()->create([
+            'password' => Hash::make('admin-password'),
+        ]);
+        $admin->assignRole($adminRole);
+
+        $user = User::factory()->create([
+            'email' => 'old@example.com',
+            'phone_number' => '+593999999999',
+            'email_verified_at' => null,
+            'phone_verified_at' => null,
+        ]);
+
+        $request = new Request([
+            'email' => 'new@example.com',
+            'verify_email' => true,
+            'phone_number' => '+593987654321',
+            'verify_phone' => true,
+            'role_id' => $adminRole->id,
+            'admin_password' => 'admin-password',
+        ]);
+        $request->setUserResolver(fn () => $admin);
+
+        $response = (new UserController())->update($request, $user);
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertNotNull($user->fresh()->email_verified_at);
+        $this->assertNotNull($user->fresh()->phone_verified_at);
+        $this->assertTrue($user->fresh()->hasRole('admin'));
+    }
 }
