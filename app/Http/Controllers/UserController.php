@@ -8,6 +8,8 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Spatie\Permission\Models\Role;
 class UserController extends Controller
 {
@@ -122,13 +124,22 @@ class UserController extends Controller
     public function update(Request $request, User $user): JsonResponse
     {
         $validated = $request->validate([
-            'role_id'      => ['nullable', 'integer', 'exists:roles,id'],
-            'email'        => ['nullable', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
-            'phone_number' => ['nullable', 'string', 'max:13', 'regex:/^\+593[0-9]{9}$/',Rule::unique('users')->ignore($user->id)],
-            'cedula'       => ['nullable', 'string', 'max:10', Rule::unique('users')->ignore($user->id)],
+            'role_id'            => ['nullable', 'integer', 'exists:roles,id'],
+            'email'              => ['nullable', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'phone_number'       => ['nullable', 'string', 'max:13', 'regex:/^\+593[0-9]{9}$/', Rule::unique('users')->ignore($user->id)],
+            'cedula'             => ['nullable', 'string', 'max:10', Rule::unique('users')->ignore($user->id)],
+            'username'           => ['nullable', 'string', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'password'           => ['nullable', 'string', 'min:8'],
+            'admin_password'     => ['nullable', 'string'],
+            'logout_all_sessions' => ['nullable', 'boolean'],
+            'name'               => ['nullable', 'string', 'max:255'],
+            'lastname'           => ['nullable', 'string', 'max:255'],
+            'birthdate'          => ['nullable', 'date_format:Y-m-d'],
         ]);
 
-        if ($request->has('role_id') && $request->role_id) {
+        $authUser = $request->user();
+
+        if ($request->has('role_id') && $request->filled('role_id')) {
             $role = Role::findOrFail($request->role_id);
             $user->syncRoles([$role->name]);
         }
@@ -147,27 +158,51 @@ class UserController extends Controller
                 $user->phone_verified_at = null;
             }
         }
-        // Validar campos requeridos para nueva cédula
-        $request->validate([
-            'name'      => ['required', 'string', 'max:255'],
-            'lastname'  => ['required', 'string', 'max:255'],
-            'birthdate' => ['required', 'date_format:Y-m-d'],
-        ]);
-        $user->name = $request->name;
-        $user->lastname = $request->lastname;
-        $user->birthdate = $request->birthdate;
+
+        if ($request->has('username')) {
+            $user->username = $request->username;
+        }
+
+        if ($request->has('name')) {
+            $user->name = $request->name;
+        }
+
+        if ($request->has('lastname')) {
+            $user->lastname = $request->lastname;
+        }
+
+        if ($request->has('birthdate')) {
+            $user->birthdate = $request->birthdate;
+        }
+
+        if ($request->filled('password')) {
+            if (! $authUser || ! $authUser->hasRole('admin')) {
+                return response()->json([
+                    'message' => 'Solo un administrador puede cambiar la contraseña de este usuario.',
+                ], 403);
+            }
+
+            if (! $request->filled('admin_password') || ! Hash::check($request->admin_password, $authUser->password)) {
+                return response()->json([
+                    'message' => 'Debes confirmar con tu contraseña para cambiar la contraseña de este usuario.',
+                ], 403);
+            }
+
+            $user->password = Hash::make($request->password);
+        }
+
+        if ($request->has('logout_all_sessions') && $request->boolean('logout_all_sessions')) {
+            $user->tokens()->delete();
+        }
 
         if ($request->has('cedula')) {
             $newCedula = $request->cedula;
-            
+
             if (is_null($newCedula)) {
                 $user->cedula = null;
                 $user->cedula_verified_at = null;
             } elseif ($newCedula !== $user->cedula) {
-
-
-                // Validación con Registro Civil
-                $response = \Illuminate\Support\Facades\Http::asForm()->post('https://si.secap.gob.ec/sisecap/logeo_web/json/busca_persona_registro_civil.php', [
+                $response = Http::asForm()->post('https://si.secap.gob.ec/sisecap/logeo_web/json/busca_persona_registro_civil.php', [
                     'documento' => $newCedula,
                     'tipo'      => '1',
                 ]);
@@ -179,35 +214,32 @@ class UserController extends Controller
                     if (isset($person['nombres']) && isset($person['apellidos'])) {
                         $apiNombres = preg_replace('/\s+/', ' ', trim(strtoupper($person['nombres'])));
                         $apiApellidos = preg_replace('/\s+/', ' ', trim(strtoupper($person['apellidos'])));
-                        $reqName = preg_replace('/\s+/', ' ', trim(strtoupper($request->name)));
-                        $reqLastname = preg_replace('/\s+/', ' ', trim(strtoupper($request->lastname)));
-                        
+                        $reqName = preg_replace('/\s+/', ' ', trim(strtoupper($request->input('name', $user->name))));
+                        $reqLastname = preg_replace('/\s+/', ' ', trim(strtoupper($request->input('lastname', $user->lastname))));
+
                         $apiBirthdate = null;
                         if (isset($person['fechaNacimiento'])) {
                             try {
-                                $apiBirthdate = \Carbon\Carbon::createFromFormat('d/m/Y', $person['fechaNacimiento'])->format('Y-m-d');
+                                $apiBirthdate = Carbon::createFromFormat('d/m/Y', $person['fechaNacimiento'])->format('Y-m-d');
                             } catch (\Exception $e) {
                                 $apiBirthdate = date('Y-m-d', strtotime(str_replace('/', '-', $person['fechaNacimiento'])));
                             }
                         }
 
-                        if ($apiNombres !== $reqName || $apiApellidos !== $reqLastname || ($apiBirthdate && $apiBirthdate !== $request->birthdate)) {
+                        $expectedBirthdate = $request->input('birthdate', $user->birthdate);
+                        if ($apiNombres !== $reqName || $apiApellidos !== $reqLastname || ($apiBirthdate && $apiBirthdate !== $expectedBirthdate)) {
                             return response()->json([
                                 'message' => 'Los nombres, apellidos o fecha de nacimiento no coinciden con los datos del Registro Civil para esta cédula',
                             ], 422);
                         }
 
                         $user->cedula = $newCedula;
-                        $user->name = $request->name;
-                        $user->lastname = $request->lastname;
                         $user->cedula_verified_at = now();
-                        
-                        // Actualizar UserInformation
+
                         $userInfo = $user->userInformation()->firstOrCreate(['user_id' => $user->id]);
                         $userInfo->sexo = $person['sexo'] ?? $userInfo->sexo;
-                        $userInfo->birthdate = $request->birthdate;
+                        $userInfo->birthdate = $expectedBirthdate;
                         $userInfo->save();
-
                     } else {
                         return response()->json(['message' => 'Los nombres, apellidos o fecha de nacimiento no coinciden con los datos del Registro Civil para esta cédula'], 422);
                     }
