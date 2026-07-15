@@ -52,14 +52,21 @@ class PanelController extends Controller
 
         // 🔐 Alcance: admin ve todo, tutor solo cursos donde ES DUEÑO
         $isAdmin = $user->hasRole('admin');
+        $requestedUsername = trim((string) $request->query('username', ''));
 
-        if ($isAdmin) {
-            $courseIds = Course::pluck('id');
-        } else {
-            $courseIds = Course::whereHas('owner', function ($q) use ($user) {
+        $courseQuery = Course::query();
+
+        if ($isAdmin && $requestedUsername !== '') {
+            $courseQuery->whereHas('owner', function ($q) use ($requestedUsername) {
+                $q->where('users.username', $requestedUsername);
+            });
+        } elseif (! $isAdmin) {
+            $courseQuery->whereHas('owner', function ($q) use ($user) {
                 $q->where('users.id', $user->id);
-            })->pluck('id');
+            });
         }
+
+        $courseIds = $courseQuery->pluck('id');
 
         // Validación rápida si no hay cursos
         if ($courseIds->isEmpty()) {
@@ -171,7 +178,7 @@ class PanelController extends Controller
 
         $registrationsByMonth = $registrationsQuery
             ->select(
-                DB::raw("DATE_FORMAT(registrations.created_at, '%Y-%m') as month"),
+                DB::raw("strftime('%Y-%m', registrations.created_at) as month"),
                 DB::raw('COUNT(*) as total')
             )
             ->groupBy('month')
