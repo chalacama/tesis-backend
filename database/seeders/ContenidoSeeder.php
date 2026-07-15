@@ -75,7 +75,7 @@ class ContenidoSeeder extends Seeder
 			'format_id' => 12, // googledrive.pdf
 			'chapter_id' => $desarrollo->id,
 			'duration_seconds' => null,
-            'max_size_bytes' => 10485760, // 10 MB
+            'size_bytes' => 10485760, // 10 MB
 		]);
 
 		// 5) Crear Test final vinculado al capítulo de evaluación
