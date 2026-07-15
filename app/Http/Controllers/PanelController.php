@@ -177,13 +177,19 @@ class PanelController extends Controller
         }
 
         $registrationsByMonth = $registrationsQuery
-            ->select(
-                DB::raw("strftime('%Y-%m', registrations.created_at) as month"),
-                DB::raw('COUNT(*) as total')
-            )
-            ->groupBy('month')
-            ->orderBy('month')
-            ->get();
+            ->select('registrations.created_at')
+            ->get()
+            ->groupBy(function ($registration) {
+                return Carbon::parse($registration->created_at)->format('Y-m');
+            })
+            ->map(function ($items, $month) {
+                return [
+                    'month' => $month,
+                    'total' => $items->count(),
+                ];
+            })
+            ->sortBy('month')
+            ->values();
 
         /*
         |--------------------------------------------------------------------------

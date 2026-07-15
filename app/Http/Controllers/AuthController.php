@@ -36,6 +36,7 @@ class AuthController extends Controller
                 $googleId = $payload['sub'];
                 $email    = $payload['email'] ?? null;
                 $name     = $payload['name'] ?? '';
+                $avatar   = $payload['picture'] ?? null;
 
                 if (!$email) {
                     return response()->json(['error' => 'La cuenta de Google no tiene un correo válido.'], 422);
@@ -49,12 +50,24 @@ class AuthController extends Controller
                         'is_registered' => false,
                         'email'         => $email,
                         'name'          => $name,
+                        'avatar'        => $avatar,
                     ], 200);
                 }
 
-                // Si SÍ existe el usuario: Actualizar google_id si es necesario y loguear
-                if (empty($user->google_id)) {
+                // Si SÍ existe el usuario: Actualizar google_id y FOTO DE PERFIL si es necesario
+                $needsSave = false;
+
+                if (empty($user->google_id) ) {
                     $user->google_id = $googleId;
+                    $needsSave = true;
+                }
+
+                if ($avatar) { // 👈 2. Actualizamos la foto en cada login con Google
+                    $user->profile_picture_url = $avatar;
+                    $needsSave = true;
+                }
+
+                if ($needsSave) {
                     $user->save();
                 }
                 
@@ -221,6 +234,7 @@ class AuthController extends Controller
                 $email = $payload['email'] ?? null;
                 $googleId = $payload['sub'];
                 $emailVerifiedAt = now(); // Google ya verificó el correo
+                $avatar = $payload['picture'] ?? null; // 👈 2. Extraemos el avatar del payload
 
                 if (!$email) {
                     return response()->json(['error' => 'La cuenta de Google no tiene un correo válido.'], 422);
@@ -255,6 +269,7 @@ class AuthController extends Controller
             'phone_number'       => $request->phone_number,
             'cedula'             => $request->cedula,
             'cedula_verified_at' => $cedulaVerifiedAt,
+            'profile_picture_url'=> $avatar, // 👈 3. Guardamos la foto por primera vez
         ]);
 
         $user->assignRole('student');
