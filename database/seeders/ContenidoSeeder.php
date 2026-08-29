@@ -59,7 +59,7 @@ class ContenidoSeeder extends Seeder
 		// Intro: video (link - YouTube)
 		LearningContent::create([
 			'name' => 'Video: Bienvenida y conceptos básicos',
-			'url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+			'url' => 'https://www.youtube.com/watch?v=E-DDmIhL4IM',
 			'type_content_id' => 1, // link
 			'format_id' => 1, // youtube
 			'chapter_id' => $intro->id,

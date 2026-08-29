@@ -234,7 +234,7 @@ class AuthController extends Controller
                 $email = $payload['email'] ?? null;
                 $googleId = $payload['sub'];
                 $emailVerifiedAt = now(); // Google ya verificó el correo
-                $avatar = $payload['picture'] ?? null; // 👈 2. Extraemos el avatar del payload
+                //$avatar = $payload['picture'] ?? null; // 👈 2. Extraemos el avatar del payload
 
                 if (!$email) {
                     return response()->json(['error' => 'La cuenta de Google no tiene un correo válido.'], 422);
@@ -269,7 +269,7 @@ class AuthController extends Controller
             'phone_number'       => $request->phone_number,
             'cedula'             => $request->cedula,
             'cedula_verified_at' => $cedulaVerifiedAt,
-            'profile_picture_url'=> $avatar, // 👈 3. Guardamos la foto por primera vez
+            //'profile_picture_url'=> $avatar, // 👈 3. Guardamos la foto por primera vez
         ]);
 
         $user->assignRole('student');
